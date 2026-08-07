@@ -8,6 +8,9 @@
   acceptance criteria, dependencies, product specification, and licensing
   constraints. The thin `atrinik/atrinik` wrapper may register and build this
   component but never owns Astro source.
+- Treat [atrinik/atrinik#168](https://github.com/atrinik/atrinik/issues/168) as
+  the authoritative cross-repository implementation plan. Local issues own
+  website delivery units; reflect dependency or exit-gate changes in that plan.
 - Pull-request titles and commits use Conventional Commits style. Squash merges
   are released by semantic-release; production deployments must identify the
   exact source revision and immutable inputs they contain.
@@ -111,7 +114,13 @@
   authoritative released sources without duplicating content or game design.
 - M6 hardens accessibility, performance, security, deployment, monitoring,
   rollback, compatibility labeling, and cutover. Rehearse previous-deployment
-  and domain recovery before changing public defaults.
+  and domain recovery before changing public defaults. Do not make replacement
+  downloads or replacement-default messaging public before whole-content-pack
+  equivalence in
+  [atrinik/atrinik#280](https://github.com/atrinik/atrinik/issues/280) and the
+  coordinated production cutover in
+  [atrinik/atrinik#272](https://github.com/atrinik/atrinik/issues/272) are
+  complete.
 
 ## Validation and handoff
 
