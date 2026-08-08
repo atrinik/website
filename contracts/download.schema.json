@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atrinik.org/contracts/download.schema.json",
+  "title": "Atrinik immutable download record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "component",
+    "version",
+    "tag",
+    "revision",
+    "platform",
+    "architecture",
+    "artifact",
+    "bytes",
+    "sha256",
+    "url",
+    "license",
+    "compatibility"
+  ],
+  "properties": {
+    "component": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "tag": { "type": "string", "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "platform": { "enum": ["linux", "windows"] },
+    "architecture": { "enum": ["x86_64"] },
+    "artifact": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$" },
+    "bytes": { "type": "integer", "minimum": 1, "maximum": 2147483648 },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "url": {
+      "type": "string",
+      "pattern": "^https://github\\.com/atrinik/[a-z0-9-]+/releases/download/v[0-9]+\\.[0-9]+\\.[0-9]+/[A-Za-z0-9._-]+$"
+    },
+    "license": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "compatibility": { "type": "string", "minLength": 1, "maxLength": 300 }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "branches": ["main"],
+  "tagFormat": "v${version}",
+  "plugins": [
+    ["@semantic-release/commit-analyzer", { "preset": "conventionalcommits" }],
+    [
+      "@semantic-release/release-notes-generator",
+      { "preset": "conventionalcommits" }
+    ],
+    ["@semantic-release/exec", { "prepareCmd": "npm run release:dry-run" }],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "build/release-dry-run/deployment-provenance.json",
+            "label": "Static deployment provenance"
+          },
+          {
+            "path": "build/release-dry-run/sbom.cdx.json",
+            "label": "CycloneDX dependency SBOM"
+          }
+        ]
+      }
+    ]
+  ]
+}

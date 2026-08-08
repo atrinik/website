@@ -1,0 +1,14 @@
+{
+  "component": "client",
+  "version": "1.2.3",
+  "tag": "v1.2.3",
+  "revision": "0123456789abcdef0123456789abcdef01234567",
+  "platform": "linux",
+  "architecture": "x86_64",
+  "artifact": "atrinik-client-1.2.3-linux-x86_64.tar.gz",
+  "bytes": 123456,
+  "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "url": "https://github.com/atrinik/client/releases/download/v1.2.3/atrinik-client-1.2.3-linux-x86_64.tar.gz",
+  "license": "MIT",
+  "compatibility": "Game Protocol 1 and replacement content format 1"
+}
