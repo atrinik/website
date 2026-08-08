@@ -8,6 +8,10 @@ updates:
       npm-development:
         dependency-type: development
         patterns: ["*"]
+    ignore:
+      # @astrojs/check 0.9.10 supports TypeScript through major 6.
+      - dependency-name: typescript
+        versions: [">=7"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
