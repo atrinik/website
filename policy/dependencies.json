@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "runtimeDependencies": [],
+  "developmentDependencies": [
+    {
+      "name": "@astrojs/check",
+      "version": "0.9.10",
+      "license": "MIT",
+      "owner": "website",
+      "purpose": "Astro and TypeScript validation"
+    },
+    {
+      "name": "@semantic-release/commit-analyzer",
+      "version": "13.0.1",
+      "license": "MIT",
+      "owner": "website",
+      "purpose": "Conventional Commit release analysis"
+    },
+    {
+      "name": "@semantic-release/exec",
+      "version": "7.1.0",
+      "license": "MIT",
+      "owner": "website",
+      "purpose": "validated release evidence preparation"
+    },
+    {
+      "name": "@semantic-release/github",
+      "version": "11.0.6",
+      "license": "MIT",
+      "owner": "website",
+      "purpose": "immutable GitHub release publication"
+    },
+    {
+      "name": "@semantic-release/release-notes-generator",
+      "version": "14.1.1",
+      "license": "MIT",
+      "owner": "website",
+      "purpose": "release note generation"
+    },
+    {
+      "name": "astro",
+      "version": "7.2.0",
+      "license": "MIT",
+      "owner": "website",
+      "purpose": "static HTML/CSS build"
+    },
+    {
+      "name": "conventional-changelog-conventionalcommits",
+      "version": "10.2.1",
+      "license": "ISC",
+      "owner": "website",
+      "purpose": "Conventional Commit parser preset"
+    },
+    {
+      "name": "prettier",
+      "version": "3.9.6",
+      "license": "MIT",
+      "owner": "website",
+      "purpose": "deterministic formatting"
+    },
+    {
+      "name": "prettier-plugin-astro",
+      "version": "0.14.1",
+      "license": "MIT",
+      "owner": "website",
+      "purpose": "Astro formatting"
+    },
+    {
+      "name": "semantic-release",
+      "version": "24.2.9",
+      "license": "MIT",
+      "owner": "website",
+      "purpose": "Conventional Commit releases"
+    },
+    {
+      "name": "typescript",
+      "version": "6.0.3",
+      "license": "Apache-2.0",
+      "owner": "website",
+      "purpose": "static type checking"
+    }
+  ],
+  "approvedInstallScripts": [
+    {
+      "name": "esbuild",
+      "version": "0.28.1",
+      "reason": "downloads/verifies the platform-specific compiler binary used only during the static build"
+    }
+  ],
+  "deniedInstallScripts": [
+    {
+      "name": "fsevents",
+      "reason": "optional macOS file-watching helper is unnecessary for static CI/release builds"
+    }
+  ],
+  "forbiddenLicenses": [
+    "GPL-1.0-only",
+    "GPL-1.0-or-later",
+    "GPL-2.0-only",
+    "GPL-2.0-or-later",
+    "GPL-3.0-only",
+    "GPL-3.0-or-later",
+    "AGPL-1.0-only",
+    "AGPL-1.0-or-later",
+    "AGPL-3.0-only",
+    "AGPL-3.0-or-later"
+  ],
+  "validation": [
+    "npm ci",
+    "npm run check",
+    "npm run deploy:dry-run",
+    "npm audit --audit-level=high",
+    "npm sbom --sbom-format cyclonedx"
+  ]
+}

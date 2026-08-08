@@ -1,0 +1,13 @@
+{
+  "title": "Atrinik",
+  "description": "An open-source cooperative role-playing game under active clean-room renewal.",
+  "canonicalOrigin": "https://atrinik.org",
+  "analytics": false,
+  "cookies": false,
+  "externalLinks": [
+    {
+      "label": "Project source on GitHub",
+      "url": "https://github.com/atrinik/atrinik"
+    }
+  ]
+}

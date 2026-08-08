@@ -1,0 +1,20 @@
+---
+import Base from "../layouts/Base.astro";
+import downloads from "../data/downloads.json";
+---
+
+<Base title="Downloads">
+  <h1>Downloads</h1>
+  {
+    downloads.entries.length === 0 ? (
+      <div class="panel" role="status">
+        <h2>No verified downloads yet</h2>
+        <p>
+          Downloads appear only after their owning repository publishes
+          immutable version, checksum, platform, compatibility, provenance, and
+          license metadata.
+        </p>
+      </div>
+    ) : null
+  }
+</Base>

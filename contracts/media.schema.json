@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atrinik.org/contracts/media.schema.json",
+  "title": "Atrinik website media record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "publicPath",
+    "sourceRepository",
+    "sourcePath",
+    "sourceRevision",
+    "sourceSha256",
+    "publishedSha256",
+    "author",
+    "license",
+    "transformations",
+    "alt",
+    "notice"
+  ],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "publicPath": { "type": "string", "pattern": "^/media/[A-Za-z0-9._/-]+$" },
+    "sourceRepository": { "type": "string", "pattern": "^atrinik/[a-z0-9-]+$" },
+    "sourcePath": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sourceSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "publishedSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "author": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "license": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "transformations": {
+      "type": "array",
+      "maxItems": 20,
+      "items": { "type": "string", "maxLength": 300 }
+    },
+    "alt": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "notice": { "type": "string", "minLength": 1, "maxLength": 500 }
+  }
+}
