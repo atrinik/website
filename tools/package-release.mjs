@@ -7,7 +7,15 @@ import { filesBelow } from "./site-contract.mjs";
 const root = resolve(import.meta.dirname, "..");
 const output = resolve(root, "build/release-dry-run");
 await mkdir(resolve(root, "build"), { recursive: true });
-await mkdir(output, { recursive: false });
+try {
+  await mkdir(output, { recursive: false });
+} catch (error) {
+  if (error.code === "EEXIST") {
+    console.error("release output already exists: build/release-dry-run");
+    process.exit(1);
+  }
+  throw error;
+}
 
 async function gitRevision() {
   const marker = await readFile(resolve(root, ".git"), "utf8").catch(
