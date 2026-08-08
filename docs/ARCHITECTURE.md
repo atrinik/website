@@ -14,6 +14,12 @@ Media stays absent until a record binds both source and published digests,
 repository/path/revision, author, exact license, transformations, alt text,
 and notice. The website never imports an asset tree by implication.
 
+The executable validator intentionally mirrors only the closed required-field
+sets and bounds from the two JSON Schemas so the build does not acquire a
+general-purpose runtime schema dependency. Source validation compares their
+field sets and closed-object flags on every run; contract changes must update
+both forms and their fixtures together.
+
 `public/_headers` supplies a no-script CSP and browser hardening for every
 static response. Source and built-output validators additionally enforce ten
 requests, 100 kB total, 40 kB HTML, 24 kB CSS, and zero JavaScript for this M1

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -59,14 +59,29 @@ test("media records require complete provenance and safe paths", () => {
   );
 });
 
-test("static output rejects scripts, broken links, and excessive files", async () => {
+test("static output rejects scripts, broken links, and excessive files", async (context) => {
   const root = await mkdtemp(join(tmpdir(), "atrinik-website-test-"));
+  context.after(async () => rm(root, { recursive: true }));
   await mkdir(join(root, "about"));
   const shell =
-    '<!doctype html><html lang="en"><body><a href="#content">Skip</a><nav aria-label="Primary navigation"></nav><main id="content"><h1>Title</h1></main></body></html>';
+    '<!doctype html><html lang="en"><head><title>Title</title><meta name="description" content="Description"><link rel="canonical" href="https://atrinik.org/"></head><body><a href="#content">Skip</a><nav aria-label="Primary navigation"></nav><main id="content"><h1>Title</h1></main></body></html>';
   await writeFile(join(root, "index.html"), shell);
   await writeFile(join(root, "about/index.html"), shell);
   assert.equal((await validateDist(root)).javascript, 0);
+  await writeFile(
+    join(root, "index.html"),
+    shell.replace(
+      "</main>",
+      '<a href="https://tracker.example/">bad</a></main>',
+    ),
+  );
+  await assert.rejects(validateDist(root), /external link origin/u);
+  await writeFile(
+    join(root, "index.html"),
+    shell.replace("</main>", "<h1>Duplicate</h1></main>"),
+  );
+  await assert.rejects(validateDist(root), /exactly one h1/u);
+  await writeFile(join(root, "index.html"), shell);
   await writeFile(join(root, "bad.js"), "alert(1)");
   await assert.rejects(validateDist(root), /performance budget/u);
 });

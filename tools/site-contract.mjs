@@ -161,7 +161,10 @@ export async function digest(path) {
     .digest("hex");
 }
 
-export async function validateDist(root) {
+export async function validateDist(
+  root,
+  { allowedReleaseUrls = new Set() } = {},
+) {
   const files = await filesBelow(root);
   if (files.length === 0 || files.length > limits.requests)
     throw new Error(`static request budget exceeded: ${files.length}`);
@@ -178,23 +181,47 @@ export async function validateDist(root) {
       for (const pattern of [
         /<html lang="en">/u,
         /<main[ >]/u,
-        /<h1[ >]/u,
         /href="#content"/u,
         /aria-label="Primary navigation"/u,
+        /<title>[^<]+<\/title>/u,
+        /<meta name="description" content="[^"]+"\s*\/?>/u,
+        /<link rel="canonical" href="https:\/\/atrinik\.org\/[^"]*"\s*\/?>/u,
       ])
         if (!pattern.test(html))
           throw new Error(`accessibility shell missing in ${path}`);
+      if ([...html.matchAll(/<h1[ >]/gu)].length !== 1)
+        throw new Error(`page must have exactly one h1 in ${path}`);
       if (/<script[ >]/iu.test(html) || /\son[a-z]+=/iu.test(html))
         throw new Error(`client script/event handler forbidden in ${path}`);
       for (const match of html.matchAll(/<img\b[^>]*>/giu))
         if (!/\balt="[^"]+"/iu.test(match[0]))
           throw new Error(`image lacks useful alt text in ${path}`);
-      for (const match of html.matchAll(/href="(\/[^"]*)"/gu)) {
-        const target = match[1].split(/[?#]/u)[0];
-        if (target === "/" || target.endsWith("/")) {
-          const index = target === "/" ? "/index.html" : `${target}index.html`;
-          if (!publicPaths.has(index))
+      for (const match of html.matchAll(/href="([^"]+)"/gu)) {
+        const raw = match[1];
+        if (raw.startsWith("#")) continue;
+        const url = new URL(raw, "https://atrinik.org/");
+        if (url.protocol !== "https:")
+          throw new Error(`unsafe link protocol ${raw} in ${path}`);
+        if (url.hostname === "atrinik.org") {
+          const target = url.pathname;
+          if (target === "/" || target.endsWith("/")) {
+            const index =
+              target === "/" ? "/index.html" : `${target}index.html`;
+            if (!publicPaths.has(index))
+              throw new Error(`broken internal link ${target} in ${path}`);
+          } else if (!publicPaths.has(target))
             throw new Error(`broken internal link ${target} in ${path}`);
+        } else if (
+          url.hostname === "github.com" &&
+          url.pathname.startsWith("/atrinik/")
+        ) {
+          if (
+            url.pathname.includes("/releases/download/") &&
+            !allowedReleaseUrls.has(url.href)
+          )
+            throw new Error(`unrecorded release link ${raw} in ${path}`);
+        } else {
+          throw new Error(`external link origin is not allowlisted: ${raw}`);
         }
       }
     } else if (extname(path) === ".css") totals.css += size;

@@ -4,13 +4,17 @@ import site from "../data/site.json";
 interface Props {
   title?: string;
   description?: string;
+  canonicalPath?: string;
 }
 
 const title = Astro.props.title
   ? `${Astro.props.title} · ${site.title}`
   : site.title;
 const description = Astro.props.description ?? site.description;
-const canonical = new URL(Astro.url.pathname, site.canonicalOrigin);
+const canonical = new URL(
+  Astro.props.canonicalPath ?? Astro.url.pathname,
+  site.canonicalOrigin,
+);
 ---
 
 <!doctype html>

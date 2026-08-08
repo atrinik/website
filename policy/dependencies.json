@@ -3,13 +3,6 @@
   "runtimeDependencies": [],
   "developmentDependencies": [
     {
-      "name": "astro",
-      "version": "7.2.0",
-      "license": "MIT",
-      "owner": "website",
-      "purpose": "static HTML/CSS build"
-    },
-    {
       "name": "@astrojs/check",
       "version": "0.9.10",
       "license": "MIT",
@@ -17,11 +10,46 @@
       "purpose": "Astro and TypeScript validation"
     },
     {
-      "name": "typescript",
-      "version": "6.0.3",
-      "license": "Apache-2.0",
+      "name": "@semantic-release/commit-analyzer",
+      "version": "13.0.1",
+      "license": "MIT",
       "owner": "website",
-      "purpose": "static type checking"
+      "purpose": "Conventional Commit release analysis"
+    },
+    {
+      "name": "@semantic-release/exec",
+      "version": "7.1.0",
+      "license": "MIT",
+      "owner": "website",
+      "purpose": "validated release evidence preparation"
+    },
+    {
+      "name": "@semantic-release/github",
+      "version": "11.0.6",
+      "license": "MIT",
+      "owner": "website",
+      "purpose": "immutable GitHub release publication"
+    },
+    {
+      "name": "@semantic-release/release-notes-generator",
+      "version": "14.1.1",
+      "license": "MIT",
+      "owner": "website",
+      "purpose": "release note generation"
+    },
+    {
+      "name": "astro",
+      "version": "7.2.0",
+      "license": "MIT",
+      "owner": "website",
+      "purpose": "static HTML/CSS build"
+    },
+    {
+      "name": "conventional-changelog-conventionalcommits",
+      "version": "10.2.1",
+      "license": "ISC",
+      "owner": "website",
+      "purpose": "Conventional Commit parser preset"
     },
     {
       "name": "prettier",
@@ -43,6 +71,13 @@
       "license": "MIT",
       "owner": "website",
       "purpose": "Conventional Commit releases"
+    },
+    {
+      "name": "typescript",
+      "version": "6.0.3",
+      "license": "Apache-2.0",
+      "owner": "website",
+      "purpose": "static type checking"
     }
   ],
   "approvedInstallScripts": [
