@@ -1,0 +1,42 @@
+{
+  "name": "@atrinik/website",
+  "version": "0.0.0-development",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.18.1 <25",
+    "npm": ">=11.16.0 <12"
+  },
+  "packageManager": "npm@11.16.0",
+  "scripts": {
+    "dev": "node tools/astro.mjs dev",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "node tools/astro.mjs check",
+    "test": "node --test",
+    "validate:source": "node tools/validate.mjs source",
+    "validate:dist": "node tools/validate.mjs dist",
+    "check": "npm run format:check && npm run typecheck && npm test && npm run validate:source",
+    "build": "node tools/astro.mjs build && npm run validate:dist",
+    "deploy:dry-run": "npm run build && node tools/deployment-dry-run.mjs",
+    "release:dry-run": "npm run deploy:dry-run && node tools/package-release.mjs --dry-run"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@semantic-release/commit-analyzer": "13.0.1",
+    "@semantic-release/exec": "7.1.0",
+    "@semantic-release/github": "11.0.6",
+    "@semantic-release/release-notes-generator": "14.1.1",
+    "astro": "7.2.0",
+    "conventional-changelog-conventionalcommits": "10.2.1",
+    "prettier": "3.9.6",
+    "prettier-plugin-astro": "0.14.1",
+    "semantic-release": "24.2.9",
+    "typescript": "6.0.3"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "fsevents": false
+  }
+}

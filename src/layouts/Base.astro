@@ -1,0 +1,147 @@
+---
+import site from "../data/site.json";
+
+interface Props {
+  title?: string;
+  description?: string;
+  canonicalPath?: string;
+}
+
+const title = Astro.props.title
+  ? `${Astro.props.title} · ${site.title}`
+  : site.title;
+const description = Astro.props.description ?? site.description;
+const canonical = new URL(
+  Astro.props.canonicalPath ?? Astro.url.pathname,
+  site.canonicalOrigin,
+);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark light" />
+    <link rel="canonical" href={canonical} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a class="skip" href="#content">Skip to content</a>
+    <header>
+      <a class="wordmark" href="/" aria-label="Atrinik home">Atrinik</a>
+      <nav aria-label="Primary navigation">
+        <a href="/about/">About</a>
+        <a href="/downloads/">Downloads</a>
+        <a href="/licenses/">Licenses</a>
+      </nav>
+    </header>
+    <main id="content"><slot /></main>
+    <footer>
+      <p>
+        Atrinik website source is MIT licensed. Game packages and authored
+        assets retain their stated licenses.
+      </p>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    color-scheme: dark;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    background: #101418;
+    color: #f2f5f7;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    min-width: 18rem;
+    line-height: 1.6;
+  }
+  header,
+  main,
+  footer {
+    width: min(70rem, calc(100% - 2rem));
+    margin-inline: auto;
+  }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 1.25rem;
+  }
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  a {
+    color: #8fd5ff;
+    text-underline-offset: 0.2em;
+  }
+  a:focus-visible {
+    outline: 0.2rem solid #ffd166;
+    outline-offset: 0.2rem;
+  }
+  .wordmark {
+    color: inherit;
+    font-size: 1.35rem;
+    font-weight: 800;
+    text-decoration: none;
+  }
+  .skip {
+    position: absolute;
+    left: 1rem;
+    top: -5rem;
+    padding: 0.5rem 0.75rem;
+    background: #fff;
+    color: #111;
+    z-index: 1;
+  }
+  .skip:focus {
+    top: 1rem;
+  }
+  main {
+    min-height: 65vh;
+    padding-block: clamp(3rem, 8vw, 8rem);
+  }
+  h1 {
+    max-width: 18ch;
+    font-size: clamp(2.5rem, 8vw, 6rem);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+  }
+  h2 {
+    margin-top: 2.5rem;
+  }
+  p,
+  li {
+    max-width: 68ch;
+  }
+  .lede {
+    font-size: clamp(1.1rem, 3vw, 1.4rem);
+  }
+  .panel {
+    border: 1px solid #44515b;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    background: #171d22;
+  }
+  footer {
+    border-top: 1px solid #44515b;
+    padding-block: 2rem;
+    font-size: 0.9rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
