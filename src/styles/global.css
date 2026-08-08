@@ -22,7 +22,7 @@
     "Segoe UI", sans-serif;
   --content: 76rem;
   --wide: 94rem;
-  --shadow: 0 1.75rem 5rem rgba(0, 0, 0, 0.42);
+  --shadow: 0 1rem 2.25rem rgba(0, 0, 0, 0.34);
   background: var(--ink);
   color: var(--text);
   font-family: var(--sans);
@@ -60,33 +60,6 @@ body {
   line-height: 1.65;
 }
 
-body::before {
-  position: fixed;
-  z-index: -1;
-  inset: 0;
-  background-image:
-    radial-gradient(
-      circle,
-      rgba(255, 255, 255, 0.34) 0 0.045rem,
-      transparent 0.055rem
-    ),
-    radial-gradient(
-      circle,
-      rgba(114, 221, 255, 0.2) 0 0.04rem,
-      transparent 0.05rem
-    );
-  background-position:
-    0 0,
-    2.5rem 2rem;
-  background-size:
-    5.5rem 5.5rem,
-    8rem 8rem;
-  content: "";
-  mask-image: linear-gradient(to bottom, black, transparent 72%);
-  opacity: 0.24;
-  pointer-events: none;
-}
-
 ::selection {
   background: var(--crystal-deep);
   color: white;
@@ -113,6 +86,7 @@ button:focus-visible {
 
 img {
   display: block;
+  height: auto;
   max-width: 100%;
 }
 
@@ -124,6 +98,10 @@ figure,
 dl,
 dd {
   margin-top: 0;
+}
+
+figure {
+  margin-inline: 0;
 }
 
 h1,
@@ -185,8 +163,7 @@ code {
   z-index: 20;
   top: 0;
   border-bottom: 1px solid rgba(177, 204, 224, 0.13);
-  background: rgba(5, 12, 20, 0.88);
-  backdrop-filter: blur(1rem);
+  background: rgba(5, 12, 20, 0.97);
 }
 
 .header-inner {
@@ -226,7 +203,6 @@ code {
   width: 1.75rem;
   height: 2.2rem;
   place-items: center;
-  filter: drop-shadow(0 0 0.55rem rgba(114, 221, 255, 0.62));
 }
 
 .brand-mark::before,
@@ -390,23 +366,18 @@ main {
   text-decoration: none;
   text-transform: uppercase;
   transition:
-    transform 180ms ease,
-    box-shadow 180ms ease,
-    background 180ms ease;
-}
-
-.button:hover {
-  transform: translateY(-0.12rem);
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
 }
 
 .button--primary {
   background: linear-gradient(135deg, #bfefff, #6bcfea);
-  box-shadow: 0 0.75rem 2.5rem rgba(70, 184, 220, 0.16);
+  box-shadow: 0 0.55rem 1.25rem rgba(70, 184, 220, 0.14);
   color: #06111b;
 }
 
 .button--primary:hover {
-  box-shadow: 0 0.9rem 2.8rem rgba(70, 184, 220, 0.28);
   color: #02070b;
 }
 
@@ -475,9 +446,8 @@ main {
   width: 78%;
   height: 70%;
   border-radius: 50%;
-  background: rgba(42, 160, 230, 0.23);
+  background: radial-gradient(circle, rgba(42, 160, 230, 0.2), transparent 70%);
   content: "";
-  filter: blur(5rem);
 }
 
 .hero-art-frame {
@@ -490,16 +460,6 @@ main {
     rgba(44, 115, 160, 0.12)
   );
   box-shadow: var(--shadow);
-  clip-path: polygon(
-    4% 0,
-    96% 0,
-    100% 2.5%,
-    100% 97.5%,
-    96% 100%,
-    4% 100%,
-    0 97.5%,
-    0 2.5%
-  );
 }
 
 .hero-art-frame::after {
@@ -512,8 +472,6 @@ main {
 
 .hero-art img {
   width: 100%;
-  aspect-ratio: 2 / 3;
-  object-fit: cover;
 }
 
 .hero-art figcaption {
@@ -577,7 +535,6 @@ main {
   width: 3rem;
   height: 3.75rem;
   margin: 0 auto 1.5rem;
-  filter: drop-shadow(0 0 1rem rgba(114, 221, 255, 0.55));
 }
 
 .crystal-sigil i {
@@ -851,7 +808,7 @@ main {
   margin-bottom: 1.5rem;
   border: 1px solid var(--line-gold);
   background: var(--panel);
-  box-shadow: 0 1.25rem 3rem rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.26);
 }
 
 .chronicle-card figure::after {
@@ -864,16 +821,6 @@ main {
 
 .chronicle-card img {
   width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  transition:
-    filter 240ms ease,
-    transform 500ms ease;
-}
-
-.chronicle-card:hover img {
-  filter: saturate(1.08) brightness(1.05);
-  transform: scale(1.015);
 }
 
 .chronicle-copy {
@@ -1356,9 +1303,5 @@ main > .callout {
   .detail-card,
   .callout {
     border: 1px solid CanvasText;
-  }
-
-  .brand-mark {
-    filter: none;
   }
 }

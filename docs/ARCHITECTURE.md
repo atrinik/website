@@ -25,8 +25,12 @@ static response. The built-output validator additionally enforces at most 16
 generated files, 900,000 bytes total, 140,000 aggregate HTML bytes, 40,000
 aggregate CSS bytes, 700,000 aggregate raster image bytes, and zero JavaScript.
 Published image filenames are content-addressed for immutable caching, and
-images below the fold are lazy-loaded. Accessibility validation covers
-language, landmarks, skip navigation, primary navigation labelling, one page
-heading, useful image alternatives, focus visibility, reflow, and
-reduced-motion policy; manual assistive-technology review remains a release
-gate.
+images below the fold are lazy-loaded. Artwork uses its intrinsic aspect ratio
+and an automatic rendered height so neither the portrait hero nor landscape
+posters are cropped. The presentation avoids fixed decorative texture layers,
+backdrop filters, large CSS blur filters, and image filter/transform effects so
+scrolling does not continuously repaint those effects. Accessibility
+validation covers language, landmarks, skip navigation, primary navigation
+labelling, one page heading, useful image alternatives, focus visibility,
+reflow, and reduced-motion policy; manual assistive-technology review remains
+a release gate.

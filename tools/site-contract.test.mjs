@@ -8,6 +8,7 @@ import {
   validateDist,
   validateDownload,
   validateMedia,
+  validatePresentationCss,
 } from "./site-contract.mjs";
 
 const accessibleShell =
@@ -61,6 +62,73 @@ test("media records require complete provenance and safe paths", () => {
     () => validateMedia({ ...valid, publicPath: "/media/../escape.png" }),
     /unsafe/u,
   );
+});
+
+test("presentation CSS preserves image geometry and avoids costly paint effects", () => {
+  assert.doesNotThrow(() =>
+    validatePresentationCss("img{display:block;height:auto;max-width:100%}"),
+  );
+  assert.throws(
+    () =>
+      validatePresentationCss(
+        "img{max-width:100%}.chronicle-card img{width:100%;object-fit:cover}",
+      ),
+    /height: auto/u,
+  );
+  assert.throws(
+    () =>
+      validatePresentationCss(
+        "img{height:auto}.chronicle-card img{object-fit:cover}",
+      ),
+    /cropping/u,
+  );
+  assert.throws(
+    () =>
+      validatePresentationCss(
+        "img{height:auto}.site-header{backdrop-filter:blur(1rem)}",
+      ),
+    /paint effect/u,
+  );
+  assert.throws(
+    () =>
+      validatePresentationCss(
+        "img{height:auto}.hero-art:before{filter:blur(5rem)}",
+      ),
+    /paint effect/u,
+  );
+  assert.throws(
+    () =>
+      validatePresentationCss(
+        "img{height:auto}body::before{position:fixed;inset:0;background:red}",
+      ),
+    /fixed viewport/u,
+  );
+});
+
+test("static output requires intrinsic image dimensions", async (context) => {
+  const root = await mkdtemp(
+    join(tmpdir(), "atrinik-website-image-layout-test-"),
+  );
+  context.after(async () => rm(root, { recursive: true }));
+  await writeFile(
+    join(root, "index.html"),
+    accessibleShell.replace(
+      "</main>",
+      '<img src="/poster.webp" width="1120" height="630" alt="Poster"></main>',
+    ),
+  );
+  await writeFile(join(root, "style.css"), "img{height:auto;max-width:100%}");
+  await writeFile(join(root, "poster.webp"), Buffer.alloc(1));
+  assert.equal((await validateDist(root)).images, 1);
+
+  await writeFile(
+    join(root, "index.html"),
+    accessibleShell.replace(
+      "</main>",
+      '<img src="/poster.webp" width="1120" alt="Poster"></main>',
+    ),
+  );
+  await assert.rejects(validateDist(root), /intrinsic dimensions/u);
 });
 
 test("static output rejects scripts, broken links, and excessive files", async (context) => {

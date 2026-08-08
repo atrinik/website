@@ -169,6 +169,26 @@ export async function digest(path) {
     .digest("hex");
 }
 
+export function validatePresentationCss(css) {
+  const imageRule = css.match(/(?:^|\})\s*img\s*\{([^}]*)\}/u);
+  if (
+    !imageRule ||
+    !/(?:^|;)\s*height\s*:\s*auto\s*(?:;|$)/u.test(imageRule[1])
+  )
+    throw new Error("responsive image baseline must set img height: auto");
+  if (/object-fit\s*:\s*cover/iu.test(css))
+    throw new Error("artwork cropping effect is forbidden");
+  if (/backdrop-filter\s*:/iu.test(css) || /filter\s*:\s*blur\s*\(/iu.test(css))
+    throw new Error("costly scrolling paint effect is forbidden");
+  const bodyDecoration = css.match(/body::?before\s*\{([^}]*)\}/iu);
+  if (
+    bodyDecoration &&
+    /position\s*:\s*fixed/iu.test(bodyDecoration[1]) &&
+    /inset\s*:\s*0\s*(?:;|$)/iu.test(bodyDecoration[1])
+  )
+    throw new Error("fixed viewport decoration is forbidden");
+}
+
 export async function validateDist(
   root,
   { allowedReleaseUrls = new Set() } = {},
@@ -180,6 +200,8 @@ export async function validateDist(
   const publicPaths = new Set(
     files.map((path) => `/${relative(root, path).replaceAll(sep, "/")}`),
   );
+  const styles = [];
+  let containsImages = false;
   for (const path of files) {
     const size = (await stat(path)).size;
     const extension = extname(path).toLowerCase();
@@ -202,9 +224,16 @@ export async function validateDist(
         throw new Error(`page must have exactly one h1 in ${path}`);
       if (/<script[ >]/iu.test(html) || /\son[a-z]+=/iu.test(html))
         throw new Error(`client script/event handler forbidden in ${path}`);
-      for (const match of html.matchAll(/<img\b[^>]*>/giu))
+      for (const match of html.matchAll(/<img\b[^>]*>/giu)) {
+        containsImages = true;
         if (!/\balt="[^"]+"/iu.test(match[0]))
           throw new Error(`image lacks useful alt text in ${path}`);
+        if (
+          !/\swidth="[1-9][0-9]*"/iu.test(match[0]) ||
+          !/\sheight="[1-9][0-9]*"/iu.test(match[0])
+        )
+          throw new Error(`image lacks intrinsic dimensions in ${path}`);
+      }
       for (const match of html.matchAll(/href="([^"]+)"/gu)) {
         const raw = match[1];
         if (raw.startsWith("#")) continue;
@@ -233,8 +262,10 @@ export async function validateDist(
           throw new Error(`external link origin is not allowlisted: ${raw}`);
         }
       }
-    } else if (extension === ".css") totals.css += size;
-    else if (rasterImageExtensions.has(extension)) totals.images += size;
+    } else if (extension === ".css") {
+      totals.css += size;
+      styles.push(await readFile(path, "utf8"));
+    } else if (rasterImageExtensions.has(extension)) totals.images += size;
     else if (new Set([".js", ".mjs", ".cjs"]).has(extension))
       totals.javascript += size;
   }
@@ -246,5 +277,6 @@ export async function validateDist(
     totals.javascript > limits.javascriptBytes
   )
     throw new Error(`performance budget exceeded: ${JSON.stringify(totals)}`);
+  if (containsImages) validatePresentationCss(styles.join("\n"));
   return { files: files.length, ...totals };
 }
