@@ -1,4 +1,77 @@
 {
   "schemaVersion": 1,
-  "entries": []
+  "entries": [
+    {
+      "id": "great-blue-crystal",
+      "publicPath": "/media/atrinik-great-blue-crystal.cb0e9d8f.webp",
+      "sourceRepository": "atrinik/website",
+      "sourcePath": "artwork/originals/atrinik-great-blue-crystal.png",
+      "sourceRevision": "05a077514624bec502e4e4df1811e23a87bb49d2",
+      "sourceSha256": "e97267740e64ee9d71c539415ec878d9d8eb25316384501015330776a4489bf3",
+      "publishedSha256": "cb0e9d8f497fb95c7b02ce2b2ec3701adbc20fbd84281bffbae5027965e33c5c",
+      "author": "Atrinik contributors with OpenAI image generation",
+      "license": "MIT",
+      "transformations": [
+        "Resized to 860 pixels wide with Sharp 0.35.3.",
+        "Encoded as WebP at quality 78 and effort 6 with smart chroma subsampling.",
+        "Removed source metadata during conversion."
+      ],
+      "alt": "Fantasy poster titled ‘Atrinik: The Great Blue Crystal — It Fell from the Sky,’ showing a towering blue crystal glowing on a snowy island as travelers arrive by boat beneath a falling star.",
+      "notice": "Atmospheric concept artwork, not a gameplay screenshot, authoritative geography, or a release promise."
+    },
+    {
+      "id": "atrinik-then",
+      "publicPath": "/media/atrinik-then.bea7e169.webp",
+      "sourceRepository": "atrinik/website",
+      "sourcePath": "artwork/originals/atrinik-then.png",
+      "sourceRevision": "05a077514624bec502e4e4df1811e23a87bb49d2",
+      "sourceSha256": "55f09d0c1cedfd302e5d49895ff66f09d3e7658e6b9677876788c404691830f4",
+      "publishedSha256": "bea7e1690e2a347dbef5b78da70bc6e0b07ab2c2a58ed2fdf63338099c353bd3",
+      "author": "Atrinik contributors with OpenAI image generation",
+      "license": "MIT",
+      "transformations": [
+        "Resized to 1120 pixels wide with Sharp 0.35.3.",
+        "Encoded as WebP at quality 76 and effort 6 with smart chroma subsampling.",
+        "Removed source metadata during conversion."
+      ],
+      "alt": "Fantasy poster titled ‘Atrinik: Then — The World We Remember,’ showing a cloaked traveler crossing a stone bridge toward a torchlit woodland settlement.",
+      "notice": "Atmospheric concept artwork, not a gameplay screenshot, authoritative geography, or a release promise."
+    },
+    {
+      "id": "atrinik-now",
+      "publicPath": "/media/atrinik-now.8b682303.webp",
+      "sourceRepository": "atrinik/website",
+      "sourcePath": "artwork/originals/atrinik-now.png",
+      "sourceRevision": "05a077514624bec502e4e4df1811e23a87bb49d2",
+      "sourceSha256": "bffc07e02e6d48d837b6bf61eb09c83d15786240a6350ccede0fea50b9ace5e5",
+      "publishedSha256": "8b682303b022dd334f38178975871a4662f475dc583aeb49ed88795a28f84df7",
+      "author": "Atrinik contributors with OpenAI image generation",
+      "license": "MIT",
+      "transformations": [
+        "Resized to 1120 pixels wide with Sharp 0.35.3.",
+        "Encoded as WebP at quality 76 and effort 6 with smart chroma subsampling.",
+        "Removed source metadata during conversion."
+      ],
+      "alt": "Fantasy poster titled ‘Atrinik: Now — The World Stirs Again,’ showing a traveler overlooking an island city, bridges, mountains, and a violet-lit cavern.",
+      "notice": "Atmospheric concept artwork, not a gameplay screenshot, authoritative geography, or a release promise."
+    },
+    {
+      "id": "atrinik-beyond",
+      "publicPath": "/media/atrinik-beyond.3ccfd1dd.webp",
+      "sourceRepository": "atrinik/website",
+      "sourcePath": "artwork/originals/atrinik-beyond.png",
+      "sourceRevision": "05a077514624bec502e4e4df1811e23a87bb49d2",
+      "sourceSha256": "2d35793b1663b06c165eff647f86bacca266a414c3a440188e1578942cdc1f45",
+      "publishedSha256": "3ccfd1dd4ea0bd3c8e9d8c6208ac4c493de5fc876d458e0cfeb409db75114605",
+      "author": "Atrinik contributors with OpenAI image generation",
+      "license": "MIT",
+      "transformations": [
+        "Resized to 1120 pixels wide with Sharp 0.35.3.",
+        "Encoded as WebP at quality 76 and effort 6 with smart chroma subsampling.",
+        "Removed source metadata during conversion."
+      ],
+      "alt": "Fantasy poster titled ‘Atrinik: Beyond — A Vision of What May Come,’ showing a dragon rider above floating realms of cities, ice, fire, and magic.",
+      "notice": "Atmospheric concept artwork, not a gameplay screenshot, authoritative geography, or a release promise."
+    }
+  ]
 }

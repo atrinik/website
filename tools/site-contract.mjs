@@ -3,13 +3,21 @@ import { readFile, readdir, stat } from "node:fs/promises";
 import { extname, join, relative, resolve, sep } from "node:path";
 
 export const limits = Object.freeze({
-  totalBytes: 100_000,
-  htmlBytes: 40_000,
-  cssBytes: 24_000,
+  totalBytes: 900_000,
+  htmlBytes: 140_000,
+  cssBytes: 40_000,
+  imageBytes: 700_000,
   javascriptBytes: 0,
-  requests: 10,
+  requests: 16,
 });
 
+const rasterImageExtensions = new Set([
+  ".webp",
+  ".avif",
+  ".png",
+  ".jpg",
+  ".jpeg",
+]);
 const sha256Pattern = /^[0-9a-f]{64}$/u;
 const revisionPattern = /^[0-9a-f]{40}$/u;
 const versionPattern = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/u;
@@ -168,14 +176,15 @@ export async function validateDist(
   const files = await filesBelow(root);
   if (files.length === 0 || files.length > limits.requests)
     throw new Error(`static request budget exceeded: ${files.length}`);
-  const totals = { total: 0, html: 0, css: 0, javascript: 0 };
+  const totals = { total: 0, html: 0, css: 0, images: 0, javascript: 0 };
   const publicPaths = new Set(
     files.map((path) => `/${relative(root, path).replaceAll(sep, "/")}`),
   );
   for (const path of files) {
     const size = (await stat(path)).size;
+    const extension = extname(path).toLowerCase();
     totals.total += size;
-    if (extname(path) === ".html") {
+    if (extension === ".html") {
       totals.html += size;
       const html = await readFile(path, "utf8");
       for (const pattern of [
@@ -224,14 +233,16 @@ export async function validateDist(
           throw new Error(`external link origin is not allowlisted: ${raw}`);
         }
       }
-    } else if (extname(path) === ".css") totals.css += size;
-    else if (new Set([".js", ".mjs", ".cjs"]).has(extname(path)))
+    } else if (extension === ".css") totals.css += size;
+    else if (rasterImageExtensions.has(extension)) totals.images += size;
+    else if (new Set([".js", ".mjs", ".cjs"]).has(extension))
       totals.javascript += size;
   }
   if (
     totals.total > limits.totalBytes ||
     totals.html > limits.htmlBytes ||
     totals.css > limits.cssBytes ||
+    totals.images > limits.imageBytes ||
     totals.javascript > limits.javascriptBytes
   )
     throw new Error(`performance budget exceeded: ${JSON.stringify(totals)}`);

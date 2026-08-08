@@ -21,9 +21,12 @@ field sets and closed-object flags on every run; contract changes must update
 both forms and their fixtures together.
 
 `public/_headers` supplies a no-script CSP and browser hardening for every
-static response. Source and built-output validators additionally enforce ten
-requests, 100 kB total, 40 kB HTML, 24 kB CSS, and zero JavaScript for this M1
-shell. Accessibility validation covers language, landmarks, skip navigation,
-primary navigation labelling, one page heading, useful image alternatives,
-focus visibility, reflow, and reduced-motion policy; manual assistive-
-technology review remains a release gate.
+static response. The built-output validator additionally enforces at most 16
+generated files, 900,000 bytes total, 140,000 aggregate HTML bytes, 40,000
+aggregate CSS bytes, 700,000 aggregate raster image bytes, and zero JavaScript.
+Published image filenames are content-addressed for immutable caching, and
+images below the fold are lazy-loaded. Accessibility validation covers
+language, landmarks, skip navigation, primary navigation labelling, one page
+heading, useful image alternatives, focus visibility, reflow, and
+reduced-motion policy; manual assistive-technology review remains a release
+gate.

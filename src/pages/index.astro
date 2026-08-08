@@ -1,20 +1,252 @@
 ---
 import Base from "../layouts/Base.astro";
+import media from "../data/media.json";
+
+const getMedia = (id: string) => {
+  const record = media.entries.find((entry) => entry.id === id);
+  if (!record) throw new Error(`missing media record: ${id}`);
+  return record;
+};
+
+const crystal = getMedia("great-blue-crystal");
+const chronicle = [
+  {
+    media: getMedia("atrinik-then"),
+    number: "I",
+    title: "The world we remember",
+    text: "The Classic line preserves Atrinik’s isometric world, its long history, and the adventures that first gave the islands their life.",
+  },
+  {
+    media: getMedia("atrinik-now"),
+    number: "II",
+    title: "The world stirs again",
+    text: "Today, Classic remains the playable home while new foundations are built independently, tested openly, and joined with care.",
+  },
+  {
+    media: getMedia("atrinik-beyond"),
+    number: "III",
+    title: "A vision of what may come",
+    text: "The next generation is a direction, not a release promise: a fresh engine stack shaped around the same authored world.",
+  },
+];
 ---
 
-<Base>
-  <h1>A world being rebuilt with care.</h1>
-  <p class="lede">
-    Atrinik is an open-source cooperative role-playing game. The current effort
-    is creating a clean-room, independently maintained engine while preserving
-    the project’s authored world and its exact licenses.
-  </p>
-  <section aria-labelledby="status-heading" class="panel">
-    <h2 id="status-heading">Current status</h2>
+<Base preloadImage={crystal.publicPath}>
+  <section class="home-hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
+      <p class="eyebrow">An open-source role-playing world</p>
+      <h1 id="hero-title">A world of crystal, memory, and unfinished paths.</h1>
+      <p class="hero-lede">
+        Atrinik is a cooperative fantasy world of islands, ruins, and
+        crystal-lit mysteries—preserved in Classic, and being rebuilt for what
+        comes next.
+      </p>
+      <div class="hero-actions">
+        <a class="button button--primary" href="/downloads/">
+          Explore Classic <span aria-hidden="true">→</span>
+        </a>
+        <a
+          class="button button--ghost"
+          href="https://github.com/atrinik/atrinik/issues/168"
+        >
+          Follow the rebuild <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+      <dl class="hero-facts" aria-label="Atrinik project status">
+        <div>
+          <dt>Classic</dt>
+          <dd>Playable &amp; maintained</dd>
+        </div>
+        <div>
+          <dt>Next generation</dt>
+          <dd>In active development</dd>
+        </div>
+        <div>
+          <dt>Source</dt>
+          <dd>Open on GitHub</dd>
+        </div>
+      </dl>
+    </div>
+    <figure class="hero-art">
+      <div class="hero-art-frame">
+        <img
+          src={crystal.publicPath}
+          width="860"
+          height="1290"
+          alt={crystal.alt}
+          decoding="async"
+          fetchpriority="high"
+        />
+      </div>
+      <figcaption>
+        <span>Morliana</span>
+        The Great Blue Crystal · concept artwork
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="world-intro" aria-labelledby="world-heading">
+    <div class="crystal-sigil" aria-hidden="true"><i></i><i></i><i></i></div>
+    <p class="eyebrow">From the lore</p>
+    <h2 id="world-heading">It fell from the sky.</h2>
     <p>
-      Replacement downloads are not published yet. Classic and replacement
-      packages will remain clearly distinguished, with immutable checksums and
-      compatibility details, before links appear here.
+      In Morliana’s oldest telling, a blue crystal fell onto a frozen island.
+      Its strange warmth drew explorers, miners, and eventually a village.
+      Atrinik is full of stories like that: discoveries that become homes, and
+      old mysteries that pull new adventurers onward.
     </p>
+    <a class="link-arrow" href="/about/">
+      Discover the world and the project <span aria-hidden="true">→</span>
+    </a>
+  </section>
+
+  <section class="section" id="paths" aria-labelledby="paths-heading">
+    <div class="section-heading section-heading--split">
+      <div>
+        <p class="eyebrow">One world, two paths</p>
+        <h2 id="paths-heading">Choose where you enter.</h2>
+      </div>
+      <p>
+        Classic keeps the world playable today. The next-generation effort is
+        building a clean-room foundation for tomorrow. They are distinct
+        implementations with clear licenses and compatibility boundaries.
+      </p>
+    </div>
+    <div class="path-grid">
+      <article class="path-card path-card--classic">
+        <div class="path-card-topline">
+          <span class="path-number">Path I</span>
+          <span class="status-tag status-tag--live">Playable</span>
+        </div>
+        <h3>Atrinik Classic</h3>
+        <p>
+          The maintained GPL-licensed game: a unified C17 client and server,
+          paired with the preserved <code>1.x</code> content line.
+        </p>
+        <ul class="path-details">
+          <li>Current playable implementation</li>
+          <li>Preserved history and world</li>
+          <li>Critical maintenance and releases</li>
+        </ul>
+        <div class="card-actions">
+          <a class="button button--light" href="/downloads/">
+            Find Classic <span aria-hidden="true">→</span>
+          </a>
+          <a class="text-link" href="https://github.com/atrinik/classic">
+            Browse source <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </article>
+      <article class="path-card path-card--future">
+        <div class="path-card-topline">
+          <span class="path-number">Path II</span>
+          <span class="status-tag">In development</span>
+        </div>
+        <h3>Next generation</h3>
+        <p>
+          A fresh MIT engine stack: a Go server, Rust client and editor, shared
+          renderer, new protocol, and content toolkit.
+        </p>
+        <ul class="path-details">
+          <li>Clean-room implementation</li>
+          <li>Independent, testable components</li>
+          <li>Not yet available as a complete game</li>
+        </ul>
+        <div class="card-actions">
+          <a
+            class="button button--light"
+            href="https://github.com/atrinik/atrinik/issues/168"
+          >
+            Read the roadmap <span aria-hidden="true">↗</span>
+          </a>
+          <a class="text-link" href="https://github.com/atrinik/client">
+            Explore the new client <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section
+    class="section section--wide chronicle"
+    aria-labelledby="chronicle-heading"
+  >
+    <div class="section-heading section-heading--center">
+      <p class="eyebrow">The project chronicle</p>
+      <h2 id="chronicle-heading">Then. Now. Beyond.</h2>
+      <p>
+        Three concept-art chapters for a project carrying its history forward
+        without pretending the future has already arrived.
+      </p>
+    </div>
+    <div class="chronicle-grid">
+      {
+        chronicle.map(({ media: image, number, title, text }) => (
+          <article class="chronicle-card">
+            <figure>
+              <img
+                src={image.publicPath}
+                width="1120"
+                height="630"
+                alt={image.alt}
+                loading="lazy"
+                decoding="async"
+              />
+            </figure>
+            <div class="chronicle-copy">
+              <span>{number}</span>
+              <div>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </div>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="section project-section" aria-labelledby="project-heading">
+    <div class="project-callout">
+      <div>
+        <p class="eyebrow">Built in the open</p>
+        <h2 id="project-heading">The world is open. So is the work.</h2>
+      </div>
+      <div>
+        <p>
+          Atrinik is developed in public across focused repositories. Follow the
+          roadmap, inspect the foundations, report an issue, or help shape the
+          path ahead.
+        </p>
+        <a
+          class="button button--primary"
+          href="https://github.com/atrinik/atrinik"
+        >
+          Enter the project <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </div>
+    <nav class="project-links" aria-label="Atrinik source repositories">
+      <a href="https://github.com/atrinik/classic">
+        <span>Preserved game</span><strong>Classic</strong><i aria-hidden="true"
+          >↗</i
+        >
+      </a>
+      <a href="https://github.com/atrinik/content">
+        <span>Authored world</span><strong>Content</strong><i aria-hidden="true"
+          >↗</i
+        >
+      </a>
+      <a href="https://github.com/atrinik/server">
+        <span>Next generation</span><strong>Server</strong><i aria-hidden="true"
+          >↗</i
+        >
+      </a>
+      <a href="https://github.com/atrinik/renderer">
+        <span>Shared foundation</span><strong>Renderer</strong><i
+          aria-hidden="true">↗</i
+        >
+      </a>
+    </nav>
   </section>
 </Base>

@@ -4,10 +4,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import {
+  limits,
   validateDist,
   validateDownload,
   validateMedia,
 } from "./site-contract.mjs";
+
+const accessibleShell =
+  '<!doctype html><html lang="en"><head><title>Title</title><meta name="description" content="Description"><link rel="canonical" href="https://atrinik.org/"></head><body><a href="#content">Skip</a><nav aria-label="Primary navigation"></nav><main id="content"><h1>Title</h1></main></body></html>';
 
 const validDownload = {
   component: "client",
@@ -63,14 +67,12 @@ test("static output rejects scripts, broken links, and excessive files", async (
   const root = await mkdtemp(join(tmpdir(), "atrinik-website-test-"));
   context.after(async () => rm(root, { recursive: true }));
   await mkdir(join(root, "about"));
-  const shell =
-    '<!doctype html><html lang="en"><head><title>Title</title><meta name="description" content="Description"><link rel="canonical" href="https://atrinik.org/"></head><body><a href="#content">Skip</a><nav aria-label="Primary navigation"></nav><main id="content"><h1>Title</h1></main></body></html>';
-  await writeFile(join(root, "index.html"), shell);
-  await writeFile(join(root, "about/index.html"), shell);
+  await writeFile(join(root, "index.html"), accessibleShell);
+  await writeFile(join(root, "about/index.html"), accessibleShell);
   assert.equal((await validateDist(root)).javascript, 0);
   await writeFile(
     join(root, "index.html"),
-    shell.replace(
+    accessibleShell.replace(
       "</main>",
       '<a href="https://tracker.example/">bad</a></main>',
     ),
@@ -78,10 +80,28 @@ test("static output rejects scripts, broken links, and excessive files", async (
   await assert.rejects(validateDist(root), /external link origin/u);
   await writeFile(
     join(root, "index.html"),
-    shell.replace("</main>", "<h1>Duplicate</h1></main>"),
+    accessibleShell.replace("</main>", "<h1>Duplicate</h1></main>"),
   );
   await assert.rejects(validateDist(root), /exactly one h1/u);
-  await writeFile(join(root, "index.html"), shell);
+  await writeFile(join(root, "index.html"), accessibleShell);
   await writeFile(join(root, "bad.js"), "alert(1)");
+  await assert.rejects(validateDist(root), /performance budget/u);
+});
+
+test("static output counts and bounds raster image bytes", async (context) => {
+  const root = await mkdtemp(join(tmpdir(), "atrinik-website-images-test-"));
+  context.after(async () => rm(root, { recursive: true }));
+  await writeFile(join(root, "index.html"), accessibleShell);
+
+  const extensions = ["webp", "avif", "png", "jpg", "jpeg"];
+  for (const extension of extensions)
+    await writeFile(join(root, `image.${extension}`), Buffer.alloc(1));
+
+  const boundedWebpBytes = limits.imageBytes - extensions.length + 1;
+  await writeFile(join(root, "image.webp"), Buffer.alloc(boundedWebpBytes));
+  const result = await validateDist(root);
+  assert.equal(result.images, limits.imageBytes);
+
+  await writeFile(join(root, "image.webp"), Buffer.alloc(boundedWebpBytes + 1));
   await assert.rejects(validateDist(root), /performance budget/u);
 });
