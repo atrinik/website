@@ -1,13 +1,24 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdtemp, mkdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import {
+  limits,
+  digest,
+  gitBlobObjectId,
+  readWebpDimensions,
   validateDist,
   validateDownload,
+  validateLocalMediaSource,
   validateMedia,
+  validatePresentationCss,
+  validateRedirects,
 } from "./site-contract.mjs";
+
+const accessibleShell =
+  '<!doctype html><html lang="en"><head><title>Title</title><meta name="description" content="Description"><link rel="canonical" href="https://atrinik.org/"><meta property="og:title" content="Title"><meta property="og:description" content="Description"><meta property="og:image" content="https://atrinik.org/media/social.00000000.webp"><meta name="twitter:card" content="summary_large_image"></head><body><a href="#content">Skip</a><nav aria-label="Primary navigation"></nav><main id="content"><h1>Title</h1></main></body></html>';
 
 const validDownload = {
   component: "client",
@@ -24,6 +35,59 @@ const validDownload = {
   compatibility: "Game Protocol 1",
 };
 
+const validMedia = {
+  id: "licensed-image",
+  publicPath: "/media/licensed.44444444.webp",
+  sourceRepository: "atrinik/website",
+  sourcePath: "paintings/licensed.png",
+  sourceRevision: "2".repeat(40),
+  sourceSha256: "3".repeat(64),
+  publishedSha256: "4".repeat(64),
+  width: 640,
+  height: 480,
+  author: "Example Author",
+  license: "CC-BY-4.0",
+  transformations: ["lossless metadata removal"],
+  alt: "A described fixture",
+  notice: "Copyright Example Author",
+};
+
+function riffWebp(chunk, payload, totalBytes) {
+  const minimumBytes = 20 + payload.length + (payload.length % 2);
+  const length = totalBytes ?? minimumBytes;
+  if (length < minimumBytes) throw new Error("WebP fixture is too small");
+  const content = Buffer.alloc(length);
+  content.write("RIFF", 0, "ascii");
+  content.writeUInt32LE(length - 8, 4);
+  content.write("WEBP", 8, "ascii");
+  content.write(chunk, 12, "ascii");
+  content.writeUInt32LE(payload.length, 16);
+  payload.copy(content, 20);
+  return content;
+}
+
+function vp8xFixture(width, height, totalBytes) {
+  const payload = Buffer.alloc(10);
+  payload.writeUIntLE(width - 1, 4, 3);
+  payload.writeUIntLE(height - 1, 7, 3);
+  return riffWebp("VP8X", payload, totalBytes);
+}
+
+function vp8lFixture(width, height) {
+  const payload = Buffer.alloc(5);
+  payload[0] = 0x2f;
+  payload.writeUInt32LE(((width - 1) | ((height - 1) << 14)) >>> 0, 1);
+  return riffWebp("VP8L", payload);
+}
+
+function vp8Fixture(width, height) {
+  const payload = Buffer.alloc(10);
+  payload.set([0x9d, 0x01, 0x2a], 3);
+  payload.writeUInt16LE(width, 6);
+  payload.writeUInt16LE(height, 8);
+  return riffWebp("VP8 ", payload);
+}
+
 test("download coordinates are closed and immutable", () => {
   assert.doesNotThrow(() => validateDownload(validDownload));
   assert.throws(
@@ -38,24 +102,296 @@ test("download coordinates are closed and immutable", () => {
 });
 
 test("media records require complete provenance and safe paths", () => {
-  const valid = {
-    id: "licensed-image",
-    publicPath: "/media/licensed.png",
-    sourceRepository: "atrinik/resources",
-    sourcePath: "paintings/licensed.png",
-    sourceRevision: "2".repeat(40),
-    sourceSha256: "3".repeat(64),
-    publishedSha256: "4".repeat(64),
-    author: "Example Author",
-    license: "CC-BY-4.0",
-    transformations: ["lossless metadata removal"],
-    alt: "A described fixture",
-    notice: "Copyright Example Author",
-  };
-  assert.doesNotThrow(() => validateMedia(valid));
+  assert.doesNotThrow(() => validateMedia(validMedia));
   assert.throws(
-    () => validateMedia({ ...valid, publicPath: "/media/../escape.png" }),
-    /unsafe/u,
+    () => validateMedia({ ...validMedia, sourcePath: "../escape.png" }),
+    /unsafe media source/u,
+  );
+  assert.throws(
+    () =>
+      validateMedia({
+        ...validMedia,
+        sourceRepository: "atrinik/resources",
+      }),
+    /unsafe media source/u,
+  );
+  assert.throws(
+    () =>
+      validateMedia({
+        ...validMedia,
+        publicPath: "/media/licensed.00000000.webp",
+      }),
+    /published digest/u,
+  );
+  assert.throws(
+    () => validateMedia({ ...validMedia, alt: "   " }),
+    /media alt/u,
+  );
+  assert.throws(
+    () => validateMedia({ ...validMedia, license: "Made-up-license" }),
+    /media license/u,
+  );
+  assert.throws(
+    () => validateMedia({ ...validMedia, transformations: [] }),
+    /transformations/u,
+  );
+});
+
+test("same-repository media binds source bytes and Git blob object", async (context) => {
+  const root = await mkdtemp(join(tmpdir(), "atrinik-website-source-test-"));
+  context.after(async () => rm(root, { recursive: true }));
+  const sourcePath = join(root, "artwork/originals/licensed.png");
+  await mkdir(join(root, "artwork/originals"), { recursive: true });
+  const content = Buffer.from("licensed source fixture");
+  await writeFile(sourcePath, content);
+  const record = {
+    ...validMedia,
+    sourcePath: "artwork/originals/licensed.png",
+    sourceRevision: gitBlobObjectId(content),
+    sourceSha256: await digest(sourcePath),
+  };
+  await assert.doesNotReject(validateLocalMediaSource(root, record));
+  await assert.rejects(
+    validateLocalMediaSource(root, {
+      ...record,
+      sourceSha256: "0".repeat(64),
+    }),
+    /source digest/u,
+  );
+  await assert.rejects(
+    validateLocalMediaSource(root, {
+      ...record,
+      sourceRevision: "0".repeat(40),
+    }),
+    /source object/u,
+  );
+  await assert.rejects(
+    validateLocalMediaSource(root, {
+      ...record,
+      sourcePath: "../licensed.png",
+    }),
+    /unsafe media source/u,
+  );
+});
+
+test("source validation rejects an intermediate symlink", async (context) => {
+  const root = await mkdtemp(join(tmpdir(), "atrinik-website-link-test-"));
+  const outside = await mkdtemp(
+    join(tmpdir(), "atrinik-website-outside-test-"),
+  );
+  context.after(async () => {
+    await rm(root, { recursive: true });
+    await rm(outside, { recursive: true });
+  });
+  const content = Buffer.from("outside source fixture");
+  await writeFile(join(outside, "licensed.png"), content);
+  try {
+    await symlink(
+      outside,
+      join(root, "linked"),
+      process.platform === "win32" ? "junction" : "dir",
+    );
+  } catch (error) {
+    if (new Set(["EACCES", "ENOSYS", "EPERM"]).has(error.code)) {
+      context.skip(`symlink creation is unavailable: ${error.code}`);
+      return;
+    }
+    throw error;
+  }
+  await assert.rejects(
+    validateLocalMediaSource(root, {
+      ...validMedia,
+      sourcePath: "linked/licensed.png",
+      sourceRevision: gitBlobObjectId(content),
+      sourceSha256: createHash("sha256").update(content).digest("hex"),
+    }),
+    /symbolic link|escaped repository/u,
+  );
+});
+
+test("source validation rejects a final file symlink", async (context) => {
+  const root = await mkdtemp(join(tmpdir(), "atrinik-website-file-link-test-"));
+  const outside = await mkdtemp(
+    join(tmpdir(), "atrinik-website-file-target-test-"),
+  );
+  context.after(async () => {
+    await rm(root, { recursive: true });
+    await rm(outside, { recursive: true });
+  });
+  const content = Buffer.from("outside file fixture");
+  const outsideFile = join(outside, "licensed.png");
+  await writeFile(outsideFile, content);
+  try {
+    await symlink(outsideFile, join(root, "linked.png"), "file");
+  } catch (error) {
+    if (new Set(["EACCES", "ENOSYS", "EPERM"]).has(error.code)) {
+      context.skip(`file symlink creation is unavailable: ${error.code}`);
+      return;
+    }
+    throw error;
+  }
+  await assert.rejects(
+    validateLocalMediaSource(root, {
+      ...validMedia,
+      sourcePath: "linked.png",
+      sourceRevision: gitBlobObjectId(content),
+      sourceSha256: createHash("sha256").update(content).digest("hex"),
+    }),
+    /symbolic link/u,
+  );
+});
+
+test("WebP dimensions are read from each supported bitstream header", () => {
+  for (const content of [
+    vp8Fixture(640, 480),
+    vp8lFixture(640, 480),
+    vp8xFixture(640, 480),
+  ])
+    assert.deepEqual(readWebpDimensions(content), {
+      width: 640,
+      height: 480,
+    });
+  assert.throws(() => readWebpDimensions(Buffer.alloc(30)), /WebP/u);
+});
+
+test("presentation CSS preserves image geometry and avoids costly paint effects", () => {
+  assert.doesNotThrow(() =>
+    validatePresentationCss("img{display:block;height:auto;max-width:100%}"),
+  );
+  assert.throws(
+    () =>
+      validatePresentationCss(
+        "img{max-width:100%}.chronicle-card img{width:100%;object-fit:cover}",
+      ),
+    /height: auto/u,
+  );
+  assert.throws(
+    () =>
+      validatePresentationCss(
+        "img{height:auto}.chronicle-card img{object-fit:cover}",
+      ),
+    /cropping/u,
+  );
+  assert.throws(
+    () =>
+      validatePresentationCss(
+        "img{height:auto}.site-header{backdrop-filter:blur(1rem)}",
+      ),
+    /paint effect/u,
+  );
+  assert.throws(
+    () =>
+      validatePresentationCss(
+        "img{height:auto}.hero-art:before{filter:blur(5rem)}",
+      ),
+    /paint effect/u,
+  );
+  assert.throws(
+    () =>
+      validatePresentationCss(
+        "img{height:auto}body::before{position:fixed;inset:0;background:red}",
+      ),
+    /fixed viewport/u,
+  );
+  assert.throws(
+    () =>
+      validatePresentationCss(
+        "img{height:auto}body::before{position:fixed;inset:0px}",
+      ),
+    /fixed viewport/u,
+  );
+  assert.throws(
+    () =>
+      validatePresentationCss(
+        "img{height:auto}body:before{top:0;position:fixed;left:0}",
+      ),
+    /fixed viewport/u,
+  );
+});
+
+test("established redirects are explicit and complete", () => {
+  const valid = [
+    "/page/installing_atrinik_client* /downloads/ 301",
+    "/page/how_to_play* /downloads/ 301",
+    "/page/starter_guide* /downloads/ 301",
+    "/page/player_guide* /downloads/ 301",
+    "/page/servers_list* /downloads/ 301",
+    "/page/development_join* /about/ 301",
+    "/page/development* /about/ 301",
+    "/page/team* /about/ 301",
+  ].join("\n");
+  assert.doesNotThrow(() => validateRedirects(valid));
+  assert.throws(
+    () => validateRedirects(valid.replace("/page/team*", "/*")),
+    /established redirect/u,
+  );
+  assert.throws(
+    () => validateRedirects(valid.split("\n").slice(1).join("\n")),
+    /incomplete/u,
+  );
+});
+
+test("static output requires intrinsic image dimensions", async (context) => {
+  const root = await mkdtemp(
+    join(tmpdir(), "atrinik-website-image-layout-test-"),
+  );
+  context.after(async () => rm(root, { recursive: true }));
+  await writeFile(
+    join(root, "index.html"),
+    accessibleShell.replace(
+      "</main>",
+      '<img src="/poster.webp" width="1120" height="630" alt="Poster"></main>',
+    ),
+  );
+  await writeFile(join(root, "style.css"), "img{height:auto;max-width:100%}");
+  const poster = vp8xFixture(1120, 630);
+  await writeFile(join(root, "poster.webp"), poster);
+  const options = {
+    allowedMedia: new Map([
+      ["/poster.webp", { alt: "Poster", width: 1120, height: 630 }],
+    ]),
+  };
+  assert.equal((await validateDist(root, options)).images, poster.length);
+
+  await writeFile(
+    join(root, "index.html"),
+    accessibleShell.replace(
+      "</main>",
+      '<img src="/poster.webp" width="1120" alt="Poster"></main>',
+    ),
+  );
+  await assert.rejects(validateDist(root, options), /intrinsic dimensions/u);
+
+  await writeFile(
+    join(root, "index.html"),
+    accessibleShell.replace(
+      "</main>",
+      '<img src="/poster.webp" width="1120" height="630" alt="Wrong"></main>',
+    ),
+  );
+  await assert.rejects(validateDist(root, options), /media record/u);
+
+  await writeFile(
+    join(root, "index.html"),
+    accessibleShell.replace(
+      "</main>",
+      '<img src="/poster.webp" width="1120" height="630" alt="Poster"></main>',
+    ),
+  );
+  await writeFile(join(root, "poster.webp"), vp8xFixture(1119, 630));
+  await assert.rejects(
+    validateDist(root, options),
+    /published media dimensions/u,
+  );
+  await writeFile(join(root, "poster.webp"), poster);
+  await assert.rejects(
+    validateDist(root, {
+      allowedMedia: new Map([
+        ...options.allowedMedia,
+        ["/missing.webp", { alt: "Missing", width: 1, height: 1 }],
+      ]),
+    }),
+    /proven media records/u,
   );
 });
 
@@ -63,14 +399,12 @@ test("static output rejects scripts, broken links, and excessive files", async (
   const root = await mkdtemp(join(tmpdir(), "atrinik-website-test-"));
   context.after(async () => rm(root, { recursive: true }));
   await mkdir(join(root, "about"));
-  const shell =
-    '<!doctype html><html lang="en"><head><title>Title</title><meta name="description" content="Description"><link rel="canonical" href="https://atrinik.org/"></head><body><a href="#content">Skip</a><nav aria-label="Primary navigation"></nav><main id="content"><h1>Title</h1></main></body></html>';
-  await writeFile(join(root, "index.html"), shell);
-  await writeFile(join(root, "about/index.html"), shell);
+  await writeFile(join(root, "index.html"), accessibleShell);
+  await writeFile(join(root, "about/index.html"), accessibleShell);
   assert.equal((await validateDist(root)).javascript, 0);
   await writeFile(
     join(root, "index.html"),
-    shell.replace(
+    accessibleShell.replace(
       "</main>",
       '<a href="https://tracker.example/">bad</a></main>',
     ),
@@ -78,10 +412,38 @@ test("static output rejects scripts, broken links, and excessive files", async (
   await assert.rejects(validateDist(root), /external link origin/u);
   await writeFile(
     join(root, "index.html"),
-    shell.replace("</main>", "<h1>Duplicate</h1></main>"),
+    accessibleShell.replace("</main>", "<h1>Duplicate</h1></main>"),
   );
   await assert.rejects(validateDist(root), /exactly one h1/u);
-  await writeFile(join(root, "index.html"), shell);
+  await writeFile(join(root, "index.html"), accessibleShell);
   await writeFile(join(root, "bad.js"), "alert(1)");
   await assert.rejects(validateDist(root), /performance budget/u);
+});
+
+test("static output counts and bounds raster image bytes", async (context) => {
+  const root = await mkdtemp(join(tmpdir(), "atrinik-website-images-test-"));
+  context.after(async () => rm(root, { recursive: true }));
+  await writeFile(join(root, "index.html"), accessibleShell);
+
+  for (const extension of ["webp", "avif", "png", "jpg", "jpeg"]) {
+    const path = join(root, `unproven.${extension}`);
+    await writeFile(path, Buffer.alloc(limits.imageBytes));
+    await assert.rejects(validateDist(root), /proven media records/u);
+    await writeFile(path, Buffer.alloc(limits.imageBytes + 1));
+    await assert.rejects(validateDist(root), /performance budget/u);
+    await rm(path);
+  }
+
+  const path = join(root, "image.webp");
+  await writeFile(path, vp8xFixture(1, 1, limits.imageBytes));
+  const options = {
+    allowedMedia: new Map([
+      ["/image.webp", { alt: "Budget fixture", width: 1, height: 1 }],
+    ]),
+  };
+  const result = await validateDist(root, options);
+  assert.equal(result.images, limits.imageBytes);
+
+  await writeFile(path, vp8xFixture(1, 1, limits.imageBytes + 1));
+  await assert.rejects(validateDist(root, options), /performance budget/u);
 });

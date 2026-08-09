@@ -29,8 +29,10 @@
   metadata makes a download unavailable.
 - Keep classic GPL and replacement MIT packages clearly distinct. The site MIT
   license never covers downloaded binaries or mixed authored media/content.
-  Media derivatives require source/revision/digest, author, license,
-  transformation, attribution, and accessible alternative text/role.
+  Media derivatives require a locally retained source bound to its repository
+  path, immutable Git blob object ID and digest, published digest and binary
+  dimensions, author, license, transformation, attribution, and accessible
+  alternative text/role. Validation rejects unproven or uncatalogued media.
 - Historical reuse follows local `PROVENANCE.md` and canonical
   `atrinik/atrinik/docs/PROVENANCE.md`, failing closed on incomplete/mixed
   evidence. Do not republish archived personal data without a separate privacy

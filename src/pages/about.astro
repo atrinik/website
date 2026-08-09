@@ -2,21 +2,140 @@
 import Base from "../layouts/Base.astro";
 ---
 
-<Base title="About">
-  <h1>About Atrinik</h1>
-  <p class="lede">
-    Atrinik is developed in public as a collection of independently released
-    components.
-  </p>
-  <h2>Clean-room renewal</h2>
-  <p>
-    Fresh MIT-licensed engine code is implemented independently. Classic
-    software remains GPL licensed, and maps, graphics, sound, and other authored
-    data retain their individual terms and attribution.
-  </p>
-  <p>
-    <a href="https://github.com/atrinik/atrinik/issues/168"
-      >Read the replacement roadmap on GitHub</a
-    >.
-  </p>
+<Base
+  title="About"
+  description="Atrinik is one open-source fantasy world with a playable classic line and a clean-room next-generation implementation in development."
+>
+  <header class="page-hero">
+    <p class="eyebrow">About Atrinik</p>
+    <h1 class="page-title">One world. Two implementations.</h1>
+    <p class="page-lede">
+      Atrinik is an open-source cooperative role-playing world. Its maintained
+      classic game can be played today while a new engine and toolchain are
+      being built in public.
+    </p>
+  </header>
+
+  <section class="section" aria-labelledby="two-paths-heading">
+    <div class="section-heading">
+      <p class="eyebrow">Two paths through the same world</p>
+      <h2 id="two-paths-heading">Playable history and a clean-room future</h2>
+      <p>
+        The two lines share a project and a setting, but they are separate
+        implementations with different licenses and release readiness.
+      </p>
+    </div>
+
+    <div class="split-grid">
+      <article class="path-card path-card--classic">
+        <div class="path-card-topline">
+          <span class="path-number">Path I</span>
+          <span class="status-tag status-tag--live"
+            >Playable and maintained</span
+          >
+        </div>
+        <h3>Classic</h3>
+        <p>
+          The current playable line preserves Atrinik’s established client,
+          server, editor, and supporting libraries. Its software is maintained
+          under GPL-2.0-or-later.
+        </p>
+        <ul class="path-details">
+          <li>Current playable implementation</li>
+          <li>Maintained as one classic project</li>
+          <li>GPL-2.0-or-later software</li>
+        </ul>
+        <div class="card-actions">
+          <a class="link-arrow" href="https://github.com/atrinik/classic">
+            Explore Atrinik Classic on GitHub <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </article>
+
+      <article class="path-card path-card--future">
+        <div class="path-card-topline">
+          <span class="path-number">Path II</span>
+          <span class="status-tag">In development</span>
+        </div>
+        <h3>Next generation</h3>
+        <p>
+          The replacement is a clean-room, MIT-licensed Go and Rust stack. It is
+          being developed in public, but it is not yet downloadable or a
+          replacement for the playable classic line.
+        </p>
+        <ul class="path-details">
+          <li>Clean-room Go and Rust implementation</li>
+          <li>MIT-licensed software</li>
+          <li>Not yet available as a complete game</li>
+        </ul>
+        <div class="card-actions">
+          <a
+            class="link-arrow"
+            href="https://github.com/atrinik/atrinik/issues/168"
+          >
+            Follow the replacement roadmap <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="open-development-heading">
+    <div class="section-heading">
+      <p class="eyebrow">Made in the open</p>
+      <h2 id="open-development-heading">A world cared for in public</h2>
+    </div>
+
+    <div class="detail-grid">
+      <article class="detail-card">
+        <h3>Open development</h3>
+        <p>
+          Plans, source, issues, and releases live in the Atrinik repositories.
+          Progress is described by completed work and published releases, not
+          invented launch dates.
+        </p>
+      </article>
+
+      <article class="detail-card">
+        <h3>Authored world</h3>
+        <p>
+          Maps, archetypes, stories, graphics, audio, and other authored content
+          have mixed terms. Their licenses and attribution are handled per file
+          or collection rather than inherited from either engine.
+        </p>
+      </article>
+
+      <article class="detail-card">
+        <h3>Independent parts</h3>
+        <p>
+          Atrinik is developed as independently released components. Each
+          repository owns its code, license, release information, and technical
+          documentation.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="follow-heading">
+    <aside class="callout">
+      <div>
+        <p class="eyebrow">Follow the journey</p>
+        <h2 id="follow-heading">See what is happening now</h2>
+        <p>
+          Visit the project repositories for current plans, source, and ways to
+          contribute.
+        </p>
+      </div>
+      <div class="card-actions">
+        <a
+          class="button button--primary"
+          href="https://github.com/atrinik/atrinik/issues/168"
+          >Read the roadmap</a
+        >
+        <a class="button button--ghost" href="https://github.com/atrinik/"
+          >Browse Atrinik on GitHub</a
+        >
+      </div>
+    </aside>
+  </section>
 </Base>
