@@ -185,6 +185,11 @@ code {
   text-decoration: none;
 }
 
+.site-header .brand {
+  grid-column: 1;
+  grid-row: 1;
+}
+
 .brand:hover {
   color: var(--gold-light);
 }
@@ -239,6 +244,8 @@ code {
 
 .site-header nav {
   display: flex;
+  grid-column: 2;
+  grid-row: 1;
   align-items: center;
   gap: 0.25rem;
 }
@@ -266,6 +273,8 @@ code {
 .header-link {
   display: inline-flex;
   justify-self: end;
+  grid-column: 3;
+  grid-row: 1;
   align-items: center;
   gap: 0.45rem;
   color: var(--gold-light);
@@ -1132,16 +1141,23 @@ main > .callout {
   }
 
   .site-header nav {
-    grid-column: 1 / -1;
+    grid-column: 1;
     grid-row: 2;
-    justify-content: center;
+    justify-content: flex-start;
     padding-bottom: 0.65rem;
-    border-top: 1px solid var(--line);
+  }
+
+  .site-header .brand {
+    grid-column: 1 / -1;
   }
 
   .header-link {
     grid-column: 2;
-    grid-row: 1;
+    grid-row: 2;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding-inline: 0.55rem;
   }
 
   .home-hero {
@@ -1207,6 +1223,19 @@ main > .callout {
 }
 
 @media (max-width: 34rem) {
+  .header-inner {
+    width: min(100% - 1.25rem, var(--wide));
+    column-gap: 0.5rem;
+  }
+
+  .site-header nav {
+    gap: 0.15rem;
+  }
+
+  .site-header nav a {
+    padding-inline: 0.55rem;
+  }
+
   .brand-name {
     font-size: 1.4rem;
   }

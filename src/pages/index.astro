@@ -71,8 +71,8 @@ const chronicle = [
       <div class="hero-art-frame">
         <img
           src={crystal.publicPath}
-          width="860"
-          height="1290"
+          width={crystal.width}
+          height={crystal.height}
           alt={crystal.alt}
           decoding="async"
           fetchpriority="high"
@@ -90,10 +90,11 @@ const chronicle = [
     <p class="eyebrow">From the lore</p>
     <h2 id="world-heading">It fell from the sky.</h2>
     <p>
-      In Morliana’s oldest telling, a blue crystal fell onto a frozen island.
-      Its strange warmth drew explorers, miners, and eventually a village.
-      Atrinik is full of stories like that: discoveries that become homes, and
-      old mysteries that pull new adventurers onward.
+      In Morliana’s founding story, a blue crystal fell onto a frozen island. An
+      expedition found it glowing with warmth amid crystals and gems, and the
+      riches they gathered funded a village. Atrinik is full of stories like
+      that: discoveries that become homes, and old mysteries that pull new
+      adventurers onward.
     </p>
     <a class="link-arrow" href="/about/">
       Discover the world and the project <span aria-hidden="true">→</span>
@@ -186,8 +187,8 @@ const chronicle = [
             <figure>
               <img
                 src={image.publicPath}
-                width="1120"
-                height="630"
+                width={image.width}
+                height={image.height}
                 alt={image.alt}
                 loading="lazy"
                 decoding="async"

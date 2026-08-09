@@ -11,8 +11,10 @@ architecture, artifact filename/size/SHA-256, exact release URL, license, and
 compatibility. Missing or contradictory records render as unavailable.
 
 Media stays absent until a record binds both source and published digests,
-repository/path/revision, author, exact license, transformations, alt text,
-and notice. The website never imports an asset tree by implication.
+repository/path, a durable Git blob object ID, published dimensions, author,
+exact license, transformations, alt text, and notice. Same-repository sources
+are digest-checked from a traversal-safe path. The website never imports an
+asset tree by implication.
 
 The executable validator intentionally mirrors only the closed required-field
 sets and bounds from the two JSON Schemas so the build does not acquire a

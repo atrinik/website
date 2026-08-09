@@ -1,5 +1,6 @@
 ---
 import site from "../data/site.json";
+import media from "../data/media.json";
 import "../styles/global.css";
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
   description?: string;
   canonicalPath?: string;
   preloadImage?: string;
+  noindex?: boolean;
 }
 
 const title = Astro.props.title
@@ -18,6 +20,9 @@ const canonical = new URL(
   site.canonicalOrigin,
 );
 const currentPath = Astro.url.pathname;
+const socialImage = media.entries.find((entry) => entry.id === "atrinik-now");
+if (!socialImage) throw new Error("missing social media record: atrinik-now");
+const socialImageUrl = new URL(socialImage.publicPath, site.canonicalOrigin);
 const navigation = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about/" },
@@ -33,9 +38,28 @@ const isCurrent = (href: string) =>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
+    {
+      Astro.props.noindex ? (
+        <meta name="robots" content="noindex, nofollow" />
+      ) : null
+    }
     <meta name="color-scheme" content="dark" />
     <meta name="theme-color" content="#07111d" />
     <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.title} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={socialImageUrl} />
+    <meta property="og:image:alt" content={socialImage.alt} />
+    <meta property="og:image:width" content={String(socialImage.width)} />
+    <meta property="og:image:height" content={String(socialImage.height)} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImageUrl} />
+    <meta name="twitter:image:alt" content={socialImage.alt} />
     {
       Astro.props.preloadImage ? (
         <link

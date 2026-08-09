@@ -12,8 +12,8 @@ licenses remain visibly distinct on every relevant page.
 
 Original website concept artwork is retained under `artwork/originals/` as
 provenance evidence. Content-addressed, optimized derivatives are published
-from `public/media/`; their exact source revisions, digests, transformations,
-licenses, notices, and alternative text are recorded in
+from `public/media/`; their exact source Git blob object IDs, digests,
+dimensions, transformations, licenses, notices, and alternative text are recorded in
 `src/data/media.json`.
 
 ## Development
