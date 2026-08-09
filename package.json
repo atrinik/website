@@ -20,6 +20,8 @@
     "check": "npm run format:check && npm run typecheck && npm test && npm run validate:source",
     "build": "node tools/astro.mjs build && npm run validate:dist",
     "deploy:dry-run": "npm run build && node tools/deployment-dry-run.mjs",
+    "deploy:test": "node tools/deploy-preview.mjs",
+    "undeploy:test": "node tools/deploy-preview.mjs --remove",
     "release:dry-run": "npm run deploy:dry-run && node tools/package-release.mjs --dry-run"
   },
   "devDependencies": {
@@ -33,10 +35,17 @@
     "prettier": "3.9.6",
     "prettier-plugin-astro": "0.14.1",
     "semantic-release": "25.0.9",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "wrangler": "4.120.0"
   },
   "allowScripts": {
     "esbuild@0.28.1": true,
-    "fsevents": false
+    "fsevents": false,
+    "workerd@1.20260801.1": true
+  },
+  "overrides": {
+    "@semantic-release/npm": {
+      "npm": "12.0.2"
+    }
   }
 }

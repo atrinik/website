@@ -20,6 +20,18 @@
   environments, domain/DNS/TLS, permissions, health, cache invalidation,
   rollback, and outage behavior. Keep metaserver/game hosts separate. Never
   deploy or change production DNS without explicit user authorization.
+- Keep one Pages project: only `main` serves `atrinik.org`, `www.atrinik.org`
+  permanently redirects to the apex, manual previews use
+  `<prefix>.testing.atrinik.org`, and eligible non-Dependabot same-repository
+  pull requests use `pr.<number>.testing.atrinik.org`. Preview hosts are public
+  and noindex.
+- The privileged `pull_request_target` preview workflow is a metadata-only
+  control plane. It runs trusted base code, never pull request code,
+  dependencies, caches, or artifacts, and never exposes its environment to
+  forks or Dependabot. Its custom environment deployment branch policy allows
+  only `main` with `protected_branches: false`. Every eligible pull request
+  close triggers ownership-checked hostname removal; retry a failed cleanup
+  job. Cloudflare may retain an opaque deployment after successful cleanup.
 
 ## Content, privacy, and security
 
@@ -40,6 +52,13 @@
 - Do not put secrets in source, static output, browser code, logs, fixtures,
   preview metadata, or `PUBLIC_` values. Protected environments use least
   privilege. Omit analytics/tracking/cookies/ads/third-party embeds by default.
+- Manual preview upload is only for a trusted maintainer-controlled worktree.
+  Run install, checks, deployment dry-run, and status inspection before loading
+  credentials; never use it to review untrusted pull request code. The upload
+  uses the repository-pinned Wrangler and one scoped environment token for both
+  upload and domain management. Keep the `cloudflare-preview-domains`
+  environment names, IDs, token mapping, and Account Pages Write / zone DNS Edit
+  boundary synchronized with the deployment contract and workflow.
 - Treat Markdown, metadata, URLs, SVG, and remote input as untrusted: validate
   schemas, allowlist destinations/protocols, escape output, prevent traversal
   and injection, and bound size, redirects, retries, and timeouts. Apply/test a

@@ -32,9 +32,22 @@ unproven media, mutable download coordinates, missing attribution or alt text,
 unsafe links, client JavaScript, broken internal links, and page-weight budget
 violations. Generated release evidence belongs under ignored `build/`.
 
-Cloudflare Pages uses Git integration with production branch `main`, build
-command `npm ci && npm run build`, and output directory `dist`. See
-[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for preview, permissions, domain,
-health, and rollback ownership.
+Cloudflare Pages uses one Git-integrated project. `main` serves the canonical
+`atrinik.org`; `www.atrinik.org` permanently redirects to it. Only from a
+trusted maintainer-controlled worktree, after running the credential-free gates
+above and exporting the scoped Cloudflare token, a maintainer can publish and
+remove a public noindex testing hostname with:
+
+```sh
+npm run deploy:test -- zoey
+npm run undeploy:test -- zoey
+```
+
+Never use the manual command from a worktree containing untrusted pull request
+code. Eligible same-repository pull requests receive
+`pr.<number>.testing.atrinik.org`; fork and Dependabot pull requests do not
+receive Cloudflare credentials or custom hostnames. See
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the exact preview, permission,
+DNS, health, cleanup, and rollback contract.
 
 The replacement roadmap is [atrinik/atrinik#168](https://github.com/atrinik/atrinik/issues/168).
