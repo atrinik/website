@@ -174,7 +174,6 @@ if (
   throw new Error("dependency override policy and package manifest differ");
 if (
   packageManifest.allowScripts["esbuild@0.28.1"] !== true ||
-  packageManifest.allowScripts["workerd@1.20260801.1"] !== true ||
   packageManifest.allowScripts.fsevents !== false
 )
   throw new Error("install-script allow/deny policy drifted");

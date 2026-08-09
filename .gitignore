@@ -84,7 +84,6 @@ dist
 .output
 /build/
 /.astro/
-.wrangler/
 
 # Gatsby files
 .cache/
