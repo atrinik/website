@@ -1170,6 +1170,11 @@ main > .callout {
     padding-bottom: 0;
   }
 
+  .hero-copy::before {
+    left: 0;
+    width: 100%;
+  }
+
   .hero-art {
     width: min(100%, 33rem);
     justify-self: center;

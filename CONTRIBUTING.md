@@ -24,25 +24,13 @@ git diff --check
 Review the built pages at narrow and desktop widths with keyboard-only input,
 reduced motion, no JavaScript, and representative screen-reader navigation.
 
-Maintainers may publish a public, search-excluded build only from a trusted,
-maintainer-controlled worktree. Complete the credential-free commands above,
-inspect `git status --short`, and only then export the scoped Cloudflare token:
+Cloudflare Pages automatically builds all non-production branches. A pull
+request from this repository receives a native `pages.dev` preview link from
+the Cloudflare GitHub integration; a fork pull request does not. Preview URLs
+are public and must never contain credentials or private material. Cloudflare
+adds `X-Robots-Tag: noindex` to preview responses, but immutable deployment URLs
+can remain reachable after the pull request closes.
 
-```sh
-npm run deploy:test -- zoey
-npm run undeploy:test -- zoey
-```
-
-Use a personal lowercase prefix and always remove its hostname after review.
-Never use the manual command to review an untrusted pull request worktree.
-Never commit Cloudflare credentials or place a token in a command argument,
-tracked `.env` file, build output, or pull request metadata.
-
-Eligible non-Dependabot pull requests whose head branch belongs to
-`atrinik/website` receive `pr.<number>.testing.atrinik.org`. The hostname is
-public and sends `X-Robots-Tag: noindex, nofollow`. Fork and Dependabot pull
-requests intentionally receive only the normal validation jobs: privileged
-preview automation never checks out or executes pull request code or artifacts,
-and neither class receives a Cloudflare token. Closing an eligible pull request
-triggers ownership-checked hostname removal; retry a failed cleanup job.
-Cloudflare may retain an opaque deployment internally after successful cleanup.
+There is no manual upload command or custom testing hostname. Push the reviewed
+branch and use the Cloudflare bot's pull-request link. Never add a Pages API
+token to this repository merely to publish or clean up a preview.

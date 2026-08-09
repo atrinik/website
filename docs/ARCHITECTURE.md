@@ -42,33 +42,17 @@ a release gate.
 One Git-integrated Cloudflare Pages project serves every environment. The
 `main` deployment owns canonical `atrinik.org`, and a Cloudflare permanent
 redirect maps `www.atrinik.org` to the apex without changing path or query.
-Manual direct uploads use isolated `manual-<prefix>` branches and
-`<prefix>.testing.atrinik.org`; eligible non-Dependabot same-repository pull
-requests use their Git preview deployment and
-`pr.<number>.testing.atrinik.org`. No preview hostname can select the production
-branch or domains. Manual upload is restricted to trusted maintainer-controlled
-worktrees after credential-free validation, never untrusted pull request code.
+Every non-production branch uses Cloudflare's native `pages.dev` preview; there
+are no custom preview domains or direct uploads.
 
-The public testing hosts deliberately render the production-canonical static
-documents. Absolute host patterns in `_headers` add
-`X-Robots-Tag: noindex, nofollow` only under `testing.atrinik.org`; production
-remains indexable. The validator binds those header patterns to the deployment
-contract so a broad noindex rule fails before upload.
+Cloudflare's GitHub integration builds same-repository pull requests and posts
+the preview link without a repository workflow or API credential. Each commit
+has an immutable provider URL, while the normalized branch alias follows the
+latest deployment for that branch. Fork pull requests do not receive a Pages
+preview. These provider URLs are public and Cloudflare adds
+`X-Robots-Tag: noindex`; an immutable deployment URL may remain reachable after
+the branch or pull request closes.
 
-The pull request workflow separates data from authority. Untrusted head ref and
-revision values are metadata used to find a successful Pages deployment. The
-privileged `pull_request_target` job checks out and executes only the trusted
-base/`main` revision, receives read-only GitHub permission, and never consumes
-head code, dependencies, caches, or artifacts. Its Cloudflare environment uses
-a custom deployment branch policy that allows only `main` with
-`protected_branches: false`; it can therefore create or remove the narrowly
-validated Pages domain and proxied DNS record without giving pull request
-content a credential path. Forks fail the repository-identity gate.
-Dependabot fails the separate actor-identity gate.
-
-Closing an eligible pull request triggers ownership-checked removal of its
-custom-domain association and managed DNS record; a failed cleanup remains
-visible and must be retried. Manual `undeploy:test` applies the same
-public-hostname cleanup to a personal prefix. Cloudflare may preserve the
-underlying immutable or branch deployment as opaque provider state; neither
-cleanup path treats that deployment as a durable, supported URL.
+Repository `_headers` therefore contains production-safe security and cache
+rules only. It must not add a global noindex response: Cloudflare owns the
+preview-only indexing header at the edge while production stays indexable.
