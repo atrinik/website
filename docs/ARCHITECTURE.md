@@ -36,3 +36,39 @@ validation covers language, landmarks, skip navigation, primary navigation
 labelling, one page heading, useful image alternatives, focus visibility,
 reflow, and reduced-motion policy; manual assistive-technology review remains
 a release gate.
+
+## Deployment topology
+
+One Git-integrated Cloudflare Pages project serves every environment. The
+`main` deployment owns canonical `atrinik.org`, and a Cloudflare permanent
+redirect maps `www.atrinik.org` to the apex without changing path or query.
+Manual direct uploads use isolated `manual-<prefix>` branches and
+`<prefix>.testing.atrinik.org`; eligible non-Dependabot same-repository pull
+requests use their Git preview deployment and
+`pr.<number>.testing.atrinik.org`. No preview hostname can select the production
+branch or domains. Manual upload is restricted to trusted maintainer-controlled
+worktrees after credential-free validation, never untrusted pull request code.
+
+The public testing hosts deliberately render the production-canonical static
+documents. Absolute host patterns in `_headers` add
+`X-Robots-Tag: noindex, nofollow` only under `testing.atrinik.org`; production
+remains indexable. The validator binds those header patterns to the deployment
+contract so a broad noindex rule fails before upload.
+
+The pull request workflow separates data from authority. Untrusted head ref and
+revision values are metadata used to find a successful Pages deployment. The
+privileged `pull_request_target` job checks out and executes only the trusted
+base/`main` revision, receives read-only GitHub permission, and never consumes
+head code, dependencies, caches, or artifacts. Its Cloudflare environment uses
+a custom deployment branch policy that allows only `main` with
+`protected_branches: false`; it can therefore create or remove the narrowly
+validated Pages domain and proxied DNS record without giving pull request
+content a credential path. Forks fail the repository-identity gate.
+Dependabot fails the separate actor-identity gate.
+
+Closing an eligible pull request triggers ownership-checked removal of its
+custom-domain association and managed DNS record; a failed cleanup remains
+visible and must be retried. Manual `undeploy:test` applies the same
+public-hostname cleanup to a personal prefix. Cloudflare may preserve the
+underlying immutable or branch deployment as opaque provider state; neither
+cleanup path treats that deployment as a durable, supported URL.

@@ -162,8 +162,19 @@ if (
   JSON.stringify(policyPins) !== JSON.stringify(packageManifest.devDependencies)
 )
   throw new Error("direct dependency policy and package pins differ");
+const policyOverrides = Object.fromEntries(
+  dependencyPolicy.dependencyOverrides.map(({ parent, name, version }) => [
+    parent,
+    { [name]: version },
+  ]),
+);
+if (
+  JSON.stringify(policyOverrides) !== JSON.stringify(packageManifest.overrides)
+)
+  throw new Error("dependency override policy and package manifest differ");
 if (
   packageManifest.allowScripts["esbuild@0.28.1"] !== true ||
+  packageManifest.allowScripts["workerd@1.20260801.1"] !== true ||
   packageManifest.allowScripts.fsevents !== false
 )
   throw new Error("install-script allow/deny policy drifted");
