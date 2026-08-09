@@ -1,20 +1,131 @@
 ---
 import Base from "../layouts/Base.astro";
-import downloads from "../data/downloads.json";
 ---
 
-<Base title="Downloads">
-  <h1>Downloads</h1>
-  {
-    downloads.entries.length === 0 ? (
-      <div class="panel" role="status">
-        <h2>No verified downloads yet</h2>
+<Base
+  title="Downloads"
+  description="Find the maintained Atrinik Classic releases and learn the status of the next-generation replacement stack."
+>
+  <header class="page-hero">
+    <p class="eyebrow">Choose your path</p>
+    <h1 class="page-title">Play the classic. Follow what comes next.</h1>
+    <p class="page-lede">
+      Atrinik Classic is the current playable game. The next-generation stack
+      remains in development and does not have a public download yet.
+    </p>
+  </header>
+
+  <section class="section" aria-labelledby="download-paths-heading">
+    <div class="section-heading">
+      <p class="eyebrow">Release status</p>
+      <h2 id="download-paths-heading">Two lines, clearly labeled</h2>
+      <p>
+        Classic and next-generation software have different licenses and
+        different levels of readiness.
+      </p>
+    </div>
+
+    <div class="split-grid">
+      <article class="path-card path-card--classic">
+        <div class="path-card-topline">
+          <span class="path-number">Path I</span>
+          <span class="status-tag status-tag--live">Playable now</span>
+        </div>
+        <h3>Atrinik Classic</h3>
         <p>
-          Downloads appear only after their owning repository publishes
-          immutable version, checksum, platform, compatibility, provenance, and
-          license metadata.
+          The maintained GPL-2.0-or-later line is the way to play Atrinik today.
+          Use its GitHub Releases page and read the notes for the available
+          packages, platforms, and compatibility details.
+        </p>
+        <ul class="path-details">
+          <li>Current playable implementation</li>
+          <li>Maintained releases</li>
+          <li>GPL-2.0-or-later software</li>
+        </ul>
+        <div class="card-actions">
+          <a
+            class="button button--primary"
+            href="https://github.com/atrinik/classic/releases"
+            >View Classic releases</a
+          >
+        </div>
+      </article>
+
+      <article class="path-card path-card--future">
+        <div class="path-card-topline">
+          <span class="path-number">Path II</span>
+          <span class="status-tag">Not yet downloadable</span>
+        </div>
+        <h3>Next generation</h3>
+        <p>
+          The clean-room MIT-licensed Go and Rust replacement stack is still in
+          development. No next-generation build is being offered for download
+          here.
+        </p>
+        <ul class="path-details">
+          <li>Clean-room Go and Rust stack</li>
+          <li>MIT-licensed software</li>
+          <li>No public download</li>
+        </ul>
+        <div class="card-actions">
+          <a
+            class="link-arrow"
+            href="https://github.com/atrinik/atrinik/issues/168"
+          >
+            Follow the replacement roadmap <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="catalog-heading">
+    <aside class="callout">
+      <div>
+        <p class="eyebrow">An honest download boundary</p>
+        <h2 id="catalog-heading">No site-verified immutable catalog yet</h2>
+        <p>
+          This site does not yet have a verified catalog of exact versions,
+          checksums, platforms, compatibility, provenance, and licenses. Until
+          that exists, it links to the owning repository’s release page instead
+          of guessing direct artifact URLs.
         </p>
       </div>
-    ) : null
-  }
+      <div class="card-actions">
+        <a class="button button--ghost" href="/licenses/"
+          >Understand the licenses</a
+        >
+      </div>
+    </aside>
+  </section>
+
+  <section class="section" aria-labelledby="before-heading">
+    <div class="section-heading">
+      <p class="eyebrow">Before you begin</p>
+      <h2 id="before-heading">Check the release that you choose</h2>
+    </div>
+    <div class="detail-grid">
+      <article class="detail-card">
+        <h3>Read the release notes</h3>
+        <p>
+          Confirm the supported platform and any compatibility guidance on the
+          Classic release page before installing a package.
+        </p>
+      </article>
+      <article class="detail-card">
+        <h3>Keep licenses distinct</h3>
+        <p>
+          Classic software is GPL-2.0-or-later. Maps, graphics, audio, and other
+          authored content can carry separate, per-file terms.
+        </p>
+      </article>
+      <article class="detail-card">
+        <h3>Watch the roadmap</h3>
+        <p>
+          Next-generation availability will be announced through the project’s
+          public development and release process when it is ready.
+        </p>
+      </article>
+    </div>
+  </section>
 </Base>

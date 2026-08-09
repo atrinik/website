@@ -2,22 +2,123 @@
 import Base from "../layouts/Base.astro";
 ---
 
-<Base title="Licenses">
-  <h1>Licenses and provenance</h1>
-  <p class="lede">
-    The website source is MIT licensed. That license does not change the terms
-    of anything it describes or links to.
-  </p>
-  <h2>Package labels</h2>
-  <p>
-    Fresh replacement code, classic GPL software, and mixed-license authored
-    content are identified separately. Every future media or download record
-    must include its exact source, revision, digest, author, license,
-    transformations, and required notice.
-  </p>
-  <h2>Privacy</h2>
-  <p>
-    This static site sets no cookies and includes no analytics, advertising,
-    third-party embeds, account forms, or gameplay state.
-  </p>
+<Base
+  title="Licenses"
+  description="Understand the separate licenses for the Atrinik website, classic game, next-generation stack, authored content, and concept artwork."
+>
+  <header class="page-hero">
+    <p class="eyebrow">Licenses and provenance</p>
+    <h1 class="page-title">Every part keeps its own terms.</h1>
+    <p class="page-lede">
+      Atrinik is made from code, world data, media, and presentation material.
+      One license does not automatically cover another part of the project.
+    </p>
+  </header>
+
+  <section class="section" aria-labelledby="license-map-heading">
+    <div class="section-heading">
+      <p class="eyebrow">The license map</p>
+      <h2 id="license-map-heading">Know which work you are using</h2>
+      <p>
+        Repository notices and per-file records remain authoritative. These
+        labels explain the project’s main boundaries.
+      </p>
+    </div>
+
+    <div class="detail-grid">
+      <article class="detail-card">
+        <p><span class="status-tag">MIT</span></p>
+        <h3>Website</h3>
+        <p>
+          The source code for atrinik.org is MIT licensed. That license covers
+          the website, not every game package or authored asset it describes.
+        </p>
+        <a class="link-arrow" href="https://github.com/atrinik/website">
+          View the website source <span aria-hidden="true">→</span>
+        </a>
+      </article>
+
+      <article class="detail-card">
+        <p>
+          <span class="status-tag status-tag--live">GPL-2.0-or-later</span>
+        </p>
+        <h3>Classic software</h3>
+        <p>
+          The maintained classic client, server, editor, libraries, and related
+          software remain under GPL-2.0-or-later.
+        </p>
+        <a class="link-arrow" href="https://github.com/atrinik/classic">
+          View the Classic source <span aria-hidden="true">→</span>
+        </a>
+      </article>
+
+      <article class="detail-card">
+        <p><span class="status-tag">MIT</span></p>
+        <h3>Next-generation software</h3>
+        <p>
+          The clean-room Go and Rust replacement stack is MIT licensed. It is a
+          separate implementation and remains in development.
+        </p>
+        <a
+          class="link-arrow"
+          href="https://github.com/atrinik/atrinik/issues/168"
+        >
+          Read the replacement roadmap <span aria-hidden="true">→</span>
+        </a>
+      </article>
+
+      <article class="detail-card">
+        <p>
+          <span class="status-tag status-tag--live">Mixed and per-file</span>
+        </p>
+        <h3>Authored content</h3>
+        <p>
+          Maps, archetypes, quests, writing, graphics, audio, and other authored
+          world content use mixed licenses. Follow the notice attached to the
+          specific file or collection.
+        </p>
+        <a class="link-arrow" href="https://github.com/atrinik/content">
+          Explore the content repository <span aria-hidden="true">→</span>
+        </a>
+      </article>
+
+      <article class="detail-card">
+        <p><span class="status-tag">MIT</span></p>
+        <h3>Website concept artwork</h3>
+        <p>
+          The atmospheric concept artwork presented on this site is MIT-licensed
+          presentation material. It is not gameplay footage, a shipped game
+          asset, or a promise of depicted features.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="boundary-heading">
+    <aside class="callout">
+      <div>
+        <p class="eyebrow">Keep the boundary visible</p>
+        <h2 id="boundary-heading">Check the exact source before reuse</h2>
+        <p>
+          A package can contain separately licensed code and content. Read its
+          license files, notices, and per-file attribution instead of assuming a
+          repository-level label applies to everything inside it.
+        </p>
+      </div>
+      <div class="card-actions">
+        <a class="button button--primary" href="/downloads/">Go to downloads</a>
+      </div>
+    </aside>
+  </section>
+
+  <section class="section" aria-labelledby="privacy-heading">
+    <div class="section-heading">
+      <p class="eyebrow">A quiet website</p>
+      <h2 id="privacy-heading">Privacy by default</h2>
+    </div>
+    <p>
+      This static site sets no cookies and includes no analytics, advertising,
+      third-party embeds, account forms, or gameplay state.
+    </p>
+  </section>
 </Base>

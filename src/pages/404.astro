@@ -2,11 +2,38 @@
 import Base from "../layouts/Base.astro";
 ---
 
-<Base title="Not found" canonicalPath="/404.html">
-  <h1>Page not found</h1>
-  <p>
-    The requested page does not exist. <a href="/"
-      >Return to the Atrinik home page</a
-    >.
-  </p>
+<Base
+  title="Page not found"
+  description="The requested Atrinik page could not be found."
+  canonicalPath="/404.html"
+  noindex={true}
+>
+  <header class="page-hero">
+    <p class="eyebrow">Error 404</p>
+    <h1 class="page-title">This path is lost to the mist.</h1>
+    <p class="page-lede">
+      The requested page could not be found. It may have moved, or the trail may
+      never have reached this part of Atrinik.
+    </p>
+  </header>
+
+  <section class="section" aria-labelledby="wayfinder-heading">
+    <div class="callout">
+      <div>
+        <p class="eyebrow">Find your bearings</p>
+        <h2 id="wayfinder-heading">Return to a known road</h2>
+        <p>
+          Begin again at the home page, learn about Atrinik’s two
+          implementations, or find the current playable release.
+        </p>
+      </div>
+      <div class="card-actions">
+        <a class="button button--primary" href="/">Return home</a>
+        <a class="button button--ghost" href="/about/">About Atrinik</a>
+        <a class="link-arrow" href="/downloads/">
+          Find downloads <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </div>
+  </section>
 </Base>

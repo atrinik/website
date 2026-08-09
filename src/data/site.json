@@ -1,13 +1,25 @@
 {
   "title": "Atrinik",
-  "description": "An open-source cooperative role-playing game under active clean-room renewal.",
+  "description": "An open-source cooperative role-playing world, preserved in Classic and being rebuilt for the next generation.",
   "canonicalOrigin": "https://atrinik.org",
   "analytics": false,
   "cookies": false,
   "externalLinks": [
     {
-      "label": "Project source on GitHub",
+      "label": "Project workspace",
       "url": "https://github.com/atrinik/atrinik"
+    },
+    {
+      "label": "Classic source",
+      "url": "https://github.com/atrinik/classic"
+    },
+    {
+      "label": "Replacement roadmap",
+      "url": "https://github.com/atrinik/atrinik/issues/168"
+    },
+    {
+      "label": "Website source",
+      "url": "https://github.com/atrinik/website"
     }
   ]
 }

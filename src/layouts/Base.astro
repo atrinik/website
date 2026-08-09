@@ -1,10 +1,14 @@
 ---
 import site from "../data/site.json";
+import media from "../data/media.json";
+import "../styles/global.css";
 
 interface Props {
   title?: string;
   description?: string;
   canonicalPath?: string;
+  preloadImage?: string;
+  noindex?: boolean;
 }
 
 const title = Astro.props.title
@@ -15,6 +19,17 @@ const canonical = new URL(
   Astro.props.canonicalPath ?? Astro.url.pathname,
   site.canonicalOrigin,
 );
+const currentPath = Astro.url.pathname;
+const socialImage = media.entries.find((entry) => entry.id === "atrinik-now");
+if (!socialImage) throw new Error("missing social media record: atrinik-now");
+const socialImageUrl = new URL(socialImage.publicPath, site.canonicalOrigin);
+const navigation = [
+  { label: "Home", href: "/" },
+  { label: "About", href: "/about/" },
+  { label: "Downloads", href: "/downloads/" },
+];
+const isCurrent = (href: string) =>
+  href === "/" ? currentPath === href : currentPath.startsWith(href);
 ---
 
 <!doctype html>
@@ -23,125 +38,106 @@ const canonical = new URL(
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
-    <meta name="color-scheme" content="dark light" />
+    {
+      Astro.props.noindex ? (
+        <meta name="robots" content="noindex, nofollow" />
+      ) : null
+    }
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#07111d" />
     <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.title} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={socialImageUrl} />
+    <meta property="og:image:alt" content={socialImage.alt} />
+    <meta property="og:image:width" content={String(socialImage.width)} />
+    <meta property="og:image:height" content={String(socialImage.height)} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImageUrl} />
+    <meta name="twitter:image:alt" content={socialImage.alt} />
+    {
+      Astro.props.preloadImage ? (
+        <link
+          rel="preload"
+          as="image"
+          href={Astro.props.preloadImage}
+          type="image/webp"
+        />
+      ) : null
+    }
     <title>{title}</title>
   </head>
   <body>
-    <a class="skip" href="#content">Skip to content</a>
-    <header>
-      <a class="wordmark" href="/" aria-label="Atrinik home">Atrinik</a>
-      <nav aria-label="Primary navigation">
-        <a href="/about/">About</a>
-        <a href="/downloads/">Downloads</a>
-        <a href="/licenses/">Licenses</a>
-      </nav>
+    <a class="skip-link" href="#content">Skip to content</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="Atrinik home">
+          <span class="brand-mark" aria-hidden="true"><i></i></span>
+          <span class="brand-name">Atrinik</span>
+        </a>
+        <nav aria-label="Primary navigation">
+          {
+            navigation.map(({ label, href }) => (
+              <a
+                href={href}
+                aria-current={isCurrent(href) ? "page" : undefined}
+              >
+                {label}
+              </a>
+            ))
+          }
+        </nav>
+        <a
+          class="header-link"
+          href="https://github.com/atrinik/atrinik"
+          aria-label="View the Atrinik project workspace on GitHub"
+        >
+          <span>GitHub</span><span aria-hidden="true">↗</span>
+        </a>
+      </div>
     </header>
     <main id="content"><slot /></main>
-    <footer>
-      <p>
-        Atrinik website source is MIT licensed. Game packages and authored
-        assets retain their stated licenses.
-      </p>
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-intro">
+          <a class="brand brand--footer" href="/" aria-label="Atrinik home">
+            <span class="brand-mark" aria-hidden="true"><i></i></span>
+            <span class="brand-name">Atrinik</span>
+          </a>
+          <p>
+            An open-source role-playing world, preserved with care and rebuilt
+            in public.
+          </p>
+        </div>
+        <div class="footer-links">
+          <div>
+            <h2>Explore</h2>
+            <a href="/about/">About Atrinik</a>
+            <a href="/downloads/">Downloads</a>
+            <a href="/licenses/">Licenses</a>
+          </div>
+          <div>
+            <h2>Project</h2>
+            {
+              site.externalLinks.map(({ label, url }) => (
+                <a href={url}>{label}</a>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>
+          Website source is MIT licensed. Game packages and authored assets
+          retain their stated licenses.
+        </p>
+        <p>No cookies. No tracking. Just the path ahead.</p>
+      </div>
     </footer>
   </body>
 </html>
-
-<style is:global>
-  :root {
-    color-scheme: dark;
-    font-family: ui-sans-serif, system-ui, sans-serif;
-    background: #101418;
-    color: #f2f5f7;
-  }
-  * {
-    box-sizing: border-box;
-  }
-  body {
-    margin: 0;
-    min-width: 18rem;
-    line-height: 1.6;
-  }
-  header,
-  main,
-  footer {
-    width: min(70rem, calc(100% - 2rem));
-    margin-inline: auto;
-  }
-  header {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 1rem;
-    padding-block: 1.25rem;
-  }
-  nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-  a {
-    color: #8fd5ff;
-    text-underline-offset: 0.2em;
-  }
-  a:focus-visible {
-    outline: 0.2rem solid #ffd166;
-    outline-offset: 0.2rem;
-  }
-  .wordmark {
-    color: inherit;
-    font-size: 1.35rem;
-    font-weight: 800;
-    text-decoration: none;
-  }
-  .skip {
-    position: absolute;
-    left: 1rem;
-    top: -5rem;
-    padding: 0.5rem 0.75rem;
-    background: #fff;
-    color: #111;
-    z-index: 1;
-  }
-  .skip:focus {
-    top: 1rem;
-  }
-  main {
-    min-height: 65vh;
-    padding-block: clamp(3rem, 8vw, 8rem);
-  }
-  h1 {
-    max-width: 18ch;
-    font-size: clamp(2.5rem, 8vw, 6rem);
-    line-height: 0.98;
-    letter-spacing: -0.04em;
-  }
-  h2 {
-    margin-top: 2.5rem;
-  }
-  p,
-  li {
-    max-width: 68ch;
-  }
-  .lede {
-    font-size: clamp(1.1rem, 3vw, 1.4rem);
-  }
-  .panel {
-    border: 1px solid #44515b;
-    border-radius: 0.75rem;
-    padding: 1.25rem;
-    background: #171d22;
-  }
-  footer {
-    border-top: 1px solid #44515b;
-    padding-block: 2rem;
-    font-size: 0.9rem;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      scroll-behavior: auto !important;
-    }
-  }
-</style>

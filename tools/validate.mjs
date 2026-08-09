@@ -6,7 +6,9 @@ import {
   readJson,
   validateDist,
   validateDownload,
+  validateLocalMediaSource,
   validateMedia,
+  validateRedirects,
 } from "./site-contract.mjs";
 
 const root = resolve(import.meta.dirname, "..");
@@ -68,6 +70,7 @@ if (
 )
   throw new Error("published media files and catalog rows differ");
 for (const record of media.entries) {
+  await validateLocalMediaSource(root, record);
   if (
     (await digest(resolve(root, `public${record.publicPath}`))) !==
     record.publishedSha256
@@ -128,6 +131,8 @@ const mediaFields = [
   "sourceRevision",
   "sourceSha256",
   "publishedSha256",
+  "width",
+  "height",
   "author",
   "license",
   "transformations",
@@ -163,10 +168,30 @@ if (
 )
   throw new Error("install-script allow/deny policy drifted");
 
+validateRedirects(await readFile(resolve(root, "public/_redirects"), "utf8"));
+const robots = await readFile(resolve(root, "public/robots.txt"), "utf8");
+if (!robots.includes("Sitemap: https://atrinik.org/sitemap.xml"))
+  throw new Error("robots.txt does not advertise the canonical sitemap");
+const sitemap = await readFile(resolve(root, "public/sitemap.xml"), "utf8");
+const sitemapUrls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/gu)].map(
+  (match) => match[1],
+);
+const expectedSitemapUrls = [
+  "https://atrinik.org/",
+  "https://atrinik.org/about/",
+  "https://atrinik.org/downloads/",
+  "https://atrinik.org/licenses/",
+];
+if (sitemapUrls.join("\n") !== expectedSitemapUrls.join("\n"))
+  throw new Error("canonical sitemap routes differ from the public contract");
+
 if (mode === "dist")
   console.log(
     JSON.stringify(
       await validateDist(resolve(root, "dist"), {
+        allowedMedia: new Map(
+          media.entries.map((record) => [record.publicPath, record]),
+        ),
         allowedReleaseUrls: new Set(
           downloads.entries.map((record) => record.url),
         ),

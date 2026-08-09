@@ -11,8 +11,10 @@ architecture, artifact filename/size/SHA-256, exact release URL, license, and
 compatibility. Missing or contradictory records render as unavailable.
 
 Media stays absent until a record binds both source and published digests,
-repository/path/revision, author, exact license, transformations, alt text,
-and notice. The website never imports an asset tree by implication.
+repository/path, a durable Git blob object ID, published dimensions, author,
+exact license, transformations, alt text, and notice. Same-repository sources
+are digest-checked from a traversal-safe path. The website never imports an
+asset tree by implication.
 
 The executable validator intentionally mirrors only the closed required-field
 sets and bounds from the two JSON Schemas so the build does not acquire a
@@ -21,9 +23,16 @@ field sets and closed-object flags on every run; contract changes must update
 both forms and their fixtures together.
 
 `public/_headers` supplies a no-script CSP and browser hardening for every
-static response. Source and built-output validators additionally enforce ten
-requests, 100 kB total, 40 kB HTML, 24 kB CSS, and zero JavaScript for this M1
-shell. Accessibility validation covers language, landmarks, skip navigation,
-primary navigation labelling, one page heading, useful image alternatives,
-focus visibility, reflow, and reduced-motion policy; manual assistive-
-technology review remains a release gate.
+static response. The built-output validator additionally enforces at most 16
+generated files, 900,000 bytes total, 140,000 aggregate HTML bytes, 40,000
+aggregate CSS bytes, 700,000 aggregate raster image bytes, and zero JavaScript.
+Published image filenames are content-addressed for immutable caching, and
+images below the fold are lazy-loaded. Artwork uses its intrinsic aspect ratio
+and an automatic rendered height so neither the portrait hero nor landscape
+posters are cropped. The presentation avoids fixed decorative texture layers,
+backdrop filters, large CSS blur filters, and image filter/transform effects so
+scrolling does not continuously repaint those effects. Accessibility
+validation covers language, landmarks, skip navigation, primary navigation
+labelling, one page heading, useful image alternatives, focus visibility,
+reflow, and reduced-motion policy; manual assistive-technology review remains
+a release gate.
