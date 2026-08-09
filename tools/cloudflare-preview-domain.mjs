@@ -1010,6 +1010,17 @@ export async function ensurePreviewDomain({
         )
           fail("Pages-managed DNS changed before it could be claimed");
         record = currentRecords[0];
+      } else {
+        const currentRecords = await exactDnsRecords(
+          cloudflare,
+          canonical.hostname,
+        );
+        if (
+          currentRecords.length !== 1 ||
+          !isSameOwnedDnsRecord(currentRecords[0], preflightRecord, canonical)
+        )
+          fail("owned DNS changed before it could be updated");
+        record = currentRecords[0];
       }
       record = await cloudflare.updateDnsRecord(record.id, canonical);
     }

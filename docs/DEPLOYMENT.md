@@ -76,13 +76,14 @@ Create the GitHub environment `cloudflare-preview-domains` with exactly:
 - variable `CLOUDFLARE_ZONE_ID`, identifying only the `atrinik.org` zone;
 - secret `CLOUDFLARE_PREVIEW_TOKEN`.
 
-The custom token needs Account / Cloudflare Pages / Write for the selected
-account and Zone / DNS / Edit for only the `atrinik.org` zone. It needs no
-GitHub permission and must not be committed, logged, placed in Pages build
-variables, or exposed to pull request code. Configure a custom environment
-deployment branch policy with `protected_branches: false` and only `main`
-allowed; `pull_request_target` runs in that trusted base/`main` context. Do not
-add a protection rule that can indefinitely hold a close-event cleanup.
+The custom token needs Account / Cloudflare Pages / Edit (called `Pages Write`
+by the API) for the selected account and Zone / DNS / Edit for only the
+`atrinik.org` zone. It needs no GitHub permission and must not be committed,
+logged, placed in Pages build variables, or exposed to pull request code.
+Configure a custom environment deployment branch policy with
+`protected_branches: false` and only `main` allowed; `pull_request_target` runs
+in that trusted base/`main` context. Do not add a protection rule that can
+indefinitely hold a close-event cleanup.
 
 Manual deployments are only for trusted, maintainer-controlled worktrees.
 Never check out untrusted pull request code and then run the manual deployment

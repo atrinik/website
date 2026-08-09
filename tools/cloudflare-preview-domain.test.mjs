@@ -820,6 +820,57 @@ test("setup resumes only a DNS-only partial state with complete ownership", asyn
   assert.equal(mutations, 0);
 });
 
+test("setup never overwrites an owned DNS record changed after preflight", async () => {
+  const spec = buildPrPreviewSpec(42, "blue-crystal.atrinik-website.pages.dev");
+  const previousSpec = buildPrPreviewSpec(
+    42,
+    "previous-crystal.atrinik-website.pages.dev",
+  );
+  const preflightRecord = ownedRecord(previousSpec);
+  const racedRecord = {
+    ...preflightRecord,
+    content: "operator.example.net",
+    comment: "changed outside preview automation",
+  };
+  let dnsReads = 0;
+  let mutations = 0;
+  await assert.rejects(
+    ensurePreviewDomain({
+      cloudflare: {
+        async getPagesDomain() {
+          return activeDomain(spec.hostname);
+        },
+        async addPagesDomain() {
+          mutations += 1;
+        },
+        async deletePagesDomain() {
+          mutations += 1;
+        },
+        async listDnsRecordsExact() {
+          dnsReads += 1;
+          return {
+            result: [dnsReads === 1 ? preflightRecord : racedRecord],
+            resultInfo: { total_pages: 1 },
+          };
+        },
+        async createDnsRecord() {
+          mutations += 1;
+        },
+        async updateDnsRecord() {
+          mutations += 1;
+        },
+        async deleteDnsRecord() {
+          mutations += 1;
+        },
+      },
+      spec,
+    }),
+    /owned DNS changed before it could be updated/u,
+  );
+  assert.equal(dnsReads, 2);
+  assert.equal(mutations, 0);
+});
+
 test("setup claims only a Pages-managed CNAME paired with its exact association", async () => {
   const spec = buildManualPreviewSpec("zoey");
   const automatic = {
