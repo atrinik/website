@@ -1,16 +1,29 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "provider": "cloudflare-pages",
   "project": "atrinik-website",
   "repository": "atrinik/website",
   "productionBranch": "main",
   "productionDomain": "atrinik.org",
+  "productionDomains": ["atrinik.org", "www.atrinik.org"],
   "buildCommand": "npm ci && npm run build",
   "outputDirectory": "dist",
   "functions": false,
   "analytics": false,
   "secrets": [],
-  "previewAccess": "team-only-until-reviewed",
+  "previewAccess": "public-noindex",
+  "previewDomains": {
+    "baseDomain": "testing.atrinik.org",
+    "manualPattern": "<prefix>.testing.atrinik.org",
+    "pullRequestPattern": "pr.<number>.testing.atrinik.org",
+    "manualBranchPrefix": "manual-",
+    "sameRepositoryPullRequestsOnly": true,
+    "cleanupOnPullRequestClose": true,
+    "githubEnvironment": "cloudflare-preview-domains",
+    "tokenSecret": "CLOUDFLARE_PREVIEW_TOKEN",
+    "accountIdVariable": "CLOUDFLARE_ACCOUNT_ID",
+    "zoneIdVariable": "CLOUDFLARE_ZONE_ID"
+  },
   "rollback": "promote the last verified production deployment in Cloudflare Pages",
   "healthPath": "/"
 }
