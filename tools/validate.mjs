@@ -2,10 +2,13 @@ import { access, readFile } from "node:fs/promises";
 import { relative, resolve, sep } from "node:path";
 import {
   digest,
+  downloadReleaseUrls,
   filesBelow,
   readJson,
   validateDist,
   validateDownload,
+  validateDownloadCatalog,
+  validateDownloadsPresentation,
   validateLocalMediaSource,
   validateMedia,
   validateRedirects,
@@ -18,25 +21,14 @@ if (!new Set(["source", "dist"]).has(mode))
 
 const downloads = await readJson(resolve(root, "src/data/downloads.json"));
 const media = await readJson(resolve(root, "src/data/media.json"));
-if (
-  downloads.schemaVersion !== 1 ||
-  !Array.isArray(downloads.entries) ||
-  downloads.entries.length > 200
-)
-  throw new Error("invalid download catalog envelope");
+validateDownloadCatalog(downloads);
 if (
   media.schemaVersion !== 1 ||
   !Array.isArray(media.entries) ||
   media.entries.length > 200
 )
   throw new Error("invalid media catalog envelope");
-downloads.entries.forEach(validateDownload);
 media.entries.forEach(validateMedia);
-if (
-  new Set(downloads.entries.map((record) => record.url)).size !==
-  downloads.entries.length
-)
-  throw new Error("duplicate download coordinate");
 if (
   new Set(media.entries.map((record) => record.id)).size !==
   media.entries.length
@@ -195,7 +187,11 @@ const expectedSitemapUrls = [
 if (sitemapUrls.join("\n") !== expectedSitemapUrls.join("\n"))
   throw new Error("canonical sitemap routes differ from the public contract");
 
-if (mode === "dist")
+if (mode === "dist") {
+  validateDownloadsPresentation(
+    await readFile(resolve(root, "dist/downloads/index.html"), "utf8"),
+    downloads,
+  );
   console.log(
     JSON.stringify(
       await validateDist(resolve(root, "dist"), {
@@ -203,12 +199,12 @@ if (mode === "dist")
           media.entries.map((record) => [record.publicPath, record]),
         ),
         allowedReleaseUrls: new Set(
-          downloads.entries.map((record) => record.url),
+          downloads.entries.flatMap(downloadReleaseUrls),
         ),
       }),
     ),
   );
-else
+} else
   console.log(
     `source contracts valid: ${downloads.entries.length} downloads, ${media.entries.length} media`,
   );

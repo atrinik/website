@@ -5,10 +5,23 @@ No browser JavaScript or server runtime is emitted. `src/data` is the only
 published content input; closed validators reject unknown download/media
 fields and unsafe coordinates before rendering.
 
-Downloads remain in their owning GitHub releases. A website record must bind
-the component, semantic version/tag, 40-character source revision, platform,
-architecture, artifact filename/size/SHA-256, exact release URL, license, and
-compatibility. Missing or contradictory records render as unavailable.
+Downloads remain in their owning GitHub releases. Catalog schema version 2
+separates the release repository from the artifact's logical role and marks at
+most one deliberately reviewed primary artifact. A record binds its semantic
+version/tag, 40-character source revision, publication and review times,
+immutable/attested release state, asset count, platform, architecture, archive format, filename, byte size,
+SHA-256, exact versioned artifact/evidence URLs, software and bundled-asset
+license boundaries, compatibility, and installation guidance. Draft,
+prerelease, zero-asset, mutable, incomplete, duplicate, or unsupported primary
+records fail source validation. An empty catalog remains valid and renders the
+release-page fallback without a direct download.
+
+The catalog is checked-in review evidence, not release discovery. Builds do not
+query GitHub, sort tags, follow `latest`, scrape release pages, or synthesize
+filenames. A newer tag therefore cannot displace the selected artifact until a
+reviewed catalog change updates every immutable coordinate together. Built
+output permits direct release links only when the exact URLs occur in the
+validated record.
 
 Media stays absent until a record binds both source and published digests,
 repository/path, a durable Git blob object ID, published dimensions, author,

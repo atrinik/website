@@ -2,7 +2,11 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { isDeepStrictEqual } from "node:util";
-import { readJson, validateDist } from "./site-contract.mjs";
+import {
+  downloadReleaseUrls,
+  readJson,
+  validateDist,
+} from "./site-contract.mjs";
 
 const expectedProductionDomains = ["atrinik.org", "www.atrinik.org"];
 const expectedPreviewDeployments = {
@@ -83,7 +87,7 @@ export async function runDeploymentDryRun(
     allowedMedia: new Map(
       media.entries.map((record) => [record.publicPath, record]),
     ),
-    allowedReleaseUrls: new Set(downloads.entries.map((record) => record.url)),
+    allowedReleaseUrls: new Set(downloads.entries.flatMap(downloadReleaseUrls)),
   });
   console.log(
     `deployment dry-run valid for ${contract.project}: ${JSON.stringify(result)}`,

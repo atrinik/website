@@ -4,13 +4,19 @@ import { mkdtemp, mkdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import adversarialDownloadCatalog from "./fixtures/download-adversarial-catalog.json" with { type: "json" };
+import emptyDownloadCatalog from "./fixtures/download-empty-catalog.json" with { type: "json" };
+import validDownload from "./fixtures/download-valid.json" with { type: "json" };
 import {
+  downloadReleaseUrls,
   limits,
   digest,
   gitBlobObjectId,
   readWebpDimensions,
   validateDist,
   validateDownload,
+  validateDownloadCatalog,
+  validateDownloadsPresentation,
   validateLocalMediaSource,
   validateMedia,
   validatePresentationCss,
@@ -19,21 +25,6 @@ import {
 
 const accessibleShell =
   '<!doctype html><html lang="en"><head><title>Title</title><meta name="description" content="Description"><link rel="canonical" href="https://atrinik.org/"><meta property="og:title" content="Title"><meta property="og:description" content="Description"><meta property="og:image" content="https://atrinik.org/media/social.00000000.webp"><meta name="twitter:card" content="summary_large_image"></head><body><a href="#content">Skip</a><nav aria-label="Primary navigation"></nav><main id="content"><h1>Title</h1></main></body></html>';
-
-const validDownload = {
-  component: "client",
-  version: "1.2.3",
-  tag: "v1.2.3",
-  revision: "0".repeat(40),
-  platform: "linux",
-  architecture: "x86_64",
-  artifact: "client.tar.gz",
-  bytes: 10,
-  sha256: "1".repeat(64),
-  url: "https://github.com/atrinik/client/releases/download/v1.2.3/client.tar.gz",
-  license: "MIT",
-  compatibility: "Game Protocol 1",
-};
 
 const validMedia = {
   id: "licensed-image",
@@ -98,6 +89,80 @@ test("download coordinates are closed and immutable", () => {
   assert.throws(
     () => validateDownload({ ...validDownload, extra: true }),
     /closed/u,
+  );
+  const { sha256: _missingDigest, ...incompleteDownload } = validDownload;
+  assert.throws(() => validateDownload(incompleteDownload), /closed/u);
+  for (const ineligible of [
+    { draft: true },
+    { prerelease: true },
+    { immutable: false },
+    { attested: false },
+    { releaseAssets: 0 },
+  ])
+    assert.throws(
+      () => validateDownload({ ...validDownload, ...ineligible }),
+      /published and eligible/u,
+    );
+  assert.throws(
+    () =>
+      validateDownload({
+        ...validDownload,
+        softwareLicense: "see bundled files",
+      }),
+    /softwareLicense/u,
+  );
+  assert.throws(
+    () =>
+      validateDownload({
+        ...validDownload,
+        releaseRepository: "atrinik/client",
+      }),
+    /immutable/u,
+  );
+  assert.deepEqual(downloadReleaseUrls(validDownload), [
+    validDownload.url,
+    validDownload.releaseNotesUrl,
+    validDownload.manifestUrl,
+    validDownload.checksumsUrl,
+    validDownload.sbomUrl,
+  ]);
+});
+
+test("download catalogs stay empty safely and reject ineligible releases", () => {
+  assert.doesNotThrow(() => validateDownloadCatalog(emptyDownloadCatalog));
+  assert.doesNotThrow(() =>
+    validateDownloadsPresentation(
+      "No site-verified immutable catalog yet https://github.com/atrinik/classic/releases",
+      emptyDownloadCatalog,
+    ),
+  );
+  assert.throws(
+    () =>
+      validateDownloadsPresentation(
+        "No site-verified immutable catalog yet https://github.com/atrinik/classic/releases/download/v9.9.9/guessed.zip",
+        emptyDownloadCatalog,
+      ),
+    /safe fallback/u,
+  );
+  assert.throws(
+    () => validateDownloadCatalog(adversarialDownloadCatalog),
+    /published and eligible/u,
+  );
+  assert.throws(
+    () =>
+      validateDownloadCatalog({
+        schemaVersion: 2,
+        entries: [validDownload, { ...validDownload }],
+      }),
+    /duplicate|multiple primary/u,
+  );
+  assert.throws(
+    () =>
+      validateDownloadCatalog({
+        schemaVersion: 2,
+        entries: [{ ...validDownload, artifactRole: "server" }],
+      }),
+    /unsupported primary/u,
   );
 });
 
@@ -410,6 +475,18 @@ test("static output rejects scripts, broken links, and excessive files", async (
     ),
   );
   await assert.rejects(validateDist(root), /external link origin/u);
+  const releaseNotes = "https://github.com/atrinik/classic/releases/tag/v1.2.3";
+  await writeFile(
+    join(root, "index.html"),
+    accessibleShell.replace(
+      "</main>",
+      `<a href="${releaseNotes}">unrecorded release</a></main>`,
+    ),
+  );
+  await assert.rejects(validateDist(root), /unrecorded release link/u);
+  await assert.doesNotReject(
+    validateDist(root, { allowedReleaseUrls: new Set([releaseNotes]) }),
+  );
   await writeFile(
     join(root, "index.html"),
     accessibleShell.replace("</main>", "<h1>Duplicate</h1></main>"),

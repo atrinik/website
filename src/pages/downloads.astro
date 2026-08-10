@@ -1,5 +1,15 @@
 ---
 import Base from "../layouts/Base.astro";
+import downloads from "../data/downloads.json";
+
+const download = downloads.entries.find((entry) => entry.primary);
+const platformNames: Record<string, string> = {
+  linux: "Linux",
+  macos: "macOS",
+  windows: "Windows",
+};
+const formatBytes = (bytes: number) =>
+  `${(bytes / 1024 ** 2).toFixed(2)} MiB (${bytes.toLocaleString("en-US")} bytes)`;
 ---
 
 <Base
@@ -45,11 +55,20 @@ import Base from "../layouts/Base.astro";
           <li>GPL-2.0-or-later software</li>
         </ul>
         <div class="card-actions">
-          <a
-            class="button button--primary"
-            href="https://github.com/atrinik/classic/releases"
-            >View all Classic releases</a
-          >
+          {
+            download ? (
+              <a class="button button--primary" href="#classic-client-download">
+                Get the supported client
+              </a>
+            ) : (
+              <a
+                class="button button--primary"
+                href="https://github.com/atrinik/classic/releases"
+              >
+                View all Classic releases
+              </a>
+            )
+          }
         </div>
       </article>
 
@@ -82,23 +101,141 @@ import Base from "../layouts/Base.astro";
   </section>
 
   <section class="section" aria-labelledby="catalog-heading">
-    <aside class="callout">
-      <div>
-        <p class="eyebrow">An honest download boundary</p>
-        <h2 id="catalog-heading">No site-verified immutable catalog yet</h2>
-        <p>
-          This site does not yet have a verified catalog of exact versions,
-          checksums, platforms, compatibility, provenance, and licenses. Until
-          that exists, it links to the owning repository’s release page instead
-          of guessing direct artifact URLs.
-        </p>
-      </div>
-      <div class="card-actions">
-        <a class="button button--ghost" href="/licenses/"
-          >Understand the licenses</a
-        >
-      </div>
-    </aside>
+    {
+      download ? (
+        <article class="download-card" id="classic-client-download">
+          <div class="download-card__intro">
+            <div>
+              <p class="eyebrow">Site-verified immutable release</p>
+              <h2 id="catalog-heading">Atrinik Classic {download.version}</h2>
+              <p class="download-lede">
+                The supported portable client for Windows x86_64. This exact
+                artifact was deliberately selected from a complete, published,
+                non-prerelease release in its owning repository.
+              </p>
+            </div>
+            <div class="card-actions">
+              <a class="button button--primary" href={download.url}>
+                Download the client ZIP
+              </a>
+              <a
+                class="button button--ghost"
+                href="https://github.com/atrinik/classic/releases"
+              >
+                View all Classic releases
+              </a>
+            </div>
+          </div>
+
+          <dl class="download-facts">
+            <div>
+              <dt>Version</dt>
+              <dd>{download.version}</dd>
+            </div>
+            <div>
+              <dt>Platform</dt>
+              <dd>
+                {platformNames[download.platform]} {download.architecture}
+              </dd>
+            </div>
+            <div>
+              <dt>Archive</dt>
+              <dd>{download.archiveFormat.toUpperCase()}</dd>
+            </div>
+            <div>
+              <dt>Size</dt>
+              <dd>{formatBytes(download.bytes)}</dd>
+            </div>
+            <div class="download-facts__wide">
+              <dt>Source revision</dt>
+              <dd>
+                <code>{download.revision}</code>
+              </dd>
+            </div>
+            <div class="download-facts__wide">
+              <dt>SHA-256</dt>
+              <dd>
+                <code>{download.sha256}</code>
+              </dd>
+            </div>
+          </dl>
+
+          <div class="download-guidance">
+            <section aria-labelledby="install-heading">
+              <h3 id="install-heading">Install and compatibility</h3>
+              <p>{download.installation}</p>
+              <p>{download.compatibility}</p>
+              <p>
+                No supported native Linux or macOS Classic client or editor
+                binary is currently published.
+              </p>
+            </section>
+            <section aria-labelledby="license-heading">
+              <h3 id="license-heading">License boundary</h3>
+              <p>
+                Classic software is licensed under{" "}
+                <strong>{download.softwareLicense}</strong>.{" "}
+                {download.bundledAssetsLicense}
+              </p>
+              <p>
+                The website’s MIT license does not replace the terms carried by
+                files inside this ZIP.
+              </p>
+            </section>
+          </div>
+
+          <section class="verification" aria-labelledby="verification-heading">
+            <h3 id="verification-heading">Verify before running</h3>
+            <ol>
+              <li>
+                Compare the downloaded file’s SHA-256 with the full digest above
+                and the signed release evidence.
+              </li>
+              <li>
+                Inspect the <a href={download.manifestUrl}>release manifest</a>{" "}
+                and <a href={download.checksumsUrl}>checksum list</a> for the
+                exact filename, size, revision, and digest.
+              </li>
+              <li>
+                Review the <a href={download.sbomUrl}>SPDX SBOM</a> and{" "}
+                <a href={download.releaseNotesUrl}>release notes</a>. GitHub has
+                a provenance attestation for this artifact; after installing the
+                GitHub CLI, verify the downloaded file with{" "}
+                <code>
+                  gh attestation verify {download.artifact} --repo{" "}
+                  {download.releaseRepository}
+                </code>
+                .
+              </li>
+            </ol>
+          </section>
+        </article>
+      ) : (
+        <aside class="callout">
+          <div>
+            <p class="eyebrow">An honest download boundary</p>
+            <h2 id="catalog-heading">No site-verified immutable catalog yet</h2>
+            <p>
+              This site does not have a verified catalog of exact versions,
+              checksums, platforms, compatibility, provenance, and licenses. It
+              keeps the owning repository’s release-page fallback instead of
+              guessing a direct artifact URL.
+            </p>
+          </div>
+          <div class="card-actions">
+            <a
+              class="button button--ghost"
+              href="https://github.com/atrinik/classic/releases"
+            >
+              View all Classic releases
+            </a>
+            <a class="button button--ghost" href="/licenses/">
+              Understand the licenses
+            </a>
+          </div>
+        </aside>
+      )
+    }
   </section>
 
   <section class="section" aria-labelledby="before-heading">
