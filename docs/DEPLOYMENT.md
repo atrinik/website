@@ -1,9 +1,10 @@
 # Cloudflare Pages deployment contract
 
 Atrinik uses one Git-integrated Cloudflare Pages project, `atrinik-website`,
-connected only to `atrinik/website`. The site is fully static: it has no Pages
-Functions, bindings, runtime secrets, analytics, remote build inputs, or
-environment-dependent pages.
+connected only to `atrinik/website`. The repository output is fully static: it
+has no Pages Functions, bindings, runtime secrets, application analytics,
+remote build inputs, or environment-dependent pages. Cloudflare can still
+transform a response at the provider edge after the build.
 
 The deployment topology is fixed:
 
@@ -28,7 +29,9 @@ Configure the Pages Git integration with:
 - preview branch deployments: **All non-production branches**;
 - build command: `npm ci && npm run build`;
 - output directory: `dist`;
-- Functions, bindings, runtime secrets, and Web Analytics: absent or disabled.
+- Functions, bindings, and runtime secrets: absent;
+- Web Analytics: no repository snippet or build integration; dashboard-managed
+  state must be checked against the delivered response and publicly disclosed.
 
 The repository's `.nvmrc` pins Node 24.18.1. Limit the Cloudflare Workers &
 Pages GitHub App installation to `atrinik/website` and periodically review its
@@ -46,6 +49,36 @@ Redirect Rule permanently redirects `www.atrinik.org` to the apex while
 preserving path and query. The response policy enables one-year HSTS with
 `includeSubDomains`, so every retained web-facing subdomain must serve valid
 HTTPS.
+
+## Provider edge privacy boundary
+
+The built artifact contains zero JavaScript and sets no application cookies.
+That does not make every Cloudflare-delivered response script- or cookie-free.
+Depending on hostname, request signals, and dashboard configuration, Cloudflare
+may inject Web Analytics, add JavaScript for bot or challenge services, replace
+the origin page with a challenge, or set strictly necessary security cookies
+such as `__cf_bm` or `cf_clearance`. These are provider-controlled behaviors,
+not files or application tracking emitted by Atrinik.
+
+A live audit on 2026-08-10 observed a Cloudflare Web Analytics tag in the
+production response for a Chromium browser user agent. This was
+`static.cloudflareinsights.com/beacon.min.js`, not an anti-bot
+`/cdn-cgi/challenge-platform/` script. The ordinary-site
+`Content-Security-Policy: script-src 'none'` blocked the tag before it received
+a response or sent a beacon; no cookies, local storage, or session storage were
+created. The branch preview contained no injected script. A curl response and
+a browser response differed, demonstrating that one request is not proof of
+provider behavior for every visitor. No challenge occurred during the audit,
+which likewise does not prove that Cloudflare will never challenge another
+request.
+
+Treat this observation as repeatable evidence, not a permanent invariant. For
+production and preview, inspect the delivered HTML, CSP console failures,
+script and `/cdn-cgi/` requests, response `Set-Cookie` headers, browser cookies,
+and local/session storage with JavaScript both enabled and disabled. Do not
+change dashboard analytics, bot, challenge, or cookie behavior through a source
+change; record any separately authorized provider configuration change and
+repeat this audit.
 
 ## Native preview deployments
 
@@ -92,7 +125,9 @@ npm run deploy:dry-run
 
 Verify `/`, `/about/`, `/downloads/`, `/licenses/`, `/404.html`, `_headers`,
 narrow and desktop keyboard behavior, no-JavaScript rendering, TLS, the apex
-canonical, and the permanent `www` redirect.
+canonical, and the permanent `www` redirect. Compare `dist/` with production
+and preview responses, recording provider-injected scripts, beacons,
+`Set-Cookie`, browser storage, and CSP outcomes.
 
 Production health means the canonical root serves the reviewed `main` revision
 with the expected security headers. If it does not, promote the last verified
@@ -109,3 +144,6 @@ Cloudflare's relevant documentation:
 - https://developers.cloudflare.com/pages/configuration/custom-domains/
 - https://developers.cloudflare.com/pages/configuration/headers/
 - https://developers.cloudflare.com/pages/configuration/rollbacks/
+- https://developers.cloudflare.com/cloudflare-challenges/challenge-types/javascript-detections/
+- https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/
+- https://developers.cloudflare.com/web-analytics/get-started/

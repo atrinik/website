@@ -5,17 +5,20 @@
 - This repository solely owns atrinik.org: the clean-room MIT Astro/TypeScript
   site, public content, deployment configuration, and recovery docs. Keep it
   independently buildable/deployable; the wrapper never owns Astro source.
-- Use static Astro output, semantic HTML/CSS/Markdown or structured data, and
-  minimal progressive JavaScript. A server runtime, database, CMS, client
-  framework, or dynamic function requires an issue proving static design is
-  insufficient and defining security/ownership.
+- Use static Astro output, semantic HTML/CSS/Markdown, and structured data with
+  no repository-authored browser JavaScript under the current contract.
+  Introducing browser JavaScript requires an issue defining its necessity,
+  privacy/security ownership, CSP changes, and validation. A server runtime,
+  database, CMS, client framework, or dynamic function likewise requires an
+  issue proving static design is insufficient and defining security/ownership.
 - The site is presentation/discovery, not an account/game API, metaserver,
   protocol authority, content compiler, release store, or documentation fork.
   Never handle credentials, characters, payments, private community data, or
   persistent game sessions.
-- Core pages work without JavaScript or live services. Status integrations are
-  read-only, bounded, cached appropriately, and honest when empty, stale,
-  malformed, timed out, or unavailable.
+- Core pages and built artifacts contain no repository-authored browser
+  JavaScript and require no live services. Status integrations are read-only,
+  bounded, cached appropriately, and honest when empty, stale, malformed,
+  timed out, or unavailable.
 - Cloudflare Pages owns preview/production deployment. Document project/branch,
   environments, domain/DNS/TLS, permissions, health, cache invalidation,
   rollback, and outage behavior. Keep metaserver/game hosts separate. Never
@@ -30,6 +33,12 @@
   Cloudflare GitHub integration; forks do not. Treat every preview as public:
   immutable deployment URLs can remain reachable after a branch or pull
   request is closed.
+- Treat Cloudflare response transformation as a separate provider boundary.
+  It may inject bot/security JavaScript or a dashboard-managed Web Analytics
+  beacon, set strictly necessary cookies, or serve a challenge with its own
+  HTML, scripts, cookies, and CSP. Keep those features out of source, disclose
+  them honestly, retain a no-script CSP on ordinary site responses, and audit
+  production plus preview behavior rather than inferring it from `dist/`.
 
 ## Content, privacy, and security
 
@@ -49,7 +58,9 @@
   and provenance decision.
 - Do not put secrets in source, static output, browser code, logs, fixtures,
   preview metadata, or `PUBLIC_` values. Protected environments use least
-  privilege. Omit analytics/tracking/cookies/ads/third-party embeds by default.
+  privilege. Omit repository-managed analytics, tracking, cookies, ads, and
+  third-party embeds by default; separately disclose provider-controlled edge
+  behavior.
 - Treat Markdown, metadata, URLs, SVG, and remote input as untrusted: validate
   schemas, allowlist destinations/protocols, escape output, prevent traversal
   and injection, and bound size, redirects, retries, and timeouts. Apply/test a
@@ -77,7 +88,9 @@
   provenance/license, accessibility, performance, dependencies/security, and
   deployment dry-run as documented. Manually check affected URLs with keyboard,
   reduced motion, representative screen reader, mobile/desktop, slow/no JS,
-  missing metadata, and broken images.
+  missing metadata, and broken images. For deployed pages also inspect response
+  HTML, network requests, `Set-Cookie`, browser storage, and CSP failures for
+  provider-injected scripts or beacons.
 
 - Wrapper replacement build adapters are not available yet. Use repository
   validation; a website-only change has no game topology/state proof. Update

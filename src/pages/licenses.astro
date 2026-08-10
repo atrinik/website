@@ -1,10 +1,11 @@
 ---
 import Base from "../layouts/Base.astro";
+import site from "../data/site.json";
 ---
 
 <Base
   title="Licenses"
-  description="Understand Atrinik's separate human-authorship policy, attribution, provenance, and license boundaries for creative game content, agentically developed software, and temporary generated website media."
+  description="Understand Atrinik's human-directed content policy, attribution, provenance, and license boundaries for creative game content, agentically developed software, and temporary generated website media."
 >
   <header class="page-hero">
     <p class="eyebrow">Licenses and provenance</p>
@@ -22,19 +23,23 @@ import Base from "../layouts/Base.astro";
         Creation, credit, and license are not the same
       </h2>
       <p>
-        “Human-made” describes how creative game content is authored. It does
-        not identify a sole creator, prove provenance, or replace the exact
-        license attached to a file or collection.
+        “Human-led” describes creative direction and responsibility; it does not
+        require every permitted editing tool to be manual, identify a sole
+        creator, prove provenance, or replace the exact license attached to a
+        file or collection.
       </p>
     </div>
     <div class="detail-grid">
       <article class="detail-card">
         <h3>Creation method</h3>
         <p>
-          Atrinik's policy reserves new and modified creative game content for
-          people; generative maps, quests, lore, dialogue, archetypes, pixel
-          art, graphics, animation, music, and sound effects are not accepted.
-          Owner audits of the existing corpus are still in progress.
+          Generated visual and audio assets—including pixel art, graphics,
+          animation, music, and sound effects—are not accepted as final game
+          content. Clearly identified generated versions may be temporary design
+          drop-ins pending suitable human-created replacements. A human content
+          creator may use generative tools to help shape maps or develop quests,
+          dialogue, and lore while directing and reviewing the result. Owner
+          audits of the existing corpus are still in progress.
         </p>
       </article>
       <article class="detail-card">
@@ -136,8 +141,8 @@ import Base from "../layouts/Base.astro";
           Four temporary atmospheric concept images were generated with OpenAI
           and are MIT-licensed presentation material. They are explicitly
           recorded and credited, are not game content or gameplay footage, and
-          remain the website-media exception until they are replaced by
-          human-created visuals.
+          remain temporary design drop-ins until suitable human-created visuals
+          are found or made.
         </p>
         <a
           class="link-arrow"
@@ -154,9 +159,9 @@ import Base from "../layouts/Base.astro";
       <p class="eyebrow">Repository-owned evidence</p>
       <h2 id="records-heading">Follow records and policy work to each owner</h2>
       <p>
-        These concrete records describe current attribution and provenance;
-        linked owner issues track the authorship policies and corpus audits that
-        are not yet complete. This page does not copy ledgers that could drift.
+        These concrete records describe current attribution and provenance; open
+        owner issues track policies and corpus audits that are not yet complete.
+        This page does not copy ledgers that could drift.
       </p>
     </div>
     <div class="detail-grid">
@@ -289,8 +294,10 @@ import Base from "../layouts/Base.astro";
       <h2 id="privacy-heading">Privacy by default</h2>
     </div>
     <p>
-      This static site sets no cookies and includes no analytics, advertising,
-      third-party embeds, account forms, or gameplay state.
+      Atrinik's static build emits no browser JavaScript, sets no application
+      cookies, and includes no Atrinik-managed analytics, tracking, advertising,
+      third-party embeds, account forms, or gameplay state.{" "}
+      {site.privacy.providerEdgeDisclosure}
     </p>
   </section>
 </Base>

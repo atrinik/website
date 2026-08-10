@@ -2,22 +2,28 @@
 
 This repository is the sole source and deployment owner for the static,
 MIT-licensed atrinik.org website. It deliberately contains no account,
-gameplay, payment, analytics, advertising, or server-side runtime.
+gameplay, payment, repository-managed analytics or tracking, advertising, or
+server-side runtime.
 
-Atrinik's policy reserves new and modified creative game content for people:
-generative maps, pixel art, music, sound effects, quests, dialogue, lore, and
-other authored world content are not accepted. The owning repositories are
-documenting that rule and auditing the existing corpus before making an
-unqualified blanket authorship claim. Human Atrinik contributors and
-appropriately licensed work from Crossfire, Daimonin, and other upstream
-creators retain their exact authorship, provenance, notices, and licenses;
-“human-made” does not mean solely Atrinik-original or covered by one license.
+Atrinik keeps people in creative control of its game world. Generated visual
+and audio assets—including pixel art, graphics, animation, music, and sound
+effects—are not accepted as final game content. They may be used only as
+clearly identified temporary design drop-ins while suitable human-created
+replacements are found or made. For maps, quests, dialogue, and lore, a human
+content creator may use generative tools to help shape terrain or develop
+writing while directing, reviewing, and taking responsibility for the result.
+The owning repositories are documenting that policy and auditing the existing
+corpus before making an unqualified blanket authorship claim. Human Atrinik
+contributors and appropriately licensed work from Crossfire, Daimonin, and
+other upstream creators retain their exact authorship, provenance, notices,
+and licenses; “human-led” describes creative direction and responsibility, not
+solely Atrinik-original work or one shared license.
 
 The project's software is developed primarily through Codex-driven agentic
 workflows under human direction, review, provenance controls, tests, and
 repository validation. Direct human-written code contributions are welcome
-under the same gates. “Generative AI” in this policy means tools that synthesize
-creative content or code, not gameplay systems such as creature or NPC AI.
+under the same gates. “Generative AI” here means tools that synthesize creative
+content or code, not gameplay systems such as creature or NPC AI.
 
 Atrinik began in 2009 under founder and original lead Zoey Rose. She led its
 human-developed beginning alongside the wider Atrinik Development Team. The
@@ -30,9 +36,9 @@ not yet a complete game release.
 Follow the [replacement roadmap](https://github.com/atrinik/atrinik/issues/168)
 for current readiness.
 
-The game-content policy does not yet describe every image on atrinik.org. Four
-temporary OpenAI-generated concept images remain transparently recorded in
-`src/data/media.json` and are tracked for replacement by
+Four temporary OpenAI-generated concept images on atrinik.org are not game
+content. They remain transparently recorded design drop-ins in
+`src/data/media.json` and are tracked for suitable human-created replacements by
 [website issue #22](https://github.com/atrinik/website/issues/22).
 
 The public information architecture keeps the useful journeys from Atrinik's
@@ -60,8 +66,9 @@ npm run deploy:dry-run
 
 The build writes a self-contained static site to `dist/`. Validation rejects
 unproven media, mutable download coordinates, missing attribution or alt text,
-unsafe links, client JavaScript, broken internal links, and page-weight budget
-violations. Generated release evidence belongs under ignored `build/`.
+unsafe links, repository-authored client JavaScript, broken internal links, and
+page-weight budget violations. Generated release evidence belongs under ignored
+`build/`.
 
 `src/data/downloads.json` is a reviewed immutable catalog, not a live release
 feed. Its closed schema keeps a release repository separate from an artifact
@@ -76,5 +83,13 @@ same-repository pull requests. The repository has no manual upload path,
 custom preview hostname, or Cloudflare credential. See
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the exact preview, domain,
 health, and rollback contract.
+
+Zero-JavaScript, cookie, analytics, and tracking claims apply to the built
+artifact, not every Cloudflare response. Cloudflare may inject bot/security
+JavaScript or a dashboard-managed Web Analytics beacon, set strictly necessary
+cookies, or serve a challenge response with different HTML, scripts, cookies,
+and CSP. Ordinary static responses retain a `script-src 'none'` CSP that blocks
+injected scripts; audit the actual production response as described in
+`docs/DEPLOYMENT.md`.
 
 The replacement roadmap is [atrinik/atrinik#168](https://github.com/atrinik/atrinik/issues/168).

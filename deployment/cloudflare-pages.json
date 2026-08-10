@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "provider": "cloudflare-pages",
   "project": "atrinik-website",
   "repository": "atrinik/website",
@@ -9,7 +9,17 @@
   "buildCommand": "npm ci && npm run build",
   "outputDirectory": "dist",
   "functions": false,
-  "analytics": false,
+  "applicationPrivacy": {
+    "analytics": false,
+    "cookies": false,
+    "tracking": false
+  },
+  "providerEdge": {
+    "htmlTransformation": "provider-controlled",
+    "securityJavaScript": "conditional",
+    "securityCookies": "conditional",
+    "webAnalytics": "dashboard-managed"
+  },
   "secrets": [],
   "previewAccess": "public-cloudflare-managed-noindex",
   "previewDeployments": {
