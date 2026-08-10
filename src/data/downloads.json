@@ -27,8 +27,8 @@
       "checksumsUrl": "https://github.com/atrinik/classic/releases/download/v5.8.2/SHA256SUMS",
       "sbomUrl": "https://github.com/atrinik/classic/releases/download/v5.8.2/atrinik-classic-5.8.2.spdx.json",
       "softwareLicense": "GPL-2.0-or-later",
-      "bundledAssetsLicense": "Bundled sound and authored assets retain their exact per-file terms; inspect the archive notices and SPDX SBOM.",
-      "compatibility": "Portable Atrinik Classic client for Windows x86_64 from the coordinated Classic 5.8.2 release; server compatibility follows the release notes.",
+      "bundledAssetsLicense": "Bundled sound and authored assets retain their exact per-file terms; inspect the packaged LICENSE.md, ATTRIBUTIONS.md, and any license files accompanying individual assets. Use the SPDX SBOM for dependency and provenance evidence.",
+      "compatibility": "This client uses gameplay protocol revision 1072 and connects only to servers using the same revision; the coordinated Classic 5.8.2 server uses revision 1072.",
       "installation": "Extract the ZIP, keep every packaged file and directory together, and run atrinik.exe from inside the extracted package."
     }
   ]

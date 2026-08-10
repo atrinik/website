@@ -161,16 +161,29 @@ test("download schema and executable constraints reject the same edge forms", ()
     ["version", "01.2.3"],
     ["tag", "v01.2.3"],
     ["publishedAt", "2026-99-99T99:99:99Z"],
+    ["publishedAt", "2026-02-31T00:00:00Z"],
     ["compatibility", ` ${validDownload.compatibility}`],
     ["installation", `${validDownload.installation} `],
   ];
   for (const [field, value] of rejected) {
     assert.throws(() => validateDownload({ ...validDownload, [field]: value }));
     const property = downloadSchema.properties[field];
-    if (property.pattern && !property.format)
+    if (property.pattern)
       assert.equal(new RegExp(property.pattern, "u").test(value), false);
-    if (property.format) assert.equal(Number.isNaN(Date.parse(value)), true);
   }
+  const timestampPattern = new RegExp(
+    downloadSchema.properties.publishedAt.pattern,
+    "u",
+  );
+  assert.equal(timestampPattern.test("2024-02-29T23:59:59Z"), true);
+  assert.equal(timestampPattern.test("2025-02-29T00:00:00Z"), false);
+  assert.doesNotThrow(() =>
+    validateDownload({
+      ...validDownload,
+      publishedAt: "2024-02-29T23:59:59Z",
+      verifiedAt: "2024-03-01T00:00:00Z",
+    }),
+  );
   assert.throws(() =>
     validateDownload({
       ...validDownload,
@@ -182,6 +195,18 @@ test("download schema and executable constraints reject the same edge forms", ()
       ...validDownload,
       artifact: "atrinik-classic-client-1.2.3-windows-x86_64.tar.gz",
     }),
+  );
+  assert.throws(() =>
+    validateDownload({ ...validDownload, compatibility: "😀".repeat(10) }),
+  );
+  assert.doesNotThrow(() =>
+    validateDownload({ ...validDownload, compatibility: "😀".repeat(20) }),
+  );
+  assert.doesNotThrow(() =>
+    validateDownload({ ...validDownload, compatibility: "😀".repeat(151) }),
+  );
+  assert.throws(() =>
+    validateDownload({ ...validDownload, compatibility: "😀".repeat(301) }),
   );
 });
 

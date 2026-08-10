@@ -25,7 +25,7 @@ const releaseRepositoryPattern = /^atrinik\/[a-z][a-z0-9-]*$/u;
 const artifactRolePattern = /^[a-z][a-z0-9-]*$/u;
 const artifactPattern = /^[A-Za-z0-9][A-Za-z0-9._-]+$/u;
 const utcTimestampPattern =
-  /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z$/u;
+  /^(?:(?:\d{2}(?:0[48]|[2468][048]|[13579][26])|(?:[02468][48]|[13579][26])00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|02-(?:0[1-9]|1\d|2[0-8])))T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\dZ$/u;
 const mediaPathPattern = /^\/media\/[a-z0-9][a-z0-9-]*\.([0-9a-f]{8})\.webp$/u;
 const mediaLicenses = new Set([
   "MIT",
@@ -192,8 +192,8 @@ export function validateDownload(record) {
     if (
       typeof record[field] !== "string" ||
       record[field].trim() !== record[field] ||
-      record[field].length < 20 ||
-      record[field].length > maximum
+      [...record[field]].length < 20 ||
+      [...record[field]].length > maximum
     )
       throw new Error(`invalid download ${field}`);
 }
