@@ -1133,6 +1133,34 @@ main > .callout {
   }
 }
 
+@media (min-width: 52.001rem) and (min-height: 48rem) {
+  .home-hero {
+    padding-block: clamp(1.25rem, calc(8svh - 2.6rem), 3.5rem);
+  }
+
+  .hero-copy {
+    padding-block: clamp(0rem, calc(5svh - 2.4rem), 1.5rem);
+  }
+
+  .hero-copy h1 {
+    margin-bottom: clamp(1rem, calc(4svh - 1rem), 1.75rem);
+    font-size: clamp(3.35rem, calc(12.5svh - 2.5rem), 6.5rem);
+  }
+
+  .hero-lede {
+    margin-bottom: clamp(1.25rem, calc(5svh - 1.5rem), 2.25rem);
+  }
+
+  .hero-facts {
+    margin-top: clamp(1.25rem, calc(8svh - 2.6rem), 4rem);
+    padding-top: clamp(0.75rem, 2svh, 1.25rem);
+  }
+
+  .hero-art {
+    width: min(100%, 37rem, calc(66.667svh - 8.5rem));
+  }
+}
+
 @media (max-width: 52rem) {
   .header-inner {
     grid-template-columns: 1fr auto;
