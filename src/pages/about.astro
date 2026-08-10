@@ -4,14 +4,14 @@ import Base from "../layouts/Base.astro";
 
 <Base
   title="About"
-  description="Atrinik is one open-source fantasy world with a playable classic line and a clean-room next-generation implementation in development."
+  description="Atrinik is one open-source fantasy world with a unified, maintained Classic line and independently released clean-room foundations in development."
 >
   <header class="page-hero">
     <p class="eyebrow">About Atrinik</p>
     <h1 class="page-title">One world. Two implementations.</h1>
     <p class="page-lede">
       Atrinik is an open-source cooperative role-playing world. Its maintained
-      classic game can be played today while a new engine and toolchain are
+      Classic game can be played today while a new engine and toolchain are
       being built in public.
     </p>
   </header>
@@ -36,13 +36,15 @@ import Base from "../layouts/Base.astro";
         </div>
         <h3>Classic</h3>
         <p>
-          The current playable line preserves Atrinik’s established client,
-          server, editor, and supporting libraries. Its software is maintained
-          under GPL-2.0-or-later.
+          The current playable line is actively maintained in the unified{
+            " "
+          }<code>atrinik/classic</code>{" "}repository. Its client, server,
+          editor, libatrinik, and protocol share one version, release notes
+          stream, and coordinated artifact set under GPL-2.0-or-later.
         </p>
         <ul class="path-details">
           <li>Current playable implementation</li>
-          <li>Maintained as one classic project</li>
+          <li>One repository and supported 5.x release line</li>
           <li>GPL-2.0-or-later software</li>
         </ul>
         <div class="card-actions">
@@ -59,9 +61,10 @@ import Base from "../layouts/Base.astro";
         </div>
         <h3>Next generation</h3>
         <p>
-          The replacement is a clean-room, MIT-licensed Go and Rust stack. It is
-          being developed in public, but it is not yet downloadable or a
-          replacement for the playable classic line.
+          The replacement is a set of independently released, clean-room,
+          MIT-licensed Go and Rust foundations. They are developed in public,
+          but do not yet form a complete public download or replace the playable
+          Classic line.
         </p>
         <ul class="path-details">
           <li>Clean-room Go and Rust implementation</li>
@@ -88,11 +91,13 @@ import Base from "../layouts/Base.astro";
 
     <div class="detail-grid">
       <article class="detail-card">
-        <h3>Open development</h3>
+        <h3>Release ownership</h3>
         <p>
-          Plans, source, issues, and releases live in the Atrinik repositories.
-          Progress is described by completed work and published releases, not
-          invented launch dates.
+          Classic plans, source, issues, and releases share one repository and
+          coordinated release train. The replacement foundations remain
+          independently released, with each repository owning its code, license,
+          release information, and technical documentation. Progress is measured
+          by completed work and published releases, not launch promises.
         </p>
       </article>
 
@@ -106,11 +111,12 @@ import Base from "../layouts/Base.astro";
       </article>
 
       <article class="detail-card">
-        <h3>Independent parts</h3>
+        <h3>Service foundations</h3>
         <p>
-          Atrinik is developed as independently released components. Each
-          repository owns its code, license, release information, and technical
-          documentation.
+          Signed publishing, protected rendezvous, and a static server directory
+          have been implemented as foundations. Rollout and canonical public
+          endpoints are still pending, so they are not advertised as live
+          services.
         </p>
       </article>
     </div>
