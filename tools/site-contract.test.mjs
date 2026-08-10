@@ -328,7 +328,11 @@ test("the actual Astro components build the empty-catalog fallback", async () =>
       {
         cwd: root,
         encoding: "utf8",
-        env: { ...process.env, ASTRO_TELEMETRY_DISABLED: "1" },
+        env: {
+          ...process.env,
+          ASTRO_TELEMETRY_DISABLED: "1",
+          ASTRO_TEST_CACHE_DIR: resolve(output, "cache"),
+        },
       },
     );
     assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
@@ -337,6 +341,10 @@ test("the actual Astro components build the empty-catalog fallback", async () =>
       validateDownloadsPresentation(html, emptyDownloadCatalog),
     );
   } finally {
+    await rm(resolve(root, "tools/fixtures/download-empty-site/.astro"), {
+      recursive: true,
+      force: true,
+    });
     await rm(output, { recursive: true, force: true });
   }
 });
