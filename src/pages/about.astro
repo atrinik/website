@@ -4,14 +4,14 @@ import Base from "../layouts/Base.astro";
 
 <Base
   title="About"
-  description="Atrinik is one open-source fantasy world with a playable classic line and a clean-room next-generation implementation in development."
+  description="Atrinik is one open-source fantasy world with a unified, maintained Classic line and independently released clean-room foundations in development."
 >
   <header class="page-hero">
     <p class="eyebrow">About Atrinik</p>
     <h1 class="page-title">One world. Two implementations.</h1>
     <p class="page-lede">
       Atrinik is an open-source cooperative role-playing world. Its maintained
-      classic game can be played today while a new engine and toolchain are
+      Classic game can be played today while a new engine and toolchain are
       being built in public.
     </p>
   </header>
@@ -36,10 +36,11 @@ import Base from "../layouts/Base.astro";
         </div>
         <h3>Classic</h3>
         <p>
-          The current playable line is actively maintained in the unified
-          <code>atrinik/classic</code> repository. Its client, server, editor, libatrinik,
-          and protocol share one version, release-notes stream, and coordinated artifact
-          set under GPL-2.0-or-later.
+          The current playable line is actively maintained in the unified{
+            " "
+          }<code>atrinik/classic</code>{" "}repository. Its client, server,
+          editor, libatrinik, and protocol share one version, release notes
+          stream, and coordinated artifact set under GPL-2.0-or-later.
         </p>
         <ul class="path-details">
           <li>Current playable implementation</li>
@@ -90,11 +91,13 @@ import Base from "../layouts/Base.astro";
 
     <div class="detail-grid">
       <article class="detail-card">
-        <h3>Open development</h3>
+        <h3>Release ownership</h3>
         <p>
-          Plans, source, issues, and releases live in the Atrinik repositories.
-          Progress is described by completed work and published releases, not
-          invented launch dates.
+          Classic plans, source, issues, and releases share one repository and
+          coordinated release train. The replacement foundations remain
+          independently released, with each repository owning its code, license,
+          release information, and technical documentation. Progress is measured
+          by completed work and published releases, not launch promises.
         </p>
       </article>
 
@@ -104,16 +107,6 @@ import Base from "../layouts/Base.astro";
           Maps, archetypes, stories, graphics, audio, and other authored content
           have mixed terms. Their licenses and attribution are handled per file
           or collection rather than inherited from either engine.
-        </p>
-      </article>
-
-      <article class="detail-card">
-        <h3>Release ownership</h3>
-        <p>
-          Classic software has one repository and coordinated release train. The
-          replacement foundations remain independently released; each repository
-          owns its code, license, release information, and technical
-          documentation.
         </p>
       </article>
 
