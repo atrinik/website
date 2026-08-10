@@ -4,7 +4,7 @@ import Base from "../layouts/Base.astro";
 
 <Base
   title="Licenses"
-  description="Understand the separate licenses for the Atrinik website, classic game, next-generation stack, authored content, and concept artwork."
+  description="Understand the separate licenses for the Atrinik website, unified Classic software, next-generation foundations, authored content, and concept artwork."
 >
   <header class="page-hero">
     <p class="eyebrow">Licenses and provenance</p>
@@ -44,8 +44,10 @@ import Base from "../layouts/Base.astro";
         </p>
         <h3>Classic software</h3>
         <p>
-          The maintained classic client, server, editor, libraries, and related
-          software remain under GPL-2.0-or-later.
+          The client, server, editor, libatrinik, and protocol software
+          maintained together in{" "}<code>atrinik/classic</code> are GPL-2.0-or-later.
+          Bundled maps, graphics, audio, fonts, and other authored assets can have
+          their own exact terms.
         </p>
         <a class="link-arrow" href="https://github.com/atrinik/classic">
           View the Classic source <span aria-hidden="true">→</span>
@@ -56,8 +58,9 @@ import Base from "../layouts/Base.astro";
         <p><span class="status-tag">MIT</span></p>
         <h3>Next-generation software</h3>
         <p>
-          The clean-room Go and Rust replacement stack is MIT licensed. It is a
-          separate implementation and remains in development.
+          The independently released clean-room Go and Rust replacement
+          foundations are MIT licensed. They remain separate from Classic and do
+          not yet form a complete public download.
         </p>
         <a
           class="link-arrow"
