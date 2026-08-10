@@ -177,6 +177,10 @@ test("download schema and executable constraints reject the same edge forms", ()
   );
   assert.equal(timestampPattern.test("2024-02-29T23:59:59Z"), true);
   assert.equal(timestampPattern.test("2025-02-29T00:00:00Z"), false);
+  assert.equal(timestampPattern.test("1900-02-29T00:00:00Z"), false);
+  assert.equal(timestampPattern.test("2000-02-29T00:00:00Z"), true);
+  assert.equal(timestampPattern.test("2100-02-29T00:00:00Z"), false);
+  assert.equal(timestampPattern.test("2400-02-29T00:00:00Z"), true);
   assert.doesNotThrow(() =>
     validateDownload({
       ...validDownload,
