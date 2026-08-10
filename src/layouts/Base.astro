@@ -23,10 +23,12 @@ const currentPath = Astro.url.pathname;
 const socialImage = media.entries.find((entry) => entry.id === "atrinik-now");
 if (!socialImage) throw new Error("missing social media record: atrinik-now");
 const socialImageUrl = new URL(socialImage.publicPath, site.canonicalOrigin);
+const socialImageAlt = `Temporary OpenAI-generated website concept artwork: ${socialImage.alt}`;
 const navigation = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about/" },
   { label: "Downloads", href: "/downloads/" },
+  { label: "Licenses", href: "/licenses/" },
 ];
 const isCurrent = (href: string) =>
   href === "/" ? currentPath === href : currentPath.startsWith(href);
@@ -52,14 +54,14 @@ const isCurrent = (href: string) =>
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={socialImageUrl} />
-    <meta property="og:image:alt" content={socialImage.alt} />
+    <meta property="og:image:alt" content={socialImageAlt} />
     <meta property="og:image:width" content={String(socialImage.width)} />
     <meta property="og:image:height" content={String(socialImage.height)} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={socialImageUrl} />
-    <meta name="twitter:image:alt" content={socialImage.alt} />
+    <meta name="twitter:image:alt" content={socialImageAlt} />
     {
       Astro.props.preloadImage ? (
         <link
@@ -110,8 +112,7 @@ const isCurrent = (href: string) =>
             <span class="brand-name">Atrinik</span>
           </a>
           <p>
-            An open-source role-playing world, preserved with care and rebuilt
-            in public.
+            {site.identity.heading} Human code contributions are welcome.
           </p>
         </div>
         <div class="footer-links">
@@ -133,10 +134,16 @@ const isCurrent = (href: string) =>
       </div>
       <div class="footer-bottom">
         <p>
-          Website source is MIT licensed. Game packages and authored assets
-          retain their stated licenses.
+          Human-led does not mean solely Atrinik-original: creators, upstream
+          projects, and exact licenses retain their credit.
         </p>
-        <p>No cookies. No tracking. Just the path ahead.</p>
+        <p>
+          <a href="/licenses/">Authorship, provenance, and licenses</a> · This site's
+          source and static build add no analytics, tracking, or application cookies.{
+            " "
+          }
+          {site.privacy.providerEdgeDisclosure}
+        </p>
       </div>
     </footer>
   </body>

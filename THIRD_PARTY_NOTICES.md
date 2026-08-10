@@ -14,9 +14,15 @@ These images are atmospheric concept artwork. They are not gameplay
 screenshots, authoritative depictions of world geography, or promises of
 features or releases.
 
-The static website publishes no third-party fonts, scripts, downloads, or
-embedded services. Build dependencies and their licenses are recorded in the
-release SBOM generated from the committed npm lockfile.
+The repository's static build publishes no third-party fonts, scripts,
+downloads, or embedded services. Cloudflare can transform a delivered response
+at the provider edge by injecting bot/security JavaScript or a
+dashboard-managed Web Analytics beacon, setting strictly necessary cookies, or
+serving a challenge response with different HTML, scripts, cookies, and CSP.
+The ordinary static response's no-script CSP blocks injected scripts; provider
+behavior is disclosed and audited separately. Build dependencies and their
+licenses are recorded in the release SBOM generated from the committed npm
+lockfile.
 
 Linked game packages and authored content are not distributed by this source
 repository and retain their own exact licenses and notices.

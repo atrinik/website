@@ -1,9 +1,19 @@
 {
   "title": "Atrinik",
-  "description": "An open-source cooperative role-playing world, playable through maintained Atrinik Classic while new foundations are built.",
+  "description": "Atrinik is an open-source role-playing world under human creative direction, with primarily Codex-driven software development and human code contributions welcome.",
   "canonicalOrigin": "https://atrinik.org",
-  "analytics": false,
-  "cookies": false,
+  "privacy": {
+    "applicationAnalytics": false,
+    "applicationCookies": false,
+    "applicationTracking": false,
+    "providerEdgeDisclosure": "Cloudflare may inject bot/security JavaScript or a dashboard-managed Web Analytics beacon, set strictly necessary cookies, or serve a challenge with its own HTML, scripts, cookies, and CSP. The ordinary page's no-script CSP blocks injected scripts."
+  },
+  "identity": {
+    "heading": "Human creativity at the heart of the world. Agent-driven software beneath it.",
+    "gameContent": "Human creators direct Atrinik's game world. Generated visual and audio assets are not accepted as final content; clearly identified temporary design drop-ins may be used until human-created replacements are found or made. For maps, quests, dialogue, and lore, generative tools may help a content creator shape terrain or develop writing; the creator directs and reviews the result. Repository owners are auditing the existing corpus before making a blanket authorship claim.",
+    "software": "Software is developed primarily through Codex-driven agentic workflows under human direction, review, provenance, and validation. Direct human code contributions are welcome under the same gates.",
+    "websiteMediaException": "The four generated website concept images are not game content. They remain explicitly recorded and credited as temporary design drop-ins while suitable human-created replacements are found or made."
+  },
   "externalLinks": [
     {
       "label": "Project workspace",

@@ -1,9 +1,12 @@
 # Static website architecture
 
 Astro compiles typed local data and `.astro` templates to static HTML and CSS.
-No browser JavaScript or server runtime is emitted. `src/data` is the only
-published content input; closed validators reject unknown download/media
-fields and unsafe coordinates before rendering.
+No browser JavaScript or server runtime is emitted by the build. `src/data` is
+the schema-validated structured metadata and catalog input, while `.astro`
+templates contain authored page prose. Closed validators reject unknown
+download/media fields and unsafe coordinates before rendering. Cloudflare can
+transform a deployed response after this build boundary; provider-injected
+security or performance code is not part of `dist/` and is audited separately.
 
 Downloads remain in their owning GitHub releases. Catalog schema version 2
 separates the release repository from the artifact's logical role and marks at
@@ -54,6 +57,13 @@ labelling, one page heading, useful image alternatives, focus visibility,
 reflow, and reduced-motion policy; manual assistive-technology review remains
 a release gate.
 
+The zero-JavaScript budget covers repository output. Cloudflare may inject
+bot/security JavaScript or a dashboard-managed Web Analytics beacon, set
+strictly necessary cookies, or serve a challenge with its own HTML, scripts,
+cookies, and CSP. Ordinary deployed pages retain `script-src 'none'`, which
+blocks injected scripts. Public privacy language therefore distinguishes the
+static artifact from this provider edge boundary.
+
 ## Deployment topology
 
 One Git-integrated Cloudflare Pages project serves every environment. The
@@ -73,3 +83,6 @@ the branch or pull request closes.
 Repository `_headers` therefore contains production-safe security and cache
 rules only. It must not add a global noindex response: Cloudflare owns the
 preview-only indexing header at the edge while production stays indexable.
+The same edge may inject provider code based on hostname, request, or dashboard
+state, so a clean static artifact does not prove that every delivered response
+is script-, cookie-, or analytics-free.

@@ -1,10 +1,11 @@
 ---
 import Base from "../layouts/Base.astro";
+import site from "../data/site.json";
 ---
 
 <Base
   title="Licenses"
-  description="Understand the separate licenses for the Atrinik website, unified Classic software, next-generation foundations, authored content, and concept artwork."
+  description="Understand Atrinik's human-directed content policy, attribution, provenance, and license boundaries for creative game content, agentically developed software, and temporary generated website media."
 >
   <header class="page-hero">
     <p class="eyebrow">Licenses and provenance</p>
@@ -14,6 +15,51 @@ import Base from "../layouts/Base.astro";
       One license does not automatically cover another part of the project.
     </p>
   </header>
+
+  <section class="section" aria-labelledby="authorship-heading">
+    <div class="section-heading">
+      <p class="eyebrow">Three different questions</p>
+      <h2 id="authorship-heading">
+        Creation, credit, and license are not the same
+      </h2>
+      <p>
+        “Human-led” describes creative direction and responsibility; it does not
+        require every permitted editing tool to be manual, identify a sole
+        creator, prove provenance, or replace the exact license attached to a
+        file or collection.
+      </p>
+    </div>
+    <div class="detail-grid">
+      <article class="detail-card">
+        <h3>Creation method</h3>
+        <p>
+          Generated visual and audio assets—including pixel art, graphics,
+          animation, music, and sound effects—are not accepted as final game
+          content. Clearly identified generated versions may be temporary design
+          drop-ins pending suitable human-created replacements. A human content
+          creator may use generative tools to help shape maps or develop quests,
+          dialogue, and lore while directing and reviewing the result. Owner
+          audits of the existing corpus are still in progress.
+        </p>
+      </article>
+      <article class="detail-card">
+        <h3>Attribution and provenance</h3>
+        <p>
+          Each work must retain its human creator or upstream project, source,
+          transformations, and applicable notices. Crossfire, Daimonin, Atrinik
+          contributors, and other creators keep their specific credit.
+        </p>
+      </article>
+      <article class="detail-card">
+        <h3>License</h3>
+        <p>
+          Permission comes from the exact license or grant for the work—not from
+          its creation method or the license of nearby software. Known gaps
+          remain visible and fail closed for new publication.
+        </p>
+      </article>
+    </div>
+  </section>
 
   <section class="section" aria-labelledby="license-map-heading">
     <div class="section-heading">
@@ -80,8 +126,11 @@ import Base from "../layouts/Base.astro";
           world content use mixed licenses. Follow the notice attached to the
           specific file or collection.
         </p>
-        <a class="link-arrow" href="https://github.com/atrinik/content">
-          Explore the content repository <span aria-hidden="true">→</span>
+        <a
+          class="link-arrow"
+          href="https://github.com/atrinik/content/blob/main/ATTRIBUTION_STATUS.md"
+        >
+          Read content attribution status <span aria-hidden="true">→</span>
         </a>
       </article>
 
@@ -89,10 +138,135 @@ import Base from "../layouts/Base.astro";
         <p><span class="status-tag">MIT</span></p>
         <h3>Website concept artwork</h3>
         <p>
-          The atmospheric concept artwork presented on this site is MIT-licensed
-          presentation material. It is not gameplay footage, a shipped game
-          asset, or a promise of depicted features.
+          Four temporary atmospheric concept images were generated with OpenAI
+          and are MIT-licensed presentation material. They are explicitly
+          recorded and credited, are not game content or gameplay footage, and
+          remain temporary design drop-ins until suitable human-created visuals
+          are found or made.
         </p>
+        <a
+          class="link-arrow"
+          href="https://github.com/atrinik/website/issues/22"
+        >
+          Follow their replacement <span aria-hidden="true">→</span>
+        </a>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="records-heading">
+    <div class="section-heading">
+      <p class="eyebrow">Repository-owned evidence</p>
+      <h2 id="records-heading">Follow records and policy work to each owner</h2>
+      <p>
+        These concrete records describe current attribution and provenance; open
+        owner issues track policies and corpus audits that are not yet complete.
+        This page does not copy ledgers that could drift.
+      </p>
+    </div>
+    <div class="detail-grid">
+      <article class="detail-card">
+        <h3>World content</h3>
+        <p>
+          Maps, archetypes, quests, dialogue, lore, and embedded authored
+          scripts.
+        </p>
+        <div class="card-actions">
+          <a
+            class="link-arrow"
+            href="https://github.com/atrinik/content/blob/main/ATTRIBUTION_STATUS.md"
+          >
+            Main attribution <span aria-hidden="true">→</span>
+          </a>
+          <a
+            class="link-arrow"
+            href="https://github.com/atrinik/content/blob/1.x/ATTRIBUTION_STATUS.md"
+          >
+            Classic attribution <span aria-hidden="true">→</span>
+          </a>
+          <a
+            class="link-arrow"
+            href="https://github.com/atrinik/content/issues/77"
+          >
+            Policy and audit <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </article>
+      <article class="detail-card">
+        <h3>Music and sound</h3>
+        <p>
+          Source audio, human creators, licenses, transformations, and runtime
+          encodings.
+        </p>
+        <div class="card-actions">
+          <a
+            class="link-arrow"
+            href="https://github.com/atrinik/sound/blob/main/manifests/source-assets.json"
+          >
+            Source manifest <span aria-hidden="true">→</span>
+          </a>
+          <a
+            class="link-arrow"
+            href="https://github.com/atrinik/sound/issues/26"
+          >
+            Policy and audit <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </article>
+      <article class="detail-card">
+        <h3>Visual resources</h3>
+        <p>
+          Shipped graphics and media with upstream, author, source, license, and
+          notice records.
+        </p>
+        <div class="card-actions">
+          <a
+            class="link-arrow"
+            href="https://github.com/atrinik/resources/blob/main/catalog/resources.json"
+          >
+            Release catalog <span aria-hidden="true">→</span>
+          </a>
+          <a
+            class="link-arrow"
+            href="https://github.com/atrinik/resources/issues/17"
+          >
+            Policy and audit <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </article>
+      <article class="detail-card">
+        <h3>Classic lineage</h3>
+        <p>
+          GPL C software history plus repository and per-file upstream
+          attribution.
+        </p>
+        <div class="card-actions">
+          <a
+            class="link-arrow"
+            href="https://github.com/atrinik/classic/blob/main/ATTRIBUTIONS.md"
+          >
+            Attribution record <span aria-hidden="true">→</span>
+          </a>
+          <a
+            class="link-arrow"
+            href="https://github.com/atrinik/classic/issues/93"
+          >
+            History and policy work <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </article>
+      <article class="detail-card">
+        <h3>Website media</h3>
+        <p>
+          Locally retained sources, immutable digests, transformations, notices,
+          and accessible text.
+        </p>
+        <a
+          class="link-arrow"
+          href="https://github.com/atrinik/website/blob/main/src/data/media.json"
+        >
+          Website media catalog <span aria-hidden="true">→</span>
+        </a>
       </article>
     </div>
   </section>
@@ -120,8 +294,10 @@ import Base from "../layouts/Base.astro";
       <h2 id="privacy-heading">Privacy by default</h2>
     </div>
     <p>
-      This static site sets no cookies and includes no analytics, advertising,
-      third-party embeds, account forms, or gameplay state.
+      Atrinik's static build emits no browser JavaScript, sets no application
+      cookies, and includes no Atrinik-managed analytics, tracking, advertising,
+      third-party embeds, account forms, or gameplay state.{" "}
+      {site.privacy.providerEdgeDisclosure}
     </p>
   </section>
 </Base>

@@ -9,6 +9,32 @@ import {
 } from "./site-contract.mjs";
 
 const expectedProductionDomains = ["atrinik.org", "www.atrinik.org"];
+const expectedApplicationPrivacy = {
+  analytics: false,
+  cookies: false,
+  tracking: false,
+};
+const expectedProviderEdge = {
+  htmlTransformation: "provider-controlled",
+  securityJavaScript: "conditional",
+  securityCookies: "conditional",
+  webAnalytics: "dashboard-managed",
+};
+const expectedContentSecurityPolicy = new Map([
+  ["default-src", ["'none'"]],
+  ["base-uri", ["'none'"]],
+  ["connect-src", ["'none'"]],
+  ["font-src", ["'self'"]],
+  ["form-action", ["'none'"]],
+  ["frame-ancestors", ["'none'"]],
+  ["img-src", ["'self'"]],
+  ["manifest-src", ["'self'"]],
+  ["media-src", ["'self'"]],
+  ["object-src", ["'none'"]],
+  ["script-src", ["'none'"]],
+  ["style-src", ["'self'"]],
+  ["upgrade-insecure-requests", []],
+]);
 const expectedPreviewDeployments = {
   source: "cloudflare-git-integration",
   branches: "all-non-production",
@@ -19,7 +45,7 @@ const expectedPreviewDeployments = {
 
 export function validateDeploymentContract(contract) {
   if (
-    contract.schemaVersion !== 3 ||
+    contract.schemaVersion !== 4 ||
     contract.provider !== "cloudflare-pages" ||
     contract.project !== "atrinik-website" ||
     contract.repository !== "atrinik/website" ||
@@ -30,7 +56,11 @@ export function validateDeploymentContract(contract) {
     throw new Error("Cloudflare Pages deployment contract drift");
   if (
     contract.functions !== false ||
-    contract.analytics !== false ||
+    !isDeepStrictEqual(
+      contract.applicationPrivacy,
+      expectedApplicationPrivacy,
+    ) ||
+    !isDeepStrictEqual(contract.providerEdge, expectedProviderEdge) ||
     !Array.isArray(contract.secrets) ||
     contract.secrets.length !== 0
   )
@@ -52,7 +82,7 @@ export function validateDeploymentHeaders(headers) {
   for (const line of headers.split(/\r?\n/u)) {
     if (line.trim() === "" || line.trimStart().startsWith("#")) continue;
     if (!/^\s/u.test(line)) {
-      block = { selector: line.trim(), headers: new Set() };
+      block = { selector: line.trim(), headers: new Map() };
       blocks.push(block);
       continue;
     }
@@ -60,12 +90,29 @@ export function validateDeploymentHeaders(headers) {
     const separator = line.indexOf(":");
     if (separator < 0)
       throw new Error(`built deployment has an invalid header: ${line.trim()}`);
-    block.headers.add(line.slice(0, separator).trim().toLowerCase());
+    const name = line.slice(0, separator).trim().toLowerCase();
+    if (block.headers.has(name))
+      throw new Error(`built deployment repeats header: ${name}`);
+    block.headers.set(name, line.slice(separator + 1).trim());
   }
 
   const globalBlock = blocks.find(({ selector }) => selector === "/*");
-  if (!globalBlock?.headers.has("content-security-policy"))
+  const contentSecurityPolicy = globalBlock?.headers.get(
+    "content-security-policy",
+  );
+  if (!contentSecurityPolicy)
     throw new Error("built deployment lacks security headers");
+  const directives = new Map();
+  for (const sourceDirective of contentSecurityPolicy.split(";")) {
+    const [rawName, ...values] = sourceDirective.trim().split(/\s+/u);
+    if (!rawName) continue;
+    const name = rawName.toLowerCase();
+    if (directives.has(name))
+      throw new Error(`built deployment repeats CSP directive: ${name}`);
+    directives.set(name, values);
+  }
+  if (!isDeepStrictEqual(directives, expectedContentSecurityPolicy))
+    throw new Error("built deployment lacks the required no-script CSP");
   if (/^\s*X-Robots-Tag:/imu.test(headers))
     throw new Error("repository headers must not mark production as noindex");
 }

@@ -4,17 +4,75 @@ import Base from "../layouts/Base.astro";
 
 <Base
   title="About"
-  description="Atrinik is one open-source fantasy world with a unified, maintained Classic line and independently released clean-room foundations in development."
+  description="Atrinik began in 2009 as a human-developed open-source world. Today its software is maintained and reimplemented primarily through Codex-driven workflows while human code contributions remain welcome."
 >
   <header class="page-hero">
     <p class="eyebrow">About Atrinik</p>
-    <h1 class="page-title">One world. Two implementations.</h1>
+    <h1 class="page-title">Human imagination. Agentic engineering.</h1>
     <p class="page-lede">
-      Atrinik is an open-source cooperative role-playing world. Its maintained
-      Classic game can be played today while a new engine and toolchain are
-      being built in public.
+      Atrinik keeps people in creative control of its game world and reserves
+      final visual and audio assets for human creators. Codex-driven workflows
+      primarily build and maintain the software that brings that craft to life,
+      and direct human code contributions are welcome.
     </p>
   </header>
+
+  <section class="section" aria-labelledby="history-heading">
+    <div class="section-heading">
+      <p class="eyebrow">From 2009 to today</p>
+      <h2 id="history-heading">A human-developed beginning</h2>
+      <p>
+        Atrinik began in 2009 under founder and original lead Zoey Rose. The
+        2011 releases were a major era of development, not the project's origin.
+      </p>
+    </div>
+    <div class="detail-grid">
+      <article class="detail-card">
+        <h3>Founded in 2009</h3>
+        <p>
+          Zoey Rose founded and originally led Atrinik. She worked alongside the
+          wider Atrinik Development Team as maps, art, music, quests, dialogue,
+          lore, and code grew through the work of many people over the years.
+        </p>
+        <a
+          class="link-arrow"
+          href="https://github.com/atrinik/classic/commit/6e5ee3ceb53c8ce3354acd6de08a308fdd21b8da"
+        >
+          See the initial 2009 source <span aria-hidden="true">→</span>
+        </a>
+      </article>
+      <article class="detail-card">
+        <h3>Credit across lineages</h3>
+        <p>
+          Atrinik's founding sources credited Daimonin and Crossfire. Classic
+          also retains work from Atrinik contributors and appropriately licensed
+          upstream authors. Their repository notices and per-file records—not a
+          blanket claim—remain authoritative.
+        </p>
+        <a class="link-arrow" href="https://github.com/atrinik/classic">
+          Read the Classic history and notices <span aria-hidden="true">→</span>
+        </a>
+      </article>
+      <article class="detail-card">
+        <h3>Human creative direction</h3>
+        <p>
+          Atrinik does not accept generated visual or audio assets as final game
+          content. Clearly identified generated art or sound may serve as a
+          temporary design drop-in until a suitable human-created replacement is
+          found or made. Human content creators may use generative tools to help
+          shape maps or develop quests, dialogue, and lore while directing and
+          reviewing the result. Owner repositories are documenting the policy
+          and auditing the existing corpus before making a blanket authorship
+          claim. Human-created upstream work still keeps its own author, source,
+          license, and attribution; it is not automatically Atrinik-original.
+        </p>
+        <a class="link-arrow" href="/licenses/">
+          Follow the exact ownership boundaries <span aria-hidden="true">→</span
+          >
+        </a>
+      </article>
+    </div>
+  </section>
 
   <section class="section" aria-labelledby="two-paths-heading">
     <div class="section-heading">
@@ -36,11 +94,13 @@ import Base from "../layouts/Base.astro";
         </div>
         <h3>Classic</h3>
         <p>
-          The current playable line is actively maintained in the unified{
-            " "
-          }<code>atrinik/classic</code>{" "}repository. Its client, server,
-          editor, libatrinik, and protocol share one version, release notes
-          stream, and coordinated artifact set under GPL-2.0-or-later.
+          The current playable line is the maintained GPL C lineage of the
+          human-developed project, actively coordinated in the unified{" "}<code
+            >atrinik/classic</code
+          >{" "}repository. Its client, server, editor, libatrinik, and protocol
+          share one version, release notes stream, and coordinated artifact set
+          under GPL-2.0-or-later. Current code maintenance primarily uses
+          Codex-driven workflows.
         </p>
         <ul class="path-details">
           <li>Current playable implementation</li>
@@ -61,10 +121,11 @@ import Base from "../layouts/Base.astro";
         </div>
         <h3>Next generation</h3>
         <p>
-          The replacement is a set of independently released, clean-room,
-          MIT-licensed Go and Rust foundations. They are developed in public,
-          but do not yet form a complete public download or replace the playable
-          Classic line.
+          The replacement is a Codex-driven clean-room reimplementation and
+          improvement: a Go server, Rust client, editor, renderer and content
+          toolkit, plus a new Protobuf protocol. These fresh MIT foundations are
+          not a mechanical source port and do not yet form a complete game
+          release or replace the playable Classic line.
         </p>
         <ul class="path-details">
           <li>Clean-room Go and Rust implementation</li>
@@ -85,38 +146,40 @@ import Base from "../layouts/Base.astro";
 
   <section class="section" aria-labelledby="open-development-heading">
     <div class="section-heading">
-      <p class="eyebrow">Made in the open</p>
-      <h2 id="open-development-heading">A world cared for in public</h2>
+      <p class="eyebrow">The current development model</p>
+      <h2 id="open-development-heading">
+        Agent-driven, human-directed, open to everyone
+      </h2>
     </div>
 
     <div class="detail-grid">
       <article class="detail-card">
-        <h3>Release ownership</h3>
+        <h3>Software workflows</h3>
         <p>
-          Classic plans, source, issues, and releases share one repository and
-          coordinated release train. The replacement foundations remain
-          independently released, with each repository owning its code, license,
-          release information, and technical documentation. Progress is measured
-          by completed work and published releases, not launch promises.
+          Software development primarily uses Codex-driven agents under
+          maintainer direction, with documented ownership, provenance review,
+          tests, and repository validation. This describes the main workflow; it
+          is not a claim that every line or commit was written by an agent.
         </p>
       </article>
 
       <article class="detail-card">
-        <h3>Authored world</h3>
+        <h3>Creator-directed world</h3>
         <p>
-          Maps, archetypes, stories, graphics, audio, and other authored content
-          have mixed terms. Their licenses and attribution are handled per file
-          or collection rather than inherited from either engine.
+          People set the creative direction for maps, archetypes, stories,
+          dialogue, graphics, animation, music, and sound effects. Generative
+          tools may help a content creator shape terrain or develop writing.
+          Generated visual and audio assets remain temporary, clearly marked
+          design drop-ins and must be replaced for final use.
         </p>
       </article>
 
       <article class="detail-card">
-        <h3>Service foundations</h3>
+        <h3>Human code is welcome</h3>
         <p>
-          Signed publishing, protected rendezvous, and a static server directory
-          have been implemented as foundations. Rollout and canonical public
-          endpoints are still pending, so they are not advertised as live
-          services.
+          People can contribute code directly. Human-written and agent-written
+          changes pass the same review, clean-room provenance, licensing, and
+          validation gates; contributors do not need to use an agent.
         </p>
       </article>
     </div>
