@@ -27,6 +27,9 @@ git diff --check
 
 Review the built pages at narrow and desktop widths with keyboard-only input,
 reduced motion, no JavaScript, and representative screen-reader navigation.
+For deployed pages, separately inspect delivered HTML, network requests,
+cookies, browser storage, and CSP failures so Cloudflare-injected security or
+analytics behavior is recorded instead of attributed to the static build.
 
 Cloudflare Pages automatically builds all non-production branches. A pull
 request from this repository receives a native `pages.dev` preview link from

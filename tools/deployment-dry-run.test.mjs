@@ -42,16 +42,34 @@ test("rejects custom preview domains and direct uploads", () => {
     );
 });
 
-test("rejects the retired custom-preview contract schema", () => {
+test("rejects the retired provider-blind contract schema", () => {
   assert.throws(
     () =>
       validateDeploymentContract(
         changedContract((value) => {
-          value.schemaVersion = 2;
+          value.schemaVersion = 3;
         }),
       ),
     /Cloudflare Pages deployment contract drift/u,
   );
+});
+
+test("requires explicit application privacy and provider edge boundaries", () => {
+  for (const changed of [
+    changedContract((value) => {
+      value.applicationPrivacy.analytics = true;
+    }),
+    changedContract((value) => {
+      value.providerEdge.securityCookies = "absent";
+    }),
+    changedContract((value) => {
+      value.providerEdge.webAnalytics = "disabled";
+    }),
+  ])
+    assert.throws(
+      () => validateDeploymentContract(changed),
+      /dynamic\/privacy boundary/u,
+    );
 });
 
 test("rejects preview credentials and an unexpected preview source", () => {
@@ -90,4 +108,16 @@ test("requires the content security policy on the global header block", () => {
       ),
     /lacks security headers/u,
   );
+});
+
+test("rejects a permissive content security policy", () => {
+  for (const changed of [
+    headers.replace("script-src 'none'", "script-src *"),
+    headers.replace("connect-src 'none'", "connect-src *"),
+    headers.replace("default-src 'none'", "default-src *"),
+  ])
+    assert.throws(
+      () => validateDeploymentHeaders(changed),
+      /required no-script CSP/u,
+    );
 });
