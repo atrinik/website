@@ -8,8 +8,12 @@ candidate historical reuse.
 Every media change updates `src/data/media.json` with its exact locally retained
 source, Git blob object ID, source and published digests, published dimensions,
 author, license, transformations, alt text, and notice. Every download change
-uses an immutable owner release URL and complete compatibility/license
-metadata. Missing evidence means the item remains unavailable.
+records the distinct release repository and artifact role; published release
+state; exact revision, versioned artifact, manifest, checksum, release-note,
+and SBOM URLs; platform/archive/size/digest details; and complete installation,
+compatibility, and software/bundled-asset license boundaries. Independently
+verify those fields against the immutable release API and manifest. Missing or
+contradictory evidence means the item remains unavailable.
 
 Pull-request titles and commits use Conventional Commits. Run:
 
