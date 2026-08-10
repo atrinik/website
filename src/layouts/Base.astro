@@ -27,6 +27,7 @@ const navigation = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about/" },
   { label: "Downloads", href: "/downloads/" },
+  { label: "Licenses", href: "/licenses/" },
 ];
 const isCurrent = (href: string) =>
   href === "/" ? currentPath === href : currentPath.startsWith(href);
@@ -110,8 +111,7 @@ const isCurrent = (href: string) =>
             <span class="brand-name">Atrinik</span>
           </a>
           <p>
-            An open-source role-playing world, preserved with care and rebuilt
-            in public.
+            {site.identity.heading} Human code contributions are welcome.
           </p>
         </div>
         <div class="footer-links">
@@ -133,10 +133,13 @@ const isCurrent = (href: string) =>
       </div>
       <div class="footer-bottom">
         <p>
-          Website source is MIT licensed. Game packages and authored assets
-          retain their stated licenses.
+          Human-made does not mean solely Atrinik-original: creators, upstream
+          projects, and exact licenses retain their credit.
         </p>
-        <p>No cookies. No tracking. Just the path ahead.</p>
+        <p>
+          <a href="/licenses/">Authorship, provenance, and licenses</a> · No cookies
+          or tracking.
+        </p>
       </div>
     </footer>
   </body>

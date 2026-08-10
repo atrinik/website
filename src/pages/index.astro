@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import media from "../data/media.json";
+import site from "../data/site.json";
 
 const getMedia = (id: string) => {
   const record = media.entries.find((entry) => entry.id === id);
@@ -83,6 +84,45 @@ const chronicle = [
         The Great Blue Crystal · concept artwork
       </figcaption>
     </figure>
+  </section>
+
+  <section class="section" aria-labelledby="identity-heading">
+    <div class="section-heading section-heading--split">
+      <div>
+        <p class="eyebrow">How Atrinik is made</p>
+        <h2 id="identity-heading">{site.identity.heading}</h2>
+      </div>
+      <p>
+        Human craft gives the world its character. Agentic engineering builds
+        and maintains the software that brings that work to life.
+      </p>
+    </div>
+    <div class="split-grid">
+      <article class="detail-card">
+        <h3>People make the world</h3>
+        <p>{site.identity.gameContent}</p>
+        <p>
+          Atrinik contributors and appropriately licensed work from Crossfire,
+          Daimonin, and other human creators retain their exact credit and
+          terms; “human-made” does not mean solely Atrinik-original.
+        </p>
+        <a class="link-arrow" href="/licenses/">
+          Read the authorship and provenance boundaries
+          <span aria-hidden="true">→</span>
+        </a>
+      </article>
+      <article class="detail-card">
+        <h3>Agents help build the software</h3>
+        <p>{site.identity.software}</p>
+        <p>
+          “Generative AI” here means tools that synthesize content or code. It
+          is unrelated to gameplay systems such as creature or NPC behavior.
+        </p>
+        <a class="link-arrow" href="/about/">
+          Learn about the development model <span aria-hidden="true">→</span>
+        </a>
+      </article>
+    </div>
   </section>
 
   <section class="world-intro" aria-labelledby="world-heading">
@@ -217,9 +257,11 @@ const chronicle = [
       </div>
       <div>
         <p>
-          Atrinik is developed in public. Classic has one coordinated home;
-          clean-room replacement foundations live in focused repositories.
-          Follow the roadmap, inspect the work, or report an issue.
+          Atrinik's software is developed in public, primarily through
+          Codex-driven agentic workflows. Direct human code contributions are
+          welcome under the same review, provenance, licensing, and validation
+          gates. Classic has one coordinated home; clean-room replacement
+          foundations live in focused repositories.
         </p>
         <a
           class="button button--primary"
