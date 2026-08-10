@@ -1,5 +1,11 @@
 ---
 import Base from "../layouts/Base.astro";
+import DownloadCatalog from "../components/DownloadCatalog.astro";
+import DownloadPrimaryAction from "../components/DownloadPrimaryAction.astro";
+import downloads from "../data/downloads.json";
+import type { DownloadCatalog as DownloadCatalogType } from "../lib/downloads";
+
+const catalog: DownloadCatalogType = downloads;
 ---
 
 <Base
@@ -35,9 +41,9 @@ import Base from "../layouts/Base.astro";
         <h3>Atrinik Classic</h3>
         <p>
           The unified{" "}<code>atrinik/classic</code> repository is the supported
-          GPL-2.0-or-later software line. Use its release notes to confirm which published
-          fixes, packages, platforms, and compatibility details apply before choosing
-          an artifact.
+          GPL-2.0-or-later software line. Use the verified catalog and release evidence
+          below to confirm the selected package, platform, protocol, and published
+          fixes before choosing an artifact.
         </p>
         <ul class="path-details">
           <li>Current playable implementation</li>
@@ -45,11 +51,7 @@ import Base from "../layouts/Base.astro";
           <li>GPL-2.0-or-later software</li>
         </ul>
         <div class="card-actions">
-          <a
-            class="button button--primary"
-            href="https://github.com/atrinik/classic/releases"
-            >View all Classic releases</a
-          >
+          <DownloadPrimaryAction catalog={catalog} />
         </div>
       </article>
 
@@ -81,25 +83,7 @@ import Base from "../layouts/Base.astro";
     </div>
   </section>
 
-  <section class="section" aria-labelledby="catalog-heading">
-    <aside class="callout">
-      <div>
-        <p class="eyebrow">An honest download boundary</p>
-        <h2 id="catalog-heading">No site-verified immutable catalog yet</h2>
-        <p>
-          This site does not yet have a verified catalog of exact versions,
-          checksums, platforms, compatibility, provenance, and licenses. Until
-          that exists, it links to the owning repository’s release page instead
-          of guessing direct artifact URLs.
-        </p>
-      </div>
-      <div class="card-actions">
-        <a class="button button--ghost" href="/licenses/"
-          >Understand the licenses</a
-        >
-      </div>
-    </aside>
-  </section>
+  <DownloadCatalog catalog={catalog} />
 
   <section class="section" aria-labelledby="before-heading">
     <div class="section-heading">

@@ -32,6 +32,12 @@ unproven media, mutable download coordinates, missing attribution or alt text,
 unsafe links, client JavaScript, broken internal links, and page-weight budget
 violations. Generated release evidence belongs under ignored `build/`.
 
+`src/data/downloads.json` is a reviewed immutable catalog, not a live release
+feed. Its closed schema keeps a release repository separate from an artifact
+role and binds exact release evidence. Drafts, prereleases, zero-asset releases,
+and guessed or mutable links fail closed; an empty catalog keeps the Classic
+release-page fallback useful without JavaScript or a GitHub request.
+
 Cloudflare Pages uses one Git-integrated project. `main` serves the canonical
 `atrinik.org`; `www.atrinik.org` permanently redirects to it. Cloudflare builds
 all non-production branches and posts its native `pages.dev` preview link on

@@ -1,4 +1,35 @@
 {
-  "schemaVersion": 1,
-  "entries": []
+  "schemaVersion": 2,
+  "entries": [
+    {
+      "releaseRepository": "atrinik/classic",
+      "artifactRole": "client",
+      "primary": true,
+      "version": "5.8.2",
+      "tag": "v5.8.2",
+      "revision": "6d5932b48a019353955d393f59cdb3fea54dd45d",
+      "publishedAt": "2026-08-10T00:32:43Z",
+      "verifiedAt": "2026-08-10T05:09:00Z",
+      "draft": false,
+      "prerelease": false,
+      "immutable": true,
+      "attested": true,
+      "releaseAssets": 12,
+      "platform": "windows",
+      "architecture": "x86_64",
+      "archiveFormat": "zip",
+      "artifact": "atrinik-classic-client-5.8.2-windows-x86_64.zip",
+      "bytes": 87406395,
+      "sha256": "1a7699f3ea5be50fc83b40dce8097c18cd0a892f98a2b0d462f851c2822689c0",
+      "url": "https://github.com/atrinik/classic/releases/download/v5.8.2/atrinik-classic-client-5.8.2-windows-x86_64.zip",
+      "releaseNotesUrl": "https://github.com/atrinik/classic/releases/tag/v5.8.2",
+      "manifestUrl": "https://github.com/atrinik/classic/releases/download/v5.8.2/release-manifest.json",
+      "checksumsUrl": "https://github.com/atrinik/classic/releases/download/v5.8.2/SHA256SUMS",
+      "sbomUrl": "https://github.com/atrinik/classic/releases/download/v5.8.2/atrinik-classic-5.8.2.spdx.json",
+      "softwareLicense": "GPL-2.0-or-later",
+      "bundledAssetsLicense": "Bundled sound and authored assets retain their exact per-file terms; inspect the packaged LICENSE.md, ATTRIBUTIONS.md, and any license files accompanying individual assets. Use the SPDX SBOM for dependency and provenance evidence.",
+      "compatibility": "This client uses gameplay protocol revision 1072 and connects only to servers using the same revision; the coordinated Classic 5.8.2 server uses revision 1072.",
+      "installation": "Extract the ZIP, keep every packaged file and directory together, and run atrinik.exe from inside the extracted package."
+    }
+  ]
 }

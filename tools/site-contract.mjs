@@ -21,7 +21,11 @@ const rasterImageExtensions = new Set([
 const sha256Pattern = /^[0-9a-f]{64}$/u;
 const revisionPattern = /^[0-9a-f]{40}$/u;
 const versionPattern = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/u;
+const releaseRepositoryPattern = /^atrinik\/[a-z][a-z0-9-]*$/u;
+const artifactRolePattern = /^[a-z][a-z0-9-]*$/u;
 const artifactPattern = /^[A-Za-z0-9][A-Za-z0-9._-]+$/u;
+const utcTimestampPattern =
+  /^(?:(?:\d{2}(?:0[48]|[2468][048]|[13579][26])|(?:[02468][048]|[13579][26])00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|02-(?:0[1-9]|1\d|2[0-8])))T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\dZ$/u;
 const mediaPathPattern = /^\/media\/[a-z0-9][a-z0-9-]*\.([0-9a-f]{8})\.webp$/u;
 const mediaLicenses = new Set([
   "MIT",
@@ -31,6 +35,20 @@ const mediaLicenses = new Set([
   "GPL-2.0-only",
   "GPL-2.0-or-later",
 ]);
+const versionPatternSource = versionPattern.source;
+const tagPatternSource = `^v${versionPatternSource.slice(1)}`;
+const trimmedGuidancePatternSource = "^\\S(?:[\\s\\S]*\\S)?$";
+const schemaUrlPatterns = Object.freeze({
+  url: "^https://github\\.com/atrinik/[a-z0-9-]+/releases/download/v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)/[A-Za-z0-9._-]+$",
+  releaseNotesUrl:
+    "^https://github\\.com/atrinik/[a-z0-9-]+/releases/tag/v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$",
+  manifestUrl:
+    "^https://github\\.com/atrinik/[a-z0-9-]+/releases/download/v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)/release-manifest\\.json$",
+  checksumsUrl:
+    "^https://github\\.com/atrinik/[a-z0-9-]+/releases/download/v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)/SHA256SUMS$",
+  sbomUrl:
+    "^https://github\\.com/atrinik/[a-z0-9-]+/releases/download/v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)/[A-Za-z0-9._-]+\\.spdx\\.json$",
+});
 const establishedRedirects = new Map([
   ["/page/installing_atrinik_client*", "/downloads/"],
   ["/page/how_to_play*", "/downloads/"],
@@ -41,6 +59,16 @@ const establishedRedirects = new Map([
   ["/page/development*", "/about/"],
   ["/page/team*", "/about/"],
 ]);
+
+function isCanonicalUtcTimestamp(value) {
+  if (typeof value !== "string" || !utcTimestampPattern.test(value))
+    return false;
+  const milliseconds = Date.parse(value);
+  return (
+    !Number.isNaN(milliseconds) &&
+    new Date(milliseconds).toISOString() === value.replace("Z", ".000Z")
+  );
+}
 
 function isSafeRelativePath(path) {
   if (
@@ -57,23 +85,43 @@ function isSafeRelativePath(path) {
 
 export function validateDownload(record) {
   const required = [
-    "component",
+    "releaseRepository",
+    "artifactRole",
+    "primary",
     "version",
     "tag",
     "revision",
+    "publishedAt",
+    "verifiedAt",
+    "draft",
+    "prerelease",
+    "immutable",
+    "attested",
+    "releaseAssets",
     "platform",
     "architecture",
+    "archiveFormat",
     "artifact",
     "bytes",
     "sha256",
     "url",
-    "license",
+    "releaseNotesUrl",
+    "manifestUrl",
+    "checksumsUrl",
+    "sbomUrl",
+    "softwareLicense",
+    "bundledAssetsLicense",
     "compatibility",
+    "installation",
   ];
   if (Object.keys(record).sort().join("\n") !== required.sort().join("\n"))
     throw new Error("download fields differ from the closed contract");
-  if (!/^[a-z][a-z0-9-]*$/u.test(record.component))
-    throw new Error("invalid download component");
+  if (
+    !releaseRepositoryPattern.test(record.releaseRepository) ||
+    !artifactRolePattern.test(record.artifactRole) ||
+    typeof record.primary !== "boolean"
+  )
+    throw new Error("invalid download repository/role");
   if (
     !versionPattern.test(record.version) ||
     record.tag !== `v${record.version}`
@@ -85,6 +133,19 @@ export function validateDownload(record) {
   )
     throw new Error("invalid immutable download digest");
   if (
+    !isCanonicalUtcTimestamp(record.publishedAt) ||
+    !isCanonicalUtcTimestamp(record.verifiedAt) ||
+    Date.parse(record.verifiedAt) < Date.parse(record.publishedAt) ||
+    record.draft !== false ||
+    record.prerelease !== false ||
+    record.immutable !== true ||
+    record.attested !== true ||
+    !Number.isSafeInteger(record.releaseAssets) ||
+    record.releaseAssets < 1 ||
+    record.releaseAssets > 200
+  )
+    throw new Error("download release is not published and eligible");
+  if (
     !artifactPattern.test(record.artifact) ||
     !Number.isSafeInteger(record.bytes) ||
     record.bytes < 1 ||
@@ -92,27 +153,224 @@ export function validateDownload(record) {
   )
     throw new Error("invalid download artifact bounds");
   if (
-    !new Set(["linux", "windows"]).has(record.platform) ||
-    record.architecture !== "x86_64"
+    !new Set(["linux", "macos", "windows"]).has(record.platform) ||
+    record.architecture !== "x86_64" ||
+    !new Set(["tar.gz", "zip"]).has(record.archiveFormat) ||
+    !record.artifact.endsWith(`.${record.archiveFormat}`)
   )
     throw new Error("unsupported download target");
-  const expected = `https://github.com/atrinik/${record.component}/releases/download/${record.tag}/${record.artifact}`;
+  const releaseRoot = `https://github.com/${record.releaseRepository}/releases`;
+  const downloadRoot = `${releaseRoot}/download/${record.tag}`;
+  const expected = `${downloadRoot}/${record.artifact}`;
   if (record.url !== expected)
     throw new Error(
       "download URL is mutable or does not match its immutable identity",
     );
+  const expectedLinks = {
+    releaseNotesUrl: `${releaseRoot}/tag/${record.tag}`,
+    manifestUrl: `${downloadRoot}/release-manifest.json`,
+    checksumsUrl: `${downloadRoot}/SHA256SUMS`,
+  };
+  for (const [field, value] of Object.entries(expectedLinks))
+    if (record[field] !== value)
+      throw new Error(`download ${field} does not match its immutable release`);
   if (
-    typeof record.license !== "string" ||
-    record.license.length === 0 ||
-    record.license.length > 80
+    typeof record.sbomUrl !== "string" ||
+    !record.sbomUrl.startsWith(`${downloadRoot}/`) ||
+    !artifactPattern.test(record.sbomUrl.slice(downloadRoot.length + 1)) ||
+    !record.sbomUrl.endsWith(".spdx.json")
   )
-    throw new Error("invalid download license");
+    throw new Error("download SBOM does not match its immutable release");
+  const stringBounds = {
+    bundledAssetsLicense: 300,
+    compatibility: 300,
+    installation: 500,
+  };
+  if (!new Set(["GPL-2.0-or-later", "MIT"]).has(record.softwareLicense))
+    throw new Error("invalid download softwareLicense");
+  for (const [field, maximum] of Object.entries(stringBounds))
+    if (
+      typeof record[field] !== "string" ||
+      record[field].trim() !== record[field] ||
+      [...record[field]].length < 20 ||
+      [...record[field]].length > maximum
+    )
+      throw new Error(`invalid download ${field}`);
+}
+
+export function validateDownloadCatalog(catalog) {
   if (
-    typeof record.compatibility !== "string" ||
-    record.compatibility.length === 0 ||
-    record.compatibility.length > 300
+    catalog === null ||
+    typeof catalog !== "object" ||
+    Object.keys(catalog).sort().join("\n") !== "entries\nschemaVersion" ||
+    catalog.schemaVersion !== 2 ||
+    !Array.isArray(catalog.entries) ||
+    catalog.entries.length > 200
   )
-    throw new Error("invalid download compatibility");
+    throw new Error("invalid download catalog envelope");
+  catalog.entries.forEach(validateDownload);
+  if (
+    new Set(catalog.entries.map((record) => record.url)).size !==
+    catalog.entries.length
+  )
+    throw new Error("duplicate download coordinate");
+  const primary = catalog.entries.filter((record) => record.primary);
+  if (primary.length > 1)
+    throw new Error("download catalog has multiple primary artifacts");
+  if (
+    primary.some(
+      (record) =>
+        record.releaseRepository !== "atrinik/classic" ||
+        record.artifactRole !== "client" ||
+        record.platform !== "windows" ||
+        record.architecture !== "x86_64" ||
+        record.archiveFormat !== "zip" ||
+        record.releaseAssets !== 12 ||
+        record.artifact !==
+          `atrinik-classic-client-${record.version}-windows-x86_64.zip` ||
+        record.sbomUrl !==
+          `https://github.com/atrinik/classic/releases/download/${record.tag}/atrinik-classic-${record.version}.spdx.json` ||
+        record.softwareLicense !== "GPL-2.0-or-later",
+    )
+  )
+    throw new Error("unsupported primary download artifact");
+}
+
+export function validateDownloadSchemaDefinition(schema, fixture) {
+  const properties = schema?.properties ?? {};
+  const expectedFields = Object.keys(fixture).sort().join("\n");
+  if (
+    schema?.additionalProperties !== false ||
+    schema.required?.toSorted().join("\n") !== expectedFields ||
+    properties.version?.pattern !== versionPatternSource ||
+    properties.tag?.pattern !== tagPatternSource ||
+    new RegExp(properties.releaseRepository?.pattern ?? "").source !==
+      releaseRepositoryPattern.source ||
+    new RegExp(properties.artifactRole?.pattern ?? "").source !==
+      artifactRolePattern.source ||
+    properties.publishedAt?.format !== "date-time" ||
+    properties.publishedAt?.pattern !== utcTimestampPattern.source ||
+    properties.verifiedAt?.format !== "date-time" ||
+    properties.verifiedAt?.pattern !== utcTimestampPattern.source ||
+    properties.revision?.pattern !== revisionPattern.source ||
+    properties.sha256?.pattern !== sha256Pattern.source ||
+    properties.artifact?.pattern !== artifactPattern.source ||
+    properties.releaseAssets?.minimum !== 1 ||
+    properties.releaseAssets?.maximum !== 200 ||
+    properties.bytes?.minimum !== 1 ||
+    properties.bytes?.maximum !== 2_147_483_648 ||
+    properties.draft?.const !== false ||
+    properties.prerelease?.const !== false ||
+    properties.immutable?.const !== true ||
+    properties.attested?.const !== true ||
+    properties.platform?.enum?.join("\n") !== "linux\nmacos\nwindows" ||
+    properties.architecture?.enum?.join("\n") !== "x86_64" ||
+    properties.archiveFormat?.enum?.join("\n") !== "tar.gz\nzip" ||
+    properties.softwareLicense?.enum?.join("\n") !== "GPL-2.0-or-later\nMIT" ||
+    properties.bundledAssetsLicense?.minLength !== 20 ||
+    properties.bundledAssetsLicense?.maxLength !== 300 ||
+    properties.bundledAssetsLicense?.pattern !== trimmedGuidancePatternSource ||
+    properties.compatibility?.minLength !== 20 ||
+    properties.compatibility?.maxLength !== 300 ||
+    properties.compatibility?.pattern !== trimmedGuidancePatternSource ||
+    properties.installation?.minLength !== 20 ||
+    properties.installation?.maxLength !== 500 ||
+    properties.installation?.pattern !== trimmedGuidancePatternSource
+  )
+    throw new Error("declarative and executable download schemas drifted");
+
+  for (const [field, pattern] of Object.entries(schemaUrlPatterns))
+    if (properties[field]?.pattern !== pattern)
+      throw new Error("declarative download URL schema drifted");
+
+  const primary = schema.allOf?.find(
+    (rule) => rule.if?.properties?.primary?.const === true,
+  )?.then?.properties;
+  if (
+    primary?.releaseRepository?.const !== "atrinik/classic" ||
+    primary?.artifactRole?.const !== "client" ||
+    primary?.releaseAssets?.const !== 12 ||
+    primary?.platform?.const !== "windows" ||
+    primary?.architecture?.const !== "x86_64" ||
+    primary?.archiveFormat?.const !== "zip" ||
+    primary?.softwareLicense?.const !== "GPL-2.0-or-later"
+  )
+    throw new Error("declarative primary download schema drifted");
+
+  for (const [format, suffix] of [
+    ["zip", "\\.zip$"],
+    ["tar.gz", "\\.tar\\.gz$"],
+  ]) {
+    const rule = schema.allOf?.find(
+      (candidate) => candidate.if?.properties?.archiveFormat?.const === format,
+    );
+    if (rule?.then?.properties?.artifact?.pattern !== suffix)
+      throw new Error("declarative archive suffix schema drifted");
+  }
+}
+
+export function downloadReleaseUrls(record) {
+  return [
+    record.url,
+    record.releaseNotesUrl,
+    record.manifestUrl,
+    record.checksumsUrl,
+    record.sbomUrl,
+  ];
+}
+
+export function validateDownloadsPresentation(html, catalog) {
+  validateDownloadCatalog(catalog);
+  const primary = catalog.entries.find((record) => record.primary);
+  if (!primary) {
+    if (
+      !html.includes("No site-verified immutable catalog yet") ||
+      !html.includes('href="https://github.com/atrinik/classic/releases"') ||
+      html.includes("/releases/download/")
+    )
+      throw new Error(
+        "empty download catalog did not render its safe fallback",
+      );
+    return;
+  }
+  const requiredEvidence = [
+    primary.version,
+    primary.revision,
+    primary.sha256,
+    primary.artifact,
+    primary.releaseRepository,
+    primary.architecture,
+    primary.archiveFormat.toUpperCase(),
+    primary.softwareLicense,
+    primary.bundledAssetsLicense,
+    primary.compatibility,
+    primary.installation,
+    primary.platform === "windows" ? "Windows" : primary.platform,
+    `${(primary.bytes / 1024 ** 2).toFixed(2)} MiB`,
+    primary.bytes.toLocaleString("en-US"),
+  ];
+  if (requiredEvidence.some((value) => !html.includes(value)))
+    throw new Error("primary download presentation omits catalog evidence");
+  const structuralEvidence = [
+    `<dt>Platform</dt><dd>${primary.platform === "windows" ? "Windows" : primary.platform} ${primary.architecture}</dd>`,
+    `<dt>Archive</dt><dd>${primary.archiveFormat.toUpperCase()}</dd>`,
+    `<h3 id="install-heading">Install and compatibility</h3><p>${primary.installation}</p><p>${primary.compatibility}</p>`,
+    `<h3 id="license-heading">License boundary</h3><p>Classic software is licensed under <strong>${primary.softwareLicense}</strong>. ${primary.bundledAssetsLicense}</p>`,
+  ];
+  if (structuralEvidence.some((value) => !html.includes(value)))
+    throw new Error("primary download presentation misplaces catalog evidence");
+  if (
+    downloadReleaseUrls(primary).some(
+      (url) => !html.includes(`href="${url}"`),
+    ) ||
+    !html.includes(`<a class="button button--primary" href="${primary.url}"`) ||
+    !html.includes(
+      `Download Classic ${primary.version} for Windows (x86_64 ZIP)`,
+    )
+  )
+    throw new Error("primary download presentation omits a catalog link");
+  if (!html.includes("Get-FileHash") || !html.includes("gh attestation verify"))
+    throw new Error("primary download presentation omits attestation guidance");
 }
 
 export function validateMedia(record) {
@@ -454,7 +712,8 @@ export async function validateDist(
           url.pathname.startsWith("/atrinik/")
         ) {
           if (
-            url.pathname.includes("/releases/download/") &&
+            (url.pathname.includes("/releases/download/") ||
+              url.pathname.includes("/releases/tag/")) &&
             !allowedReleaseUrls.has(url.href)
           )
             throw new Error(`unrecorded release link ${raw} in ${path}`);

@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "entries": [
+    {
+      "releaseRepository": "atrinik/classic",
+      "artifactRole": "client",
+      "primary": true,
+      "version": "5.9.0",
+      "tag": "v5.9.0",
+      "revision": "0123456789abcdef0123456789abcdef01234567",
+      "publishedAt": "2026-08-10T01:00:00Z",
+      "verifiedAt": "2026-08-10T01:01:00Z",
+      "draft": true,
+      "prerelease": false,
+      "immutable": false,
+      "attested": false,
+      "releaseAssets": 0,
+      "platform": "windows",
+      "architecture": "x86_64",
+      "archiveFormat": "zip",
+      "artifact": "atrinik-classic-client-5.9.0-windows-x86_64.zip",
+      "bytes": 1,
+      "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "url": "https://github.com/atrinik/classic/releases/download/v5.9.0/atrinik-classic-client-5.9.0-windows-x86_64.zip",
+      "releaseNotesUrl": "https://github.com/atrinik/classic/releases/tag/v5.9.0",
+      "manifestUrl": "https://github.com/atrinik/classic/releases/download/v5.9.0/release-manifest.json",
+      "checksumsUrl": "https://github.com/atrinik/classic/releases/download/v5.9.0/SHA256SUMS",
+      "sbomUrl": "https://github.com/atrinik/classic/releases/download/v5.9.0/atrinik-classic-5.9.0.spdx.json",
+      "softwareLicense": "GPL-2.0-or-later",
+      "bundledAssetsLicense": "Bundled sound and authored assets retain their exact per-file terms.",
+      "compatibility": "Adversarial zero-asset draft fixture.",
+      "installation": "This draft must never render as a download."
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+---
+import type { DownloadCatalog } from "../lib/downloads";
+import { primaryDownload } from "../lib/downloads";
+
+interface Props {
+  catalog: DownloadCatalog;
+}
+
+const download = primaryDownload(Astro.props.catalog);
+---
+
+{
+  download ? (
+    <a class="button button--primary" href={download.url}>
+      Download Classic {download.version} for Windows (x86_64 ZIP)
+    </a>
+  ) : (
+    <a
+      class="button button--primary"
+      href="https://github.com/atrinik/classic/releases"
+    >
+      View all Classic releases
+    </a>
+  )
+}
