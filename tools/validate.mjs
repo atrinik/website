@@ -78,6 +78,26 @@ if (
   site.cookies !== false
 )
   throw new Error("privacy/canonical contract drift");
+const identityFields = [
+  "heading",
+  "gameContent",
+  "software",
+  "websiteMediaException",
+];
+if (
+  site.identity === null ||
+  typeof site.identity !== "object" ||
+  Object.keys(site.identity).sort().join("\n") !==
+    identityFields.sort().join("\n") ||
+  identityFields.some(
+    (field) =>
+      typeof site.identity[field] !== "string" ||
+      site.identity[field].trim() !== site.identity[field] ||
+      site.identity[field].length < 30 ||
+      site.identity[field].length > 500,
+  )
+)
+  throw new Error("site identity contract drift");
 for (const link of site.externalLinks) {
   const url = new URL(link.url);
   if (
@@ -187,6 +207,18 @@ if (sitemapUrls.join("\n") !== expectedSitemapUrls.join("\n"))
   throw new Error("canonical sitemap routes differ from the public contract");
 
 if (mode === "dist") {
+  const home = await readFile(resolve(root, "dist/index.html"), "utf8");
+  const decodedHome = home
+    .replaceAll("&#39;", "'")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&amp;", "&");
+  for (const field of identityFields)
+    if (!decodedHome.includes(site.identity[field]))
+      throw new Error(`home omits site identity ${field}`);
+  if (!home.includes("Temporary OpenAI-generated website concept artwork:"))
+    throw new Error(
+      "social metadata omits the generated website-media exception",
+    );
   validateDownloadsPresentation(
     await readFile(resolve(root, "dist/downloads/index.html"), "utf8"),
     downloads,

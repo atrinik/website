@@ -4,12 +4,14 @@ This repository is the sole source and deployment owner for the static,
 MIT-licensed atrinik.org website. It deliberately contains no account,
 gameplay, payment, analytics, advertising, or server-side runtime.
 
-Atrinik's game world is made by people: maps, pixel art, music, sound effects,
-quests, dialogue, lore, and other shipped creative content are not created or
-modified with generative AI. Human Atrinik contributors and appropriately
-licensed work from Crossfire, Daimonin, and other upstream creators retain
-their exact authorship, provenance, notices, and licenses; “human-made” does
-not mean solely Atrinik-original or covered by one license.
+Atrinik's policy reserves new and modified creative game content for people:
+generative maps, pixel art, music, sound effects, quests, dialogue, lore, and
+other authored world content are not accepted. The owning repositories are
+documenting that rule and auditing the existing corpus before making an
+unqualified blanket authorship claim. Human Atrinik contributors and
+appropriately licensed work from Crossfire, Daimonin, and other upstream
+creators retain their exact authorship, provenance, notices, and licenses;
+“human-made” does not mean solely Atrinik-original or covered by one license.
 
 The project's software is developed primarily through Codex-driven agentic
 workflows under human direction, review, provenance controls, tests, and
@@ -17,13 +19,14 @@ repository validation. Direct human-written code contributions are welcome
 under the same gates. “Generative AI” in this policy means tools that synthesize
 creative content or code, not gameplay systems such as creature or NPC AI.
 
-Atrinik began in 2009 under founder and original lead Zoey Rose. The maintained
-GPL C Classic line descends from that human-developed project and credits its
-Atrinik, Daimonin, Crossfire, and wider upstream/community contributors through
-its authoritative records; 2011 was a major development and release era, not
-the founding year. The new Go server, Rust client/editor/renderer/toolkit, and
-Protobuf protocol are a Codex-driven clean-room reimplementation and
-improvement, not a mechanical source port and not yet a complete game release.
+Atrinik began in 2009 under founder and original lead Zoey Rose. She led its
+human-developed beginning alongside the wider Atrinik Development Team. The
+maintained GPL C Classic line credits Atrinik, Daimonin, Crossfire, and wider
+upstream/community contributors through its authoritative records; 2011 was a
+major development and release era, not the founding year. The new Go server,
+Rust client/editor/renderer/toolkit, and Protobuf protocol are a Codex-driven
+clean-room reimplementation and improvement, not a mechanical source port and
+not yet a complete game release.
 Follow the [replacement roadmap](https://github.com/atrinik/atrinik/issues/168)
 for current readiness.
 
