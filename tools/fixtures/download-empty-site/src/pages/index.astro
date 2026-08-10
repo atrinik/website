@@ -1,0 +1,15 @@
+---
+import DownloadCatalog from "../../../../../src/components/DownloadCatalog.astro";
+import DownloadPrimaryAction from "../../../../../src/components/DownloadPrimaryAction.astro";
+import emptyCatalog from "../../../download-empty-catalog.json";
+import type { DownloadCatalog as DownloadCatalogType } from "../../../../../src/lib/downloads";
+
+const catalog: DownloadCatalogType = emptyCatalog;
+---
+
+<main>
+  <div class="card-actions">
+    <DownloadPrimaryAction catalog={catalog} />
+  </div>
+  <DownloadCatalog catalog={catalog} />
+</main>

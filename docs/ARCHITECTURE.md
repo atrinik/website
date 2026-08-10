@@ -29,11 +29,15 @@ exact license, transformations, alt text, and notice. Same-repository sources
 are digest-checked from a traversal-safe path. The website never imports an
 asset tree by implication.
 
-The executable validator intentionally mirrors only the closed required-field
-sets and bounds from the two JSON Schemas so the build does not acquire a
-general-purpose runtime schema dependency. Source validation compares their
-field sets and closed-object flags on every run; contract changes must update
-both forms and their fixtures together.
+The executable validator checks the JSON Schema's locally expressible field
+sets, patterns, formats, bounds, constants, primary-artifact restrictions, and
+archive suffix rules on every run, without adding a general-purpose runtime
+schema dependency. Cross-field identity rules remain executable-only: the tag
+must equal the version, evidence URLs must share the record's repository and
+tag, the artifact URL and suffix must match its filename and format, review
+cannot precede publication, and the primary filename and SBOM name must match
+the reviewed Classic release. Tests exercise valid and adversarial forms and
+contract changes must update both representations and their fixtures together.
 
 `public/_headers` supplies a no-script CSP and browser hardening for every
 static response. The built-output validator additionally enforces at most 16

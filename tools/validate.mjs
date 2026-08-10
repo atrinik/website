@@ -8,6 +8,7 @@ import {
   validateDist,
   validateDownload,
   validateDownloadCatalog,
+  validateDownloadSchemaDefinition,
   validateDownloadsPresentation,
   validateLocalMediaSource,
   validateMedia,
@@ -112,6 +113,7 @@ const fixture = await readJson(
 const downloadSchema = await readJson(
   resolve(root, "contracts/download.schema.json"),
 );
+validateDownloadSchemaDefinition(downloadSchema, fixture);
 const mediaSchema = await readJson(
   resolve(root, "contracts/media.schema.json"),
 );
@@ -132,9 +134,6 @@ const mediaFields = [
   "notice",
 ];
 if (
-  downloadSchema.additionalProperties !== false ||
-  downloadSchema.required.sort().join("\n") !==
-    Object.keys(fixture).sort().join("\n") ||
   mediaSchema.additionalProperties !== false ||
   mediaSchema.required.sort().join("\n") !== mediaFields.sort().join("\n")
 )

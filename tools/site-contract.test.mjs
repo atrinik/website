@@ -1,9 +1,18 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, rm, symlink, writeFile } from "node:fs/promises";
+import {
+  mkdtemp,
+  mkdir,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import test from "node:test";
+import downloadSchema from "../contracts/download.schema.json" with { type: "json" };
 import adversarialDownloadCatalog from "./fixtures/download-adversarial-catalog.json" with { type: "json" };
 import emptyDownloadCatalog from "./fixtures/download-empty-catalog.json" with { type: "json" };
 import validDownload from "./fixtures/download-valid.json" with { type: "json" };
@@ -16,12 +25,15 @@ import {
   validateDist,
   validateDownload,
   validateDownloadCatalog,
+  validateDownloadSchemaDefinition,
   validateDownloadsPresentation,
   validateLocalMediaSource,
   validateMedia,
   validatePresentationCss,
   validateRedirects,
 } from "./site-contract.mjs";
+
+const root = resolve(import.meta.dirname, "..");
 
 const accessibleShell =
   '<!doctype html><html lang="en"><head><title>Title</title><meta name="description" content="Description"><link rel="canonical" href="https://atrinik.org/"><meta property="og:title" content="Title"><meta property="og:description" content="Description"><meta property="og:image" content="https://atrinik.org/media/social.00000000.webp"><meta name="twitter:card" content="summary_large_image"></head><body><a href="#content">Skip</a><nav aria-label="Primary navigation"></nav><main id="content"><h1>Title</h1></main></body></html>';
@@ -80,6 +92,9 @@ function vp8Fixture(width, height) {
 }
 
 test("download coordinates are closed and immutable", () => {
+  assert.doesNotThrow(() =>
+    validateDownloadSchemaDefinition(downloadSchema, validDownload),
+  );
   assert.doesNotThrow(() => validateDownload(validDownload));
   assert.throws(
     () =>
@@ -141,11 +156,40 @@ test("download coordinates are closed and immutable", () => {
     );
 });
 
+test("download schema and executable constraints reject the same edge forms", () => {
+  const rejected = [
+    ["version", "01.2.3"],
+    ["tag", "v01.2.3"],
+    ["publishedAt", "2026-99-99T99:99:99Z"],
+    ["compatibility", ` ${validDownload.compatibility}`],
+    ["installation", `${validDownload.installation} `],
+  ];
+  for (const [field, value] of rejected) {
+    assert.throws(() => validateDownload({ ...validDownload, [field]: value }));
+    const property = downloadSchema.properties[field];
+    if (property.pattern && !property.format)
+      assert.equal(new RegExp(property.pattern, "u").test(value), false);
+    if (property.format) assert.equal(Number.isNaN(Date.parse(value)), true);
+  }
+  assert.throws(() =>
+    validateDownload({
+      ...validDownload,
+      verifiedAt: "2025-12-31T23:59:59Z",
+    }),
+  );
+  assert.throws(() =>
+    validateDownload({
+      ...validDownload,
+      artifact: "atrinik-classic-client-1.2.3-windows-x86_64.tar.gz",
+    }),
+  );
+});
+
 test("download catalogs stay empty safely and reject ineligible releases", () => {
   assert.doesNotThrow(() => validateDownloadCatalog(emptyDownloadCatalog));
   assert.doesNotThrow(() =>
     validateDownloadsPresentation(
-      "No site-verified immutable catalog yet https://github.com/atrinik/classic/releases",
+      'No site-verified immutable catalog yet <a href="https://github.com/atrinik/classic/releases">Releases</a>',
       emptyDownloadCatalog,
     ),
   );
@@ -200,6 +244,101 @@ test("download catalogs stay empty safely and reject ineligible releases", () =>
       }),
     /unsupported primary/u,
   );
+});
+
+test("download presentation structurally preserves all catalog evidence", () => {
+  const evidence = [
+    validDownload.version,
+    validDownload.revision,
+    validDownload.sha256,
+    validDownload.artifact,
+    validDownload.releaseRepository,
+    validDownload.architecture,
+    validDownload.archiveFormat.toUpperCase(),
+    validDownload.softwareLicense,
+    validDownload.bundledAssetsLicense,
+    validDownload.compatibility,
+    validDownload.installation,
+    "Windows",
+    `${(validDownload.bytes / 1024 ** 2).toFixed(2)} MiB`,
+    validDownload.bytes.toLocaleString("en-US"),
+    "Get-FileHash",
+    "gh attestation verify",
+    `Download Classic ${validDownload.version} for Windows (x86_64 ZIP)`,
+  ];
+  const links = downloadReleaseUrls(validDownload)
+    .map((url, index) =>
+      index === 0
+        ? `<a class="button button--primary" href="${url}">Download</a>`
+        : `<a href="${url}">Evidence</a>`,
+    )
+    .join(" ");
+  const structures = [
+    `<dt>Platform</dt><dd>Windows ${validDownload.architecture}</dd>`,
+    `<dt>Archive</dt><dd>${validDownload.archiveFormat.toUpperCase()}</dd>`,
+    `<h3 id="install-heading">Install and compatibility</h3><p>${validDownload.installation}</p><p>${validDownload.compatibility}</p>`,
+    `<h3 id="license-heading">License boundary</h3><p>Classic software is licensed under <strong>${validDownload.softwareLicense}</strong>. ${validDownload.bundledAssetsLicense}</p>`,
+  ];
+  const html = `${evidence.join(" ")} ${structures.join(" ")} ${links}`;
+  const catalog = { schemaVersion: 2, entries: [validDownload] };
+  assert.doesNotThrow(() => validateDownloadsPresentation(html, catalog));
+  assert.throws(
+    () =>
+      validateDownloadsPresentation(
+        html.replaceAll(validDownload.compatibility, ""),
+        catalog,
+      ),
+    /omits catalog evidence/u,
+  );
+  assert.throws(
+    () =>
+      validateDownloadsPresentation(
+        html.replace(
+          `<a class="button button--primary" href="${validDownload.url}">`,
+          `<span data-url="${validDownload.url}">`,
+        ),
+        catalog,
+      ),
+    /catalog link/u,
+  );
+  assert.throws(
+    () =>
+      validateDownloadsPresentation(
+        html.replace(structures[0], "Windows x86_64"),
+        catalog,
+      ),
+    /misplaces catalog evidence/u,
+  );
+});
+
+test("the actual Astro components build the empty-catalog fallback", async () => {
+  const output = await mkdtemp(join(tmpdir(), "atrinik-empty-download-"));
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [
+        resolve(root, "node_modules/astro/bin/astro.mjs"),
+        "--root",
+        resolve(root, "tools/fixtures/download-empty-site"),
+        "build",
+        "--outDir",
+        output,
+        "--silent",
+      ],
+      {
+        cwd: root,
+        encoding: "utf8",
+        env: { ...process.env, ASTRO_TELEMETRY_DISABLED: "1" },
+      },
+    );
+    assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+    const html = await readFile(resolve(output, "index.html"), "utf8");
+    assert.doesNotThrow(() =>
+      validateDownloadsPresentation(html, emptyDownloadCatalog),
+    );
+  } finally {
+    await rm(output, { recursive: true, force: true });
+  }
 });
 
 test("media records require complete provenance and safe paths", () => {
