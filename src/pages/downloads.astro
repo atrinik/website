@@ -57,8 +57,8 @@ const formatBytes = (bytes: number) =>
         <div class="card-actions">
           {
             download ? (
-              <a class="button button--primary" href="#classic-client-download">
-                Get the supported client
+              <a class="button button--primary" href={download.url}>
+                Download Classic {download.version}
               </a>
             ) : (
               <a
@@ -188,8 +188,11 @@ const formatBytes = (bytes: number) =>
             <h3 id="verification-heading">Verify before running</h3>
             <ol>
               <li>
-                Compare the downloaded file’s SHA-256 with the full digest above
-                and the signed release evidence.
+                In PowerShell, run{" "}
+                <code>
+                  Get-FileHash .\{download.artifact} -Algorithm SHA256
+                </code>{" "}
+                and compare its result with the full digest above.
               </li>
               <li>
                 Inspect the <a href={download.manifestUrl}>release manifest</a>{" "}

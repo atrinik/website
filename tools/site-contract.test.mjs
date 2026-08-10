@@ -126,6 +126,19 @@ test("download coordinates are closed and immutable", () => {
     validDownload.checksumsUrl,
     validDownload.sbomUrl,
   ]);
+  for (const sbomUrl of [
+    `${validDownload.sbomUrl}?claimed=.spdx.json`,
+    `${validDownload.sbomUrl}#claimed.spdx.json`,
+    validDownload.sbomUrl.replace(
+      "atrinik-classic-1.2.3.spdx.json",
+      "nested/false.spdx.json",
+    ),
+    validDownload.sbomUrl.replace(".spdx.json", ".json"),
+  ])
+    assert.throws(
+      () => validateDownload({ ...validDownload, sbomUrl }),
+      /SBOM/u,
+    );
 });
 
 test("download catalogs stay empty safely and reject ineligible releases", () => {
@@ -161,6 +174,29 @@ test("download catalogs stay empty safely and reject ineligible releases", () =>
       validateDownloadCatalog({
         schemaVersion: 2,
         entries: [{ ...validDownload, artifactRole: "server" }],
+      }),
+    /unsupported primary/u,
+  );
+  const serverArtifact = "atrinik-classic-server-1.2.3-windows-x86_64.zip";
+  assert.throws(
+    () =>
+      validateDownloadCatalog({
+        schemaVersion: 2,
+        entries: [
+          {
+            ...validDownload,
+            artifact: serverArtifact,
+            url: `https://github.com/atrinik/classic/releases/download/v1.2.3/${serverArtifact}`,
+          },
+        ],
+      }),
+    /unsupported primary/u,
+  );
+  assert.throws(
+    () =>
+      validateDownloadCatalog({
+        schemaVersion: 2,
+        entries: [{ ...validDownload, softwareLicense: "MIT" }],
       }),
     /unsupported primary/u,
   );

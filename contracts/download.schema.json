@@ -91,5 +91,24 @@
     },
     "compatibility": { "type": "string", "minLength": 20, "maxLength": 300 },
     "installation": { "type": "string", "minLength": 20, "maxLength": 500 }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "primary": { "const": true } },
+        "required": ["primary"]
+      },
+      "then": {
+        "properties": {
+          "releaseRepository": { "const": "atrinik/classic" },
+          "artifactRole": { "const": "client" },
+          "releaseAssets": { "const": 12 },
+          "platform": { "const": "windows" },
+          "architecture": { "const": "x86_64" },
+          "archiveFormat": { "const": "zip" },
+          "softwareLicense": { "const": "GPL-2.0-or-later" }
+        }
+      }
+    }
+  ]
 }

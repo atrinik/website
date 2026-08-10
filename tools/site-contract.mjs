@@ -160,6 +160,7 @@ export function validateDownload(record) {
   if (
     typeof record.sbomUrl !== "string" ||
     !record.sbomUrl.startsWith(`${downloadRoot}/`) ||
+    !artifactPattern.test(record.sbomUrl.slice(downloadRoot.length + 1)) ||
     !record.sbomUrl.endsWith(".spdx.json")
   )
     throw new Error("download SBOM does not match its immutable release");
@@ -206,7 +207,13 @@ export function validateDownloadCatalog(catalog) {
         record.artifactRole !== "client" ||
         record.platform !== "windows" ||
         record.architecture !== "x86_64" ||
-        record.releaseAssets !== 12,
+        record.archiveFormat !== "zip" ||
+        record.releaseAssets !== 12 ||
+        record.artifact !==
+          `atrinik-classic-client-${record.version}-windows-x86_64.zip` ||
+        record.sbomUrl !==
+          `https://github.com/atrinik/classic/releases/download/${record.tag}/atrinik-classic-${record.version}.spdx.json` ||
+        record.softwareLicense !== "GPL-2.0-or-later",
     )
   )
     throw new Error("unsupported primary download artifact");
