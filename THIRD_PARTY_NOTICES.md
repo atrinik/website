@@ -26,3 +26,7 @@ lockfile.
 
 Linked game packages and authored content are not distributed by this source
 repository and retain their own exact licenses and notices.
+
+The favicon and pinned-tab mask are new MIT-licensed repository artwork, not
+third-party game assets. Their authorship and immutable provenance bindings are
+recorded in `src/data/icons.json` and `PROVENANCE.md`.

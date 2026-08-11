@@ -448,6 +448,95 @@ export function validateMedia(record) {
     throw new Error("invalid media transformations");
 }
 
+export function validateIcon(record) {
+  const required = [
+    "id",
+    "publicPath",
+    "sourceRepository",
+    "sourcePath",
+    "sourceRevision",
+    "sourceSha256",
+    "publishedSha256",
+    "width",
+    "height",
+    "author",
+    "license",
+    "transformations",
+    "purpose",
+    "notice",
+  ];
+  if (Object.keys(record).sort().join("\n") !== required.sort().join("\n"))
+    throw new Error("icon fields differ from the closed contract");
+  if (
+    !/^[a-z][a-z0-9-]*$/u.test(record.id) ||
+    !new Set(["/favicon.svg", "/mask-icon.svg"]).has(record.publicPath) ||
+    record.sourcePath !== `public${record.publicPath}` ||
+    record.sourceRepository !== "atrinik/website"
+  )
+    throw new Error("invalid icon identity/path");
+  if (
+    !revisionPattern.test(record.sourceRevision) ||
+    !sha256Pattern.test(record.sourceSha256) ||
+    !sha256Pattern.test(record.publishedSha256) ||
+    record.sourceSha256 !== record.publishedSha256
+  )
+    throw new Error("invalid icon digest");
+  if (record.width !== 64 || record.height !== 64)
+    throw new Error("invalid icon dimensions");
+  const stringBounds = { author: 200, purpose: 300, notice: 500 };
+  for (const [field, maximum] of Object.entries(stringBounds))
+    if (
+      typeof record[field] !== "string" ||
+      record[field].trim() !== record[field] ||
+      record[field].length === 0 ||
+      record[field].length > maximum
+    )
+      throw new Error(`invalid icon ${field}`);
+  if (
+    record.license !== "MIT" ||
+    !Array.isArray(record.transformations) ||
+    record.transformations.length < 1 ||
+    record.transformations.length > 10 ||
+    record.transformations.some(
+      (item) =>
+        typeof item !== "string" ||
+        item.trim() !== item ||
+        item.length === 0 ||
+        item.length > 300,
+    )
+  )
+    throw new Error("invalid icon license or transformations");
+}
+
+export function validateIconCatalog(entries) {
+  if (!Array.isArray(entries) || entries.length !== 2)
+    throw new Error("invalid icon catalog envelope");
+  entries.forEach(validateIcon);
+  const ids = new Set(entries.map(({ id }) => id));
+  const paths = new Set(entries.map(({ publicPath }) => publicPath));
+  if (
+    ids.size !== entries.length ||
+    paths.size !== entries.length ||
+    [...paths].sort().join("\n") !==
+      ["/favicon.svg", "/mask-icon.svg"].sort().join("\n")
+  )
+    throw new Error(
+      "icon catalog identities and paths must be unique and complete",
+    );
+}
+
+export function validateSvgIconSource(source, id = "icon") {
+  if (
+    typeof source !== "string" ||
+    !source.startsWith("<svg ") ||
+    !source.includes('viewBox="0 0 64 64"') ||
+    /<script|<style|(?:\s|\/|["'])on[a-z][a-z0-9_-]*\s*=|(?:\s|\/)style\s*=|(?:href|src)\s*=|@import|url\s*\(/iu.test(
+      source,
+    )
+  )
+    throw new Error(`unsafe icon source: ${id}`);
+}
+
 export async function readJson(path) {
   return JSON.parse(await readFile(path, "utf8"));
 }
@@ -624,6 +713,181 @@ function decodeHtmlAttribute(value) {
     .replaceAll("&amp;", "&");
 }
 
+function metadataContent(html, attribute, key) {
+  const pattern = new RegExp(
+    `<meta ${attribute}="${key.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}" content="([^"]+)"\\s*/?>`,
+    "gu",
+  );
+  const values = [...html.matchAll(pattern)].map((match) =>
+    decodeHtmlAttribute(match[1]),
+  );
+  if (values.length !== 1)
+    throw new Error(`metadata must contain exactly one ${key}`);
+  return values[0];
+}
+
+export function parseInertJsonLd(html) {
+  const lower = html.toLowerCase();
+  const scripts = [];
+  let cursor = 0;
+  while (cursor < html.length) {
+    let opening = lower.indexOf("<script", cursor);
+    const strayClosing = lower.indexOf("</script", cursor);
+    while (
+      opening !== -1 &&
+      !/[\s/>]/u.test(lower[opening + "<script".length] ?? "")
+    )
+      opening = lower.indexOf("<script", opening + "<script".length);
+    if (strayClosing !== -1 && (opening === -1 || strayClosing < opening))
+      throw new Error("malformed or unclosed script block");
+    if (opening === -1) break;
+    const openingEnd = lower.indexOf(">", opening + "<script".length);
+    if (openingEnd === -1)
+      throw new Error("malformed or unclosed script block");
+    const closing = lower.indexOf("</script", openingEnd + 1);
+    if (closing === -1) throw new Error("malformed or unclosed script block");
+    const nested = lower.indexOf("<script", openingEnd + 1);
+    if (nested !== -1 && nested < closing)
+      throw new Error("nested script block forbidden");
+    const closingNameEnd = closing + "</script".length;
+    const closingEnd = lower.indexOf(">", closingNameEnd);
+    if (
+      closingEnd === -1 ||
+      lower.slice(closingNameEnd, closingEnd).trim() !== ""
+    )
+      throw new Error("malformed or unclosed script block");
+    scripts.push({
+      rawAttributes: html.slice(opening + "<script".length, openingEnd),
+      body: html.slice(openingEnd + 1, closing),
+    });
+    cursor = closingEnd + 1;
+  }
+  return scripts.map(({ rawAttributes, body }) => {
+    if (rawAttributes.trim() !== 'type="application/ld+json"')
+      throw new Error("executable or attributed script block forbidden");
+    if (/[<>&\u2028\u2029]/u.test(body))
+      throw new Error("JSON-LD is not safely serialized");
+    try {
+      return JSON.parse(body);
+    } catch {
+      throw new Error("JSON-LD is not valid JSON");
+    }
+  });
+}
+
+export function validatePageMetadata(
+  html,
+  { canonicalUrl = null, websiteIdentity = false, allowedMedia = null } = {},
+) {
+  const titleMatches = [...html.matchAll(/<title>([^<]+)<\/title>/gu)];
+  if (titleMatches.length !== 1)
+    throw new Error("metadata must contain exactly one title");
+  const title = decodeHtmlAttribute(titleMatches[0][1]);
+  const description = metadataContent(html, "name", "description");
+  const robots = metadataContent(html, "name", "robots");
+  const jsonLd = parseInertJsonLd(html);
+  const canonicalMatches = [
+    ...html.matchAll(/<link rel="canonical" href="([^"]+)"\s*\/?>/gu),
+  ];
+
+  if (canonicalUrl === null) {
+    if (
+      robots !== "noindex, nofollow" ||
+      canonicalMatches.length !== 0 ||
+      /<meta (?:property="og:|name="twitter:)/u.test(html) ||
+      jsonLd.length !== 0
+    )
+      throw new Error(
+        "noindex page acquired canonical, preview, or structured identity",
+      );
+    return { title, description, canonicalUrl: null };
+  }
+
+  if (robots !== "index, follow")
+    throw new Error("indexable page has the wrong robots policy");
+  if (
+    canonicalMatches.length !== 1 ||
+    decodeHtmlAttribute(canonicalMatches[0][1]) !== canonicalUrl
+  )
+    throw new Error("page canonical differs from its route contract");
+  const ogType = metadataContent(html, "property", "og:type");
+  const ogTitle = metadataContent(html, "property", "og:title");
+  const ogDescription = metadataContent(html, "property", "og:description");
+  const ogUrl = metadataContent(html, "property", "og:url");
+  const ogImage = metadataContent(html, "property", "og:image");
+  const ogImageAlt = metadataContent(html, "property", "og:image:alt");
+  const ogWidth = metadataContent(html, "property", "og:image:width");
+  const ogHeight = metadataContent(html, "property", "og:image:height");
+  const twitterCard = metadataContent(html, "name", "twitter:card");
+  const twitterTitle = metadataContent(html, "name", "twitter:title");
+  const twitterDescription = metadataContent(
+    html,
+    "name",
+    "twitter:description",
+  );
+  const twitterImage = metadataContent(html, "name", "twitter:image");
+  const twitterImageAlt = metadataContent(html, "name", "twitter:image:alt");
+  const imageUrl = new URL(ogImage);
+  const expectedImage = allowedMedia?.get(imageUrl.pathname);
+  const expectedImageAlt = expectedImage
+    ? expectedImage.author.includes("OpenAI image generation")
+      ? `Temporary OpenAI-generated website concept artwork: ${expectedImage.alt}`
+      : expectedImage.alt
+    : null;
+  if (
+    ogType !== "website" ||
+    ogTitle !== title ||
+    ogDescription !== description ||
+    ogUrl !== canonicalUrl ||
+    imageUrl.origin !== "https://atrinik.org" ||
+    imageUrl.search !== "" ||
+    imageUrl.hash !== "" ||
+    !imageUrl.pathname.startsWith("/media/") ||
+    !/^[1-9][0-9]*$/u.test(ogWidth) ||
+    !/^[1-9][0-9]*$/u.test(ogHeight) ||
+    ogImageAlt.length < 20 ||
+    twitterCard !== "summary_large_image" ||
+    twitterTitle !== title ||
+    twitterDescription !== description ||
+    twitterImage !== ogImage ||
+    twitterImageAlt !== ogImageAlt ||
+    (allowedMedia !== null &&
+      (!expectedImage ||
+        Number(ogWidth) !== expectedImage.width ||
+        Number(ogHeight) !== expectedImage.height ||
+        ogImageAlt !== expectedImageAlt))
+  )
+    throw new Error("Open Graph and Twitter metadata are inconsistent");
+
+  if (websiteIdentity) {
+    if (jsonLd.length !== 1)
+      throw new Error("homepage must contain one WebSite identity");
+    const identity = jsonLd[0];
+    if (
+      identity === null ||
+      typeof identity !== "object" ||
+      Array.isArray(identity) ||
+      identity["@context"] !== "https://schema.org" ||
+      identity["@type"] !== "WebSite" ||
+      identity["@id"] !== "https://atrinik.org/#website" ||
+      identity.url !== "https://atrinik.org/" ||
+      identity.name !== "Atrinik" ||
+      identity.description !== description ||
+      JSON.stringify(identity.sameAs) !==
+        JSON.stringify([
+          "https://github.com/atrinik",
+          "https://github.com/atrinik/website",
+        ])
+    )
+      throw new Error(
+        "homepage WebSite identity differs from its verified contract",
+      );
+  } else if (jsonLd.length !== 0)
+    throw new Error("route emitted unowned structured identity");
+
+  return { title, description, canonicalUrl };
+}
+
 function normalizedText(fragment) {
   return decodeHtmlAttribute(fragment.replaceAll(/<[^>]+>/gu, " "))
     .replaceAll(/\s+/gu, " ")
@@ -739,6 +1003,8 @@ export async function validateDist(
     if (extension === ".html") {
       totals.html += size;
       const html = await readFile(path, "utf8");
+      const relativePath = relative(root, path).replaceAll(sep, "/");
+      const is404 = relativePath === "404.html";
       for (const pattern of [
         /<html lang="en">/u,
         /<main[ >]/u,
@@ -746,22 +1012,29 @@ export async function validateDist(
         /aria-label="Primary navigation"/u,
         /<title>[^<]+<\/title>/u,
         /<meta name="description" content="[^"]+"\s*\/?>/u,
-        /<link rel="canonical" href="https:\/\/atrinik\.org\/[^"]*"\s*\/?>/u,
-        /<meta property="og:title" content="[^"]+"\s*\/?>/u,
-        /<meta property="og:description" content="[^"]+"\s*\/?>/u,
-        /<meta property="og:image" content="https:\/\/atrinik\.org\/media\/[^"]+"\s*\/?>/u,
-        /<meta name="twitter:card" content="summary_large_image"\s*\/?>/u,
       ])
         if (!pattern.test(html))
           throw new Error(`accessibility shell missing in ${path}`);
+      if (
+        !is404 &&
+        [
+          /<link rel="canonical" href="https:\/\/atrinik\.org\/[^"]*"\s*\/?>/u,
+          /<meta property="og:title" content="[^"]+"\s*\/?>/u,
+          /<meta property="og:description" content="[^"]+"\s*\/?>/u,
+          /<meta property="og:image" content="https:\/\/atrinik\.org\/media\/[^"]+"\s*\/?>/u,
+          /<meta name="twitter:card" content="summary_large_image"\s*\/?>/u,
+        ].some((pattern) => !pattern.test(html))
+      )
+        throw new Error(`social metadata shell missing in ${path}`);
       if ([...html.matchAll(/<h1[ >]/gu)].length !== 1)
         throw new Error(`page must have exactly one h1 in ${path}`);
       if (
-        relative(root, path).replaceAll(sep, "/") === "404.html" &&
+        is404 &&
         !/<meta name="robots" content="noindex, nofollow"\s*\/?>/u.test(html)
       )
         throw new Error("404 page must be excluded from indexing");
-      if (/<script[ >]/iu.test(html) || /\son[a-z]+=/iu.test(html))
+      parseInertJsonLd(html);
+      if (/(?:\s|\/|["'])on[a-z][a-z0-9_-]*\s*=/iu.test(html))
         throw new Error(`client script/event handler forbidden in ${path}`);
       for (const match of html.matchAll(/<img\b[^>]*>/giu)) {
         containsImages = true;

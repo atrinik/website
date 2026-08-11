@@ -1,12 +1,25 @@
 # Static website architecture
 
 Astro compiles typed local data and `.astro` templates to static HTML and CSS.
-No browser JavaScript or server runtime is emitted by the build. `src/data` is
-the schema-validated structured metadata and catalog input, while `.astro`
-templates contain authored page prose. Closed validators reject unknown
-download/media fields and unsafe coordinates before rendering. Cloudflare can
-transform a deployed response after this build boundary; provider-injected
-security or performance code is not part of `dist/` and is audited separately.
+No browser JavaScript or server runtime is emitted by the build. The only
+permitted `script` element is inert `type="application/ld+json"` data generated
+locally with `<`, `>`, `&`, and JavaScript line separators escaped before raw
+HTML insertion. `src/data` is the schema-validated catalog input, the typed
+metadata factory owns page identity, and `.astro` templates contain authored
+page prose. Closed validators reject unknown download/media/icon fields and
+unsafe coordinates before rendering. Cloudflare can transform a deployed
+response after this build boundary; provider-injected security or performance
+code is not part of `dist/` and is audited separately.
+
+Every indexable page supplies an explicit metadata object with a unique title,
+description, canonical route, index policy, and matched Open Graph/Twitter
+identity. Social images resolve only through `src/data/media.json`, including
+their canonical local URL, dimensions, and alternative text. The temporary
+`atrinik-now` concept image is the explicit sitewide fallback pending issue #22;
+pages may choose a more relevant proven catalog record. The homepage alone owns
+the canonical `WebSite` JSON-LD record for `https://atrinik.org/` and its two
+verified Atrinik GitHub identities. The 404 emits no canonical, preview, or
+structured identity and retains `noindex, nofollow`.
 
 Downloads remain in their owning GitHub releases. Catalog schema version 2
 separates the release repository from the artifact's logical role and marks at
@@ -32,6 +45,13 @@ exact license, transformations, alt text, and notice. Same-repository sources
 are digest-checked from a traversal-safe path. The website never imports an
 asset tree by implication.
 
+The two SVG site icons use a separate closed catalog because they are
+repository-native vector interface artwork rather than page media. Each record
+binds the exact checked-in source/published bytes to a Git blob object ID and
+SHA-256, 64×64 view box, author, MIT license, transformation, purpose, and
+notice. Source validation rejects SVG scripts, event attributes, and external
+references; built pages must link both canonical local files.
+
 The executable validator checks the JSON Schema's locally expressible field
 sets, patterns, formats, bounds, constants, primary-artifact restrictions, and
 archive suffix rules on every run, without adding a general-purpose runtime
@@ -43,7 +63,10 @@ the reviewed Classic release. Tests exercise valid and adversarial forms and
 contract changes must update both representations and their fixtures together.
 
 `public/_headers` supplies a no-script CSP and browser hardening for every
-static response. The built-output validator additionally enforces at most 16
+static response. Inert JSON-LD does not relax `script-src 'none'`. The
+built-output validator rejects every other script element or script attribute,
+parses the JSON-LD, compares it with visible metadata and canonical identity,
+and additionally enforces at most 16
 generated files, 900,000 bytes total, 140,000 aggregate HTML bytes, 40,000
 aggregate CSS bytes, 700,000 aggregate raster image bytes, and zero JavaScript.
 Published image filenames are content-addressed for immutable caching, and
