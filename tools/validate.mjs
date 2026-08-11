@@ -10,11 +10,12 @@ import {
   validateDownloadCatalog,
   validateDownloadSchemaDefinition,
   validateDownloadsPresentation,
-  validateIcon,
+  validateIconCatalog,
   validateLocalMediaSource,
   validateMedia,
   validatePageMetadata,
   validateRedirects,
+  validateSvgIconSource,
 } from "./site-contract.mjs";
 
 const root = resolve(import.meta.dirname, "..");
@@ -33,13 +34,8 @@ if (
 )
   throw new Error("invalid media catalog envelope");
 media.entries.forEach(validateMedia);
-if (
-  icons.schemaVersion !== 1 ||
-  !Array.isArray(icons.entries) ||
-  icons.entries.length !== 2
-)
-  throw new Error("invalid icon catalog envelope");
-icons.entries.forEach(validateIcon);
+if (icons.schemaVersion !== 1) throw new Error("invalid icon catalog envelope");
+validateIconCatalog(icons.entries);
 if (
   new Set(media.entries.map((record) => record.id)).size !==
   media.entries.length
@@ -91,12 +87,7 @@ for (const record of icons.entries) {
     resolve(root, `public${record.publicPath}`),
     "utf8",
   );
-  if (
-    !source.startsWith("<svg ") ||
-    !source.includes('viewBox="0 0 64 64"') ||
-    /<script|\son[a-z]+=|(?:href|src)\s*=/iu.test(source)
-  )
-    throw new Error(`unsafe icon source: ${record.id}`);
+  validateSvgIconSource(source, record.id);
 }
 
 const site = await readJson(resolve(root, "src/data/site.json"));
@@ -287,21 +278,51 @@ if (mode === "dist") {
     throw new Error(
       "social metadata omits the generated website-media exception",
     );
-  const pageContracts = [
-    ["index.html", "https://atrinik.org/", true],
-    ["about/index.html", "https://atrinik.org/about/", false],
-    ["downloads/index.html", "https://atrinik.org/downloads/", false],
-    ["licenses/index.html", "https://atrinik.org/licenses/", false],
-    ["404.html", null, false],
-  ];
+  const htmlPaths = (await filesBelow(resolve(root, "dist"))).filter((path) =>
+    path.endsWith(".html"),
+  );
   const identities = [];
-  for (const [path, canonicalUrl, websiteIdentity] of pageContracts) {
-    const html = await readFile(resolve(root, `dist/${path}`), "utf8");
-    for (const icon of icons.entries)
-      if (!html.includes(`href="${icon.publicPath}"`))
-        throw new Error(`${path} omits icon ${icon.id}`);
+  const allowedMedia = new Map(
+    media.entries.map((record) => [record.publicPath, record]),
+  );
+  for (const path of htmlPaths) {
+    const relativePath = relative(resolve(root, "dist"), path).replaceAll(
+      sep,
+      "/",
+    );
+    let canonicalUrl = null;
+    if (relativePath !== "404.html") {
+      const canonicalPath =
+        relativePath === "index.html"
+          ? "/"
+          : relativePath.endsWith("/index.html")
+            ? `/${relativePath.slice(0, -"index.html".length)}`
+            : `/${relativePath}`;
+      canonicalUrl = new URL(canonicalPath, site.canonicalOrigin).href;
+      if (!sitemapUrls.includes(canonicalUrl))
+        throw new Error(
+          `indexable generated route is absent from sitemap: ${relativePath}`,
+        );
+    }
+    const html = await readFile(path, "utf8");
+    const faviconLinks = [
+      ...html.matchAll(
+        /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml" sizes="any"\s*\/?>/gu,
+      ),
+    ];
+    const maskLinks = [
+      ...html.matchAll(
+        /<link rel="mask-icon" href="\/mask-icon\.svg" color="#[0-9a-fA-F]{6}"\s*\/?>/gu,
+      ),
+    ];
+    if (faviconLinks.length !== 1 || maskLinks.length !== 1)
+      throw new Error(`${relativePath} has incomplete or duplicate icon links`);
     identities.push(
-      validatePageMetadata(html, { canonicalUrl, websiteIdentity }),
+      validatePageMetadata(html, {
+        canonicalUrl,
+        websiteIdentity: canonicalUrl === "https://atrinik.org/",
+        allowedMedia,
+      }),
     );
   }
   for (const field of ["title", "description", "canonicalUrl"]) {
@@ -311,6 +332,12 @@ if (mode === "dist") {
     if (new Set(values).size !== values.length)
       throw new Error(`indexable page ${field} values are not unique`);
   }
+  const generatedCanonicalUrls = identities
+    .map(({ canonicalUrl }) => canonicalUrl)
+    .filter((value) => value !== null)
+    .sort();
+  if (generatedCanonicalUrls.join("\n") !== [...sitemapUrls].sort().join("\n"))
+    throw new Error("generated indexable routes and sitemap differ");
   validateDownloadsPresentation(
     await readFile(resolve(root, "dist/downloads/index.html"), "utf8"),
     downloads,

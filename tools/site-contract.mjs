@@ -483,12 +483,13 @@ export function validateIcon(record) {
     throw new Error("invalid icon digest");
   if (record.width !== 64 || record.height !== 64)
     throw new Error("invalid icon dimensions");
-  for (const field of ["author", "purpose", "notice"])
+  const stringBounds = { author: 200, purpose: 300, notice: 500 };
+  for (const [field, maximum] of Object.entries(stringBounds))
     if (
       typeof record[field] !== "string" ||
       record[field].trim() !== record[field] ||
       record[field].length === 0 ||
-      record[field].length > 500
+      record[field].length > maximum
     )
       throw new Error(`invalid icon ${field}`);
   if (
@@ -505,6 +506,35 @@ export function validateIcon(record) {
     )
   )
     throw new Error("invalid icon license or transformations");
+}
+
+export function validateIconCatalog(entries) {
+  if (!Array.isArray(entries) || entries.length !== 2)
+    throw new Error("invalid icon catalog envelope");
+  entries.forEach(validateIcon);
+  const ids = new Set(entries.map(({ id }) => id));
+  const paths = new Set(entries.map(({ publicPath }) => publicPath));
+  if (
+    ids.size !== entries.length ||
+    paths.size !== entries.length ||
+    [...paths].sort().join("\n") !==
+      ["/favicon.svg", "/mask-icon.svg"].sort().join("\n")
+  )
+    throw new Error(
+      "icon catalog identities and paths must be unique and complete",
+    );
+}
+
+export function validateSvgIconSource(source, id = "icon") {
+  if (
+    typeof source !== "string" ||
+    !source.startsWith("<svg ") ||
+    !source.includes('viewBox="0 0 64 64"') ||
+    /<script|<style|\son[a-z][a-z0-9_-]*\s*=|\sstyle\s*=|(?:href|src)\s*=|@import|url\s*\(/iu.test(
+      source,
+    )
+  )
+    throw new Error(`unsafe icon source: ${id}`);
 }
 
 export async function readJson(path) {
@@ -697,12 +727,42 @@ function metadataContent(html, attribute, key) {
 }
 
 export function parseInertJsonLd(html) {
-  const scripts = [
-    ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/giu),
-  ];
-  if ([...html.matchAll(/<script\b/giu)].length !== scripts.length)
-    throw new Error("malformed or unclosed script block");
-  return scripts.map(([, rawAttributes, body]) => {
+  const lower = html.toLowerCase();
+  const scripts = [];
+  let cursor = 0;
+  while (cursor < html.length) {
+    let opening = lower.indexOf("<script", cursor);
+    const strayClosing = lower.indexOf("</script", cursor);
+    while (
+      opening !== -1 &&
+      !/[\s>]/u.test(lower[opening + "<script".length] ?? "")
+    )
+      opening = lower.indexOf("<script", opening + "<script".length);
+    if (strayClosing !== -1 && (opening === -1 || strayClosing < opening))
+      throw new Error("malformed or unclosed script block");
+    if (opening === -1) break;
+    const openingEnd = lower.indexOf(">", opening + "<script".length);
+    if (openingEnd === -1)
+      throw new Error("malformed or unclosed script block");
+    const closing = lower.indexOf("</script", openingEnd + 1);
+    if (closing === -1) throw new Error("malformed or unclosed script block");
+    const nested = lower.indexOf("<script", openingEnd + 1);
+    if (nested !== -1 && nested < closing)
+      throw new Error("nested script block forbidden");
+    const closingNameEnd = closing + "</script".length;
+    const closingEnd = lower.indexOf(">", closingNameEnd);
+    if (
+      closingEnd === -1 ||
+      lower.slice(closingNameEnd, closingEnd).trim() !== ""
+    )
+      throw new Error("malformed or unclosed script block");
+    scripts.push({
+      rawAttributes: html.slice(opening + "<script".length, openingEnd),
+      body: html.slice(openingEnd + 1, closing),
+    });
+    cursor = closingEnd + 1;
+  }
+  return scripts.map(({ rawAttributes, body }) => {
     if (rawAttributes.trim() !== 'type="application/ld+json"')
       throw new Error("executable or attributed script block forbidden");
     if (/[<>&\u2028\u2029]/u.test(body))
@@ -717,7 +777,7 @@ export function parseInertJsonLd(html) {
 
 export function validatePageMetadata(
   html,
-  { canonicalUrl = null, websiteIdentity = false } = {},
+  { canonicalUrl = null, websiteIdentity = false, allowedMedia = null } = {},
 ) {
   const titleMatches = [...html.matchAll(/<title>([^<]+)<\/title>/gu)];
   if (titleMatches.length !== 1)
@@ -768,12 +828,20 @@ export function validatePageMetadata(
   const twitterImage = metadataContent(html, "name", "twitter:image");
   const twitterImageAlt = metadataContent(html, "name", "twitter:image:alt");
   const imageUrl = new URL(ogImage);
+  const expectedImage = allowedMedia?.get(imageUrl.pathname);
+  const expectedImageAlt = expectedImage
+    ? expectedImage.author.includes("OpenAI image generation")
+      ? `Temporary OpenAI-generated website concept artwork: ${expectedImage.alt}`
+      : expectedImage.alt
+    : null;
   if (
     ogType !== "website" ||
     ogTitle !== title ||
     ogDescription !== description ||
     ogUrl !== canonicalUrl ||
     imageUrl.origin !== "https://atrinik.org" ||
+    imageUrl.search !== "" ||
+    imageUrl.hash !== "" ||
     !imageUrl.pathname.startsWith("/media/") ||
     !/^[1-9][0-9]*$/u.test(ogWidth) ||
     !/^[1-9][0-9]*$/u.test(ogHeight) ||
@@ -782,7 +850,12 @@ export function validatePageMetadata(
     twitterTitle !== title ||
     twitterDescription !== description ||
     twitterImage !== ogImage ||
-    twitterImageAlt !== ogImageAlt
+    twitterImageAlt !== ogImageAlt ||
+    (allowedMedia !== null &&
+      (!expectedImage ||
+        Number(ogWidth) !== expectedImage.width ||
+        Number(ogHeight) !== expectedImage.height ||
+        ogImageAlt !== expectedImageAlt))
   )
     throw new Error("Open Graph and Twitter metadata are inconsistent");
 
@@ -867,7 +940,7 @@ export async function validateDist(
       )
         throw new Error("404 page must be excluded from indexing");
       parseInertJsonLd(html);
-      if (/\son[a-z]+=/iu.test(html))
+      if (/\son[a-z][a-z0-9_-]*\s*=/iu.test(html))
         throw new Error(`client script/event handler forbidden in ${path}`);
       for (const match of html.matchAll(/<img\b[^>]*>/giu)) {
         containsImages = true;
