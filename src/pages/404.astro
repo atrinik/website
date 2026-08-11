@@ -1,13 +1,14 @@
 ---
 import Base from "../layouts/Base.astro";
+import { noindexPage } from "../lib/metadata";
+
+const metadata = noindexPage({
+  title: "Page not found · Atrinik",
+  description: "The requested Atrinik page could not be found.",
+});
 ---
 
-<Base
-  title="Page not found"
-  description="The requested Atrinik page could not be found."
-  canonicalPath="/404.html"
-  noindex={true}
->
+<Base metadata={metadata}>
   <header class="page-hero">
     <p class="eyebrow">Error 404</p>
     <h1 class="page-title">This path is lost to the mist.</h1>

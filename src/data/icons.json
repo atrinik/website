@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "atrinik-favicon",
+      "publicPath": "/favicon.svg",
+      "sourceRepository": "atrinik/website",
+      "sourcePath": "public/favicon.svg",
+      "sourceRevision": "b8ce07b4d6eb9d134268b1f13fba95290f6bb5c2",
+      "sourceSha256": "8b5a901b27d14d2c57bcd844febea646e026cb7ccb34a611837212a2da18ef45",
+      "publishedSha256": "8b5a901b27d14d2c57bcd844febea646e026cb7ccb34a611837212a2da18ef45",
+      "width": 64,
+      "height": 64,
+      "author": "Zoey Rose with Codex implementation assistance",
+      "license": "MIT",
+      "transformations": ["Authored directly as a compact SVG favicon."],
+      "purpose": "Browser favicon depicting the Atrinik crystal mark.",
+      "notice": "New repository-native vector artwork created for atrinik/website issue #27."
+    },
+    {
+      "id": "atrinik-mask-icon",
+      "publicPath": "/mask-icon.svg",
+      "sourceRepository": "atrinik/website",
+      "sourcePath": "public/mask-icon.svg",
+      "sourceRevision": "96bc7f293ea2a809ac45cdb0094cb82862cb2dde",
+      "sourceSha256": "84a60770868f27e7d1ac169d90c62f9293bd57e2b238117a699673f2e92535a2",
+      "publishedSha256": "84a60770868f27e7d1ac169d90c62f9293bd57e2b238117a699673f2e92535a2",
+      "width": 64,
+      "height": 64,
+      "author": "Zoey Rose with Codex implementation assistance",
+      "license": "MIT",
+      "transformations": [
+        "Simplified from the new favicon geometry into a monochrome SVG mask."
+      ],
+      "purpose": "Pinned-tab mask icon depicting the Atrinik crystal mark.",
+      "notice": "New repository-native vector artwork created for atrinik/website issue #27."
+    }
+  ]
+}

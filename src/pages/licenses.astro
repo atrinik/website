@@ -1,12 +1,18 @@
 ---
 import Base from "../layouts/Base.astro";
 import site from "../data/site.json";
+import { indexablePage } from "../lib/metadata";
+
+const metadata = indexablePage({
+  title: "Atrinik authorship, provenance, and license boundaries",
+  description:
+    "Understand the distinct authorship, provenance, attribution, and license boundaries for Atrinik software, game content, and website presentation media.",
+  canonicalPath: "/licenses/",
+  socialImageId: "atrinik-beyond",
+});
 ---
 
-<Base
-  title="Licenses"
-  description="Understand Atrinik's human-directed content policy, attribution, provenance, and license boundaries for creative game content, agentically developed software, and temporary generated website media."
->
+<Base metadata={metadata}>
   <header class="page-hero">
     <p class="eyebrow">Licenses and provenance</p>
     <h1 class="page-title">Every part keeps its own terms.</h1>

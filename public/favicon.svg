@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Atrinik crystal</title>
+  <rect width="64" height="64" rx="12" fill="#07111d"/>
+  <path d="M32 7 48 22 40 53H24L16 22 32 7Z" fill="#77e6ff"/>
+  <path d="m32 7 8 46H24L32 7Z" fill="#2e8fff"/>
+  <path d="m16 22 16 7 16-7-8 31H24L16 22Z" fill="#154f91" opacity=".78"/>
+  <path d="M32 7v22l16-7M32 29 16 22" fill="none" stroke="#d8fbff" stroke-width="2" stroke-linejoin="round"/>
+</svg>

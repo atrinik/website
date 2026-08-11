@@ -23,6 +23,13 @@ immutable Git blob object IDs, source and published digests, published
 dimensions, transformations, license, notices, and alternative text in
 `src/data/media.json`.
 
+The crystal favicon and pinned-tab mask under `public/` are new MIT-licensed
+vector artwork authored for website issue #27 by Zoey Rose with Codex
+implementation assistance. Their exact source paths, Git blob object IDs,
+SHA-256 digests, dimensions, transformations, purposes, and notices are closed
+records in `src/data/icons.json`; the checked-in SVG is both retained source and
+published file.
+
 The synthetic download and media records under `tools/` are contract-only test
 data. They do not name or contain a real release or asset and are never
 published by Astro. `src/data/downloads.json` remains empty until exact

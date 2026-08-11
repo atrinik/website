@@ -10,8 +10,10 @@ import {
   validateDownloadCatalog,
   validateDownloadSchemaDefinition,
   validateDownloadsPresentation,
+  validateIcon,
   validateLocalMediaSource,
   validateMedia,
+  validatePageMetadata,
   validateRedirects,
 } from "./site-contract.mjs";
 
@@ -22,6 +24,7 @@ if (!new Set(["source", "dist"]).has(mode))
 
 const downloads = await readJson(resolve(root, "src/data/downloads.json"));
 const media = await readJson(resolve(root, "src/data/media.json"));
+const icons = await readJson(resolve(root, "src/data/icons.json"));
 validateDownloadCatalog(downloads);
 if (
   media.schemaVersion !== 1 ||
@@ -30,6 +33,13 @@ if (
 )
   throw new Error("invalid media catalog envelope");
 media.entries.forEach(validateMedia);
+if (
+  icons.schemaVersion !== 1 ||
+  !Array.isArray(icons.entries) ||
+  icons.entries.length !== 2
+)
+  throw new Error("invalid icon catalog envelope");
+icons.entries.forEach(validateIcon);
 if (
   new Set(media.entries.map((record) => record.id)).size !==
   media.entries.length
@@ -69,6 +79,24 @@ for (const record of media.entries) {
     record.publishedSha256
   )
     throw new Error(`published media digest mismatch: ${record.id}`);
+}
+for (const record of icons.entries) {
+  await validateLocalMediaSource(root, record);
+  if (
+    (await digest(resolve(root, `public${record.publicPath}`))) !==
+    record.publishedSha256
+  )
+    throw new Error(`published icon digest mismatch: ${record.id}`);
+  const source = await readFile(
+    resolve(root, `public${record.publicPath}`),
+    "utf8",
+  );
+  if (
+    !source.startsWith("<svg ") ||
+    !source.includes('viewBox="0 0 64 64"') ||
+    /<script|\son[a-z]+=|(?:href|src)\s*=/iu.test(source)
+  )
+    throw new Error(`unsafe icon source: ${record.id}`);
 }
 
 const site = await readJson(resolve(root, "src/data/site.json"));
@@ -135,6 +163,7 @@ for (const directive of [
     throw new Error(`missing security header ${directive}`);
 for (const path of [
   "contracts/download.schema.json",
+  "contracts/icon.schema.json",
   "contracts/media.schema.json",
   "LICENSE",
   "PROVENANCE.md",
@@ -152,6 +181,7 @@ validateDownloadSchemaDefinition(downloadSchema, fixture);
 const mediaSchema = await readJson(
   resolve(root, "contracts/media.schema.json"),
 );
+const iconSchema = await readJson(resolve(root, "contracts/icon.schema.json"));
 const mediaFields = [
   "id",
   "publicPath",
@@ -173,6 +203,27 @@ if (
   mediaSchema.required.sort().join("\n") !== mediaFields.sort().join("\n")
 )
   throw new Error("declarative and executable catalog schemas drifted");
+const iconFields = [
+  "id",
+  "publicPath",
+  "sourceRepository",
+  "sourcePath",
+  "sourceRevision",
+  "sourceSha256",
+  "publishedSha256",
+  "width",
+  "height",
+  "author",
+  "license",
+  "transformations",
+  "purpose",
+  "notice",
+];
+if (
+  iconSchema.additionalProperties !== false ||
+  iconSchema.required.sort().join("\n") !== iconFields.sort().join("\n")
+)
+  throw new Error("declarative and executable icon schemas drifted");
 
 const packageManifest = await readJson(resolve(root, "package.json"));
 const dependencyPolicy = await readJson(
@@ -236,6 +287,30 @@ if (mode === "dist") {
     throw new Error(
       "social metadata omits the generated website-media exception",
     );
+  const pageContracts = [
+    ["index.html", "https://atrinik.org/", true],
+    ["about/index.html", "https://atrinik.org/about/", false],
+    ["downloads/index.html", "https://atrinik.org/downloads/", false],
+    ["licenses/index.html", "https://atrinik.org/licenses/", false],
+    ["404.html", null, false],
+  ];
+  const identities = [];
+  for (const [path, canonicalUrl, websiteIdentity] of pageContracts) {
+    const html = await readFile(resolve(root, `dist/${path}`), "utf8");
+    for (const icon of icons.entries)
+      if (!html.includes(`href="${icon.publicPath}"`))
+        throw new Error(`${path} omits icon ${icon.id}`);
+    identities.push(
+      validatePageMetadata(html, { canonicalUrl, websiteIdentity }),
+    );
+  }
+  for (const field of ["title", "description", "canonicalUrl"]) {
+    const values = identities
+      .map((identity) => identity[field])
+      .filter((value) => value !== null);
+    if (new Set(values).size !== values.length)
+      throw new Error(`indexable page ${field} values are not unique`);
+  }
   validateDownloadsPresentation(
     await readFile(resolve(root, "dist/downloads/index.html"), "utf8"),
     downloads,

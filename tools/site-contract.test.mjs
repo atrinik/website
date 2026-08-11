@@ -27,8 +27,10 @@ import {
   validateDownloadCatalog,
   validateDownloadSchemaDefinition,
   validateDownloadsPresentation,
+  validateIcon,
   validateLocalMediaSource,
   validateMedia,
+  validatePageMetadata,
   validatePresentationCss,
   validateRedirects,
 } from "./site-contract.mjs";
@@ -37,6 +39,9 @@ const root = resolve(import.meta.dirname, "..");
 
 const accessibleShell =
   '<!doctype html><html lang="en"><head><title>Title</title><meta name="description" content="Description"><link rel="canonical" href="https://atrinik.org/"><meta property="og:title" content="Title"><meta property="og:description" content="Description"><meta property="og:image" content="https://atrinik.org/media/social.00000000.webp"><meta name="twitter:card" content="summary_large_image"></head><body><a href="#content">Skip</a><nav aria-label="Primary navigation"></nav><main id="content"><h1>Title</h1></main></body></html>';
+
+const completeMetadataShell =
+  '<!doctype html><html lang="en"><head><title>About Atrinik</title><meta name="description" content="A useful description"><meta name="robots" content="index, follow"><link rel="canonical" href="https://atrinik.org/about/"><meta property="og:type" content="website"><meta property="og:title" content="About Atrinik"><meta property="og:description" content="A useful description"><meta property="og:url" content="https://atrinik.org/about/"><meta property="og:image" content="https://atrinik.org/media/social.00000000.webp"><meta property="og:image:alt" content="A useful social image alternative"><meta property="og:image:width" content="1120"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="About Atrinik"><meta name="twitter:description" content="A useful description"><meta name="twitter:image" content="https://atrinik.org/media/social.00000000.webp"><meta name="twitter:image:alt" content="A useful social image alternative"></head><body></body></html>';
 
 const validMedia = {
   id: "licensed-image",
@@ -53,6 +58,23 @@ const validMedia = {
   transformations: ["lossless metadata removal"],
   alt: "A described fixture",
   notice: "Copyright Example Author",
+};
+
+const validIcon = {
+  id: "atrinik-favicon",
+  publicPath: "/favicon.svg",
+  sourceRepository: "atrinik/website",
+  sourcePath: "public/favicon.svg",
+  sourceRevision: "2".repeat(40),
+  sourceSha256: "3".repeat(64),
+  publishedSha256: "3".repeat(64),
+  width: 64,
+  height: 64,
+  author: "Example Author",
+  license: "MIT",
+  transformations: ["Authored as SVG."],
+  purpose: "Browser favicon.",
+  notice: "Example notice.",
 };
 
 function riffWebp(chunk, payload, totalBytes) {
@@ -411,6 +433,64 @@ test("media records require complete provenance and safe paths", () => {
   assert.throws(
     () => validateMedia({ ...validMedia, transformations: [] }),
     /transformations/u,
+  );
+});
+
+test("icon records require closed local SVG provenance", () => {
+  assert.doesNotThrow(() => validateIcon(validIcon));
+  assert.throws(
+    () => validateIcon({ ...validIcon, publicPath: "/remote.svg" }),
+    /icon identity/u,
+  );
+  assert.throws(
+    () => validateIcon({ ...validIcon, publishedSha256: "4".repeat(64) }),
+    /icon digest/u,
+  );
+  assert.throws(
+    () => validateIcon({ ...validIcon, width: 32 }),
+    /icon dimensions/u,
+  );
+});
+
+test("page metadata stays complete, consistent, and safely inert", () => {
+  assert.deepEqual(
+    validatePageMetadata(completeMetadataShell, {
+      canonicalUrl: "https://atrinik.org/about/",
+    }),
+    {
+      title: "About Atrinik",
+      description: "A useful description",
+      canonicalUrl: "https://atrinik.org/about/",
+    },
+  );
+  assert.throws(
+    () =>
+      validatePageMetadata(
+        completeMetadataShell.replace(
+          '<meta name="twitter:title" content="About Atrinik">',
+          '<meta name="twitter:title" content="Different">',
+        ),
+        { canonicalUrl: "https://atrinik.org/about/" },
+      ),
+    /inconsistent/u,
+  );
+  assert.throws(
+    () =>
+      validatePageMetadata(
+        completeMetadataShell.replace(
+          "</head>",
+          '<script src="/app.js"></script></head>',
+        ),
+        { canonicalUrl: "https://atrinik.org/about/" },
+      ),
+    /script block/u,
+  );
+  const noindex =
+    '<html><head><title>Not found</title><meta name="description" content="Missing"><meta name="robots" content="noindex, nofollow"></head></html>';
+  assert.doesNotThrow(() => validatePageMetadata(noindex));
+  assert.throws(
+    () => validatePageMetadata(`${noindex}<script>alert(1)</script>`),
+    /script block/u,
   );
 });
 
