@@ -30,6 +30,8 @@ import {
   validateDownloadsPresentation,
   validateIcon,
   validateIconCatalog,
+  validateHomepagePhraseSet,
+  validateHomepagePresentation,
   validateLocalMediaSource,
   validateMedia,
   validatePageMetadata,
@@ -91,6 +93,48 @@ const validIcon = {
   purpose: "Browser favicon.",
   notice: "Example notice.",
 };
+
+const homepage = {
+  description:
+    "Atrinik is a free, open-source online role-playing game. Download Atrinik Classic for Windows; the replacement remains in development.",
+  eyebrow: "Free, open-source online role-playing game",
+  heading: "Atrinik is a cooperative fantasy game.",
+  introduction:
+    "Explore Atrinik’s isometric islands, ruins, and crystal-lit mysteries with other players. The maintained Classic release is available for Windows; the replacement game remains in development.",
+  primaryAction: "Download Atrinik Classic",
+  title: "Free, open-source online role-playing game",
+};
+
+const homepageHtml = `<title>${homepage.title} · Atrinik</title><meta name="description" content="${homepage.description}"><meta property="og:title" content="${homepage.title} · Atrinik"><meta property="og:description" content="${homepage.description}"><meta name="twitter:title" content="${homepage.title} · Atrinik"><meta name="twitter:description" content="${homepage.description}"><h1 id="hero-title">${homepage.heading}</h1><p class="eyebrow">${homepage.eyebrow}</p><p class="hero-lede">${homepage.introduction}</p><a class="button button--primary" href="/downloads/">${homepage.primaryAction} <span aria-hidden="true">→</span></a>`;
+
+test("homepage phrase set stays structurally aligned", () => {
+  assert.doesNotThrow(() => validateHomepagePhraseSet(homepage));
+  assert.doesNotThrow(() =>
+    validateHomepagePresentation(homepageHtml, homepage, "Atrinik"),
+  );
+  for (const drift of [
+    homepageHtml.replace('name="description"', 'name="summary"'),
+    homepageHtml.replace('property="og:description"', 'property="og:summary"'),
+    homepageHtml.replace(
+      'name="twitter:description"',
+      'name="twitter:summary"',
+    ),
+    homepageHtml.replace('id="hero-title"', 'id="other-title"'),
+    homepageHtml.replace('href="/downloads/"', 'href="/about/"'),
+  ])
+    assert.throws(
+      () => validateHomepagePresentation(drift, homepage, "Atrinik"),
+      /homepage|description|primary|H1/u,
+    );
+  assert.throws(
+    () =>
+      validateHomepagePhraseSet({
+        ...homepage,
+        description: "x".repeat(161),
+      }),
+    /phrase set/u,
+  );
+});
 
 function riffWebp(chunk, payload, totalBytes) {
   const minimumBytes = 20 + payload.length + (payload.length % 2);

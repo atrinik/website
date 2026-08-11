@@ -2,6 +2,14 @@
   "title": "Atrinik",
   "description": "Atrinik is an open-source role-playing world under human creative direction, with primarily Codex-driven software development and human code contributions welcome.",
   "canonicalOrigin": "https://atrinik.org",
+  "homepage": {
+    "title": "Free, open-source online role-playing game",
+    "description": "Atrinik is a free, open-source online role-playing game. Download Atrinik Classic for Windows; the replacement remains in development.",
+    "eyebrow": "Free, open-source online role-playing game",
+    "heading": "Atrinik is a cooperative fantasy game.",
+    "introduction": "Explore Atrinik’s isometric islands, ruins, and crystal-lit mysteries with other players. The maintained Classic release is available for Windows; the replacement game remains in development.",
+    "primaryAction": "Download Atrinik Classic"
+  },
   "privacy": {
     "applicationAnalytics": false,
     "applicationCookies": false,

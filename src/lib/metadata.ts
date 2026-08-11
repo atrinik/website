@@ -112,7 +112,7 @@ export function websiteIdentity(): JsonLdValue {
     "@id": "https://atrinik.org/#website",
     url: "https://atrinik.org/",
     name: site.title,
-    description: site.description,
+    description: site.homepage.description,
     sameAs: [
       "https://github.com/atrinik",
       "https://github.com/atrinik/website",
