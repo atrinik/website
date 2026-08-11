@@ -4,14 +4,18 @@ import DownloadCatalog from "../components/DownloadCatalog.astro";
 import DownloadPrimaryAction from "../components/DownloadPrimaryAction.astro";
 import downloads from "../data/downloads.json";
 import type { DownloadCatalog as DownloadCatalogType } from "../lib/downloads";
+import { indexablePage } from "../lib/metadata";
 
 const catalog: DownloadCatalogType = downloads;
+const metadata = indexablePage({
+  title: "Atrinik Classic downloads and release status",
+  description:
+    "Find the maintained Atrinik Classic release path, verify available packages, and understand why the replacement foundations are not yet a complete game download.",
+  canonicalPath: "/downloads/",
+});
 ---
 
-<Base
-  title="Downloads"
-  description="Find the unified, maintained Atrinik Classic releases and learn the status of the independently released replacement foundations."
->
+<Base metadata={metadata}>
   <header class="page-hero">
     <p class="eyebrow">Choose your path</p>
     <h1 class="page-title">Play the classic. Follow what comes next.</h1>

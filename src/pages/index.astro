@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import media from "../data/media.json";
 import site from "../data/site.json";
+import { indexablePage, websiteIdentity } from "../lib/metadata";
 
 const getMedia = (id: string) => {
   const record = media.entries.find((entry) => entry.id === id);
@@ -10,6 +11,12 @@ const getMedia = (id: string) => {
 };
 
 const crystal = getMedia("great-blue-crystal");
+const metadata = indexablePage({
+  title: `${site.homepage.title} · ${site.title}`,
+  description: site.homepage.description,
+  canonicalPath: "/",
+  structuredData: [websiteIdentity()],
+});
 const chronicle = [
   {
     media: getMedia("atrinik-then"),
@@ -32,11 +39,7 @@ const chronicle = [
 ];
 ---
 
-<Base
-  title={site.homepage.title}
-  description={site.homepage.description}
-  preloadImage={crystal.publicPath}
->
+<Base metadata={metadata} preloadImage={crystal.publicPath}>
   <section class="home-hero" aria-labelledby="hero-title">
     <div class="hero-copy">
       <p class="eyebrow">{site.homepage.eyebrow}</p>

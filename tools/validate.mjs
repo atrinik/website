@@ -10,11 +10,14 @@ import {
   validateDownloadCatalog,
   validateDownloadSchemaDefinition,
   validateDownloadsPresentation,
+  validateIconCatalog,
   validateHomepagePhraseSet,
   validateHomepagePresentation,
   validateLocalMediaSource,
   validateMedia,
+  validatePageMetadata,
   validateRedirects,
+  validateSvgIconSource,
 } from "./site-contract.mjs";
 
 const root = resolve(import.meta.dirname, "..");
@@ -24,6 +27,7 @@ if (!new Set(["source", "dist"]).has(mode))
 
 const downloads = await readJson(resolve(root, "src/data/downloads.json"));
 const media = await readJson(resolve(root, "src/data/media.json"));
+const icons = await readJson(resolve(root, "src/data/icons.json"));
 validateDownloadCatalog(downloads);
 if (
   media.schemaVersion !== 1 ||
@@ -32,6 +36,8 @@ if (
 )
   throw new Error("invalid media catalog envelope");
 media.entries.forEach(validateMedia);
+if (icons.schemaVersion !== 1) throw new Error("invalid icon catalog envelope");
+validateIconCatalog(icons.entries);
 if (
   new Set(media.entries.map((record) => record.id)).size !==
   media.entries.length
@@ -71,6 +77,19 @@ for (const record of media.entries) {
     record.publishedSha256
   )
     throw new Error(`published media digest mismatch: ${record.id}`);
+}
+for (const record of icons.entries) {
+  await validateLocalMediaSource(root, record);
+  if (
+    (await digest(resolve(root, `public${record.publicPath}`))) !==
+    record.publishedSha256
+  )
+    throw new Error(`published icon digest mismatch: ${record.id}`);
+  const source = await readFile(
+    resolve(root, `public${record.publicPath}`),
+    "utf8",
+  );
+  validateSvgIconSource(source, record.id);
 }
 
 const site = await readJson(resolve(root, "src/data/site.json"));
@@ -138,6 +157,7 @@ for (const directive of [
     throw new Error(`missing security header ${directive}`);
 for (const path of [
   "contracts/download.schema.json",
+  "contracts/icon.schema.json",
   "contracts/media.schema.json",
   "LICENSE",
   "PROVENANCE.md",
@@ -155,6 +175,7 @@ validateDownloadSchemaDefinition(downloadSchema, fixture);
 const mediaSchema = await readJson(
   resolve(root, "contracts/media.schema.json"),
 );
+const iconSchema = await readJson(resolve(root, "contracts/icon.schema.json"));
 const mediaFields = [
   "id",
   "publicPath",
@@ -176,6 +197,27 @@ if (
   mediaSchema.required.sort().join("\n") !== mediaFields.sort().join("\n")
 )
   throw new Error("declarative and executable catalog schemas drifted");
+const iconFields = [
+  "id",
+  "publicPath",
+  "sourceRepository",
+  "sourcePath",
+  "sourceRevision",
+  "sourceSha256",
+  "publishedSha256",
+  "width",
+  "height",
+  "author",
+  "license",
+  "transformations",
+  "purpose",
+  "notice",
+];
+if (
+  iconSchema.additionalProperties !== false ||
+  iconSchema.required.sort().join("\n") !== iconFields.sort().join("\n")
+)
+  throw new Error("declarative and executable icon schemas drifted");
 
 const packageManifest = await readJson(resolve(root, "package.json"));
 const dependencyPolicy = await readJson(
@@ -242,6 +284,66 @@ if (mode === "dist") {
     throw new Error(
       "social metadata omits the generated website-media exception",
     );
+  const htmlPaths = (await filesBelow(resolve(root, "dist"))).filter((path) =>
+    path.endsWith(".html"),
+  );
+  const identities = [];
+  const allowedMedia = new Map(
+    media.entries.map((record) => [record.publicPath, record]),
+  );
+  for (const path of htmlPaths) {
+    const relativePath = relative(resolve(root, "dist"), path).replaceAll(
+      sep,
+      "/",
+    );
+    let canonicalUrl = null;
+    if (relativePath !== "404.html") {
+      const canonicalPath =
+        relativePath === "index.html"
+          ? "/"
+          : relativePath.endsWith("/index.html")
+            ? `/${relativePath.slice(0, -"index.html".length)}`
+            : `/${relativePath}`;
+      canonicalUrl = new URL(canonicalPath, site.canonicalOrigin).href;
+      if (!sitemapUrls.includes(canonicalUrl))
+        throw new Error(
+          `indexable generated route is absent from sitemap: ${relativePath}`,
+        );
+    }
+    const html = await readFile(path, "utf8");
+    const faviconLinks = [
+      ...html.matchAll(
+        /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml" sizes="any"\s*\/?>/gu,
+      ),
+    ];
+    const maskLinks = [
+      ...html.matchAll(
+        /<link rel="mask-icon" href="\/mask-icon\.svg" color="#[0-9a-fA-F]{6}"\s*\/?>/gu,
+      ),
+    ];
+    if (faviconLinks.length !== 1 || maskLinks.length !== 1)
+      throw new Error(`${relativePath} has incomplete or duplicate icon links`);
+    identities.push(
+      validatePageMetadata(html, {
+        canonicalUrl,
+        websiteIdentity: canonicalUrl === "https://atrinik.org/",
+        allowedMedia,
+      }),
+    );
+  }
+  for (const field of ["title", "description", "canonicalUrl"]) {
+    const values = identities
+      .map((identity) => identity[field])
+      .filter((value) => value !== null);
+    if (new Set(values).size !== values.length)
+      throw new Error(`indexable page ${field} values are not unique`);
+  }
+  const generatedCanonicalUrls = identities
+    .map(({ canonicalUrl }) => canonicalUrl)
+    .filter((value) => value !== null)
+    .sort();
+  if (generatedCanonicalUrls.join("\n") !== [...sitemapUrls].sort().join("\n"))
+    throw new Error("generated indexable routes and sitemap differ");
   validateDownloadsPresentation(
     await readFile(resolve(root, "dist/downloads/index.html"), "utf8"),
     downloads,

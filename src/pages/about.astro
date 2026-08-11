@@ -1,11 +1,17 @@
 ---
 import Base from "../layouts/Base.astro";
+import { indexablePage } from "../lib/metadata";
+
+const metadata = indexablePage({
+  title: "About Atrinik: Human imagination and open development",
+  description:
+    "Atrinik began in 2009 as a human-developed open-source world. Learn how human creative direction, agentic software work, and direct contributions shape it today.",
+  canonicalPath: "/about/",
+  socialImageId: "atrinik-then",
+});
 ---
 
-<Base
-  title="About"
-  description="Atrinik began in 2009 as a human-developed open-source world. Today its software is maintained and reimplemented primarily through Codex-driven workflows while human code contributions remain welcome."
->
+<Base metadata={metadata}>
   <header class="page-hero">
     <p class="eyebrow">About Atrinik</p>
     <h1 class="page-title">Human imagination. Agentic engineering.</h1>

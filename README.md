@@ -53,6 +53,20 @@ from `public/media/`; their exact source Git blob object IDs, digests,
 dimensions, transformations, licenses, notices, and alternative text are
 recorded in `src/data/media.json`.
 
+Every indexable route constructs a closed, typed page identity through
+`src/lib/metadata.ts`: one unique title and description, canonical URL, robots
+policy, internally consistent Open Graph/Twitter fields, preview image
+dimensions, and alternative text. `atrinik-now` is the documented sitewide
+preview fallback until issue #22 supplies approved replacement artwork; routes
+can select a more relevant record from the same validated media catalog. The
+homepage also emits the canonical Atrinik `WebSite` identity as safely
+serialized inert JSON-LD. The 404 is noindex and deliberately has no canonical,
+social-preview, or structured identity.
+
+The new crystal favicon and pinned-tab mask are compact repository-authored SVG
+files. Their closed authorship, license, source, hash, Git blob, dimensions,
+transformation, purpose, and notice records live in `src/data/icons.json`.
+
 ## Development
 
 Use Node 24.18.1 and npm 11.16.0:
@@ -67,8 +81,10 @@ npm run deploy:dry-run
 The build writes a self-contained static site to `dist/`. Validation rejects
 unproven media, mutable download coordinates, missing attribution or alt text,
 unsafe links, repository-authored client JavaScript, broken internal links, and
-page-weight budget violations. Generated release evidence belongs under ignored
-`build/`.
+page-weight budget violations. It permits only inert, locally serialized
+`type="application/ld+json"` data blocks; executable scripts, script sources,
+event handlers, and JavaScript assets remain forbidden. Generated release
+evidence belongs under ignored `build/`.
 
 `src/data/downloads.json` is a reviewed immutable catalog, not a live release
 feed. Its closed schema keeps a release repository separate from an artifact
