@@ -10,6 +10,8 @@ import {
   validateDownloadCatalog,
   validateDownloadSchemaDefinition,
   validateDownloadsPresentation,
+  validateHomepagePhraseSet,
+  validateHomepagePresentation,
   validateLocalMediaSource,
   validateMedia,
   validateRedirects,
@@ -74,6 +76,7 @@ for (const record of media.entries) {
 const site = await readJson(resolve(root, "src/data/site.json"));
 if (site.canonicalOrigin !== "https://atrinik.org")
   throw new Error("privacy/canonical contract drift");
+validateHomepagePhraseSet(site.homepage);
 const privacyFields = [
   "applicationAnalytics",
   "applicationCookies",
@@ -227,6 +230,9 @@ if (mode === "dist") {
     .replaceAll("&#39;", "'")
     .replaceAll("&quot;", '"')
     .replaceAll("&amp;", "&");
+  validateHomepagePresentation(home, site.homepage, site.title);
+  if (!decodedHome.includes("temporary concept artwork"))
+    throw new Error("home omits the concept-art disclosure");
   for (const field of identityFields)
     if (!decodedHome.includes(site.identity[field]))
       throw new Error(`home omits site identity ${field}`);

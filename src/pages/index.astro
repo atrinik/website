@@ -32,19 +32,20 @@ const chronicle = [
 ];
 ---
 
-<Base preloadImage={crystal.publicPath}>
+<Base
+  title={site.homepage.title}
+  description={site.homepage.description}
+  preloadImage={crystal.publicPath}
+>
   <section class="home-hero" aria-labelledby="hero-title">
     <div class="hero-copy">
-      <p class="eyebrow">An open-source role-playing world</p>
-      <h1 id="hero-title">A world of crystal, memory, and unfinished paths.</h1>
-      <p class="hero-lede">
-        Atrinik is a cooperative fantasy world of islands, ruins, and
-        crystal-lit mysteries—playable through the unified, maintained Classic
-        line, and being rebuilt on new foundations for what comes next.
-      </p>
+      <p class="eyebrow">{site.homepage.eyebrow}</p>
+      <h1 id="hero-title">{site.homepage.heading}</h1>
+      <p class="hero-lede">{site.homepage.introduction}</p>
       <div class="hero-actions">
         <a class="button button--primary" href="/downloads/">
-          Explore Classic <span aria-hidden="true">→</span>
+          {site.homepage.primaryAction}
+          <span aria-hidden="true">→</span>
         </a>
         <a
           class="button button--ghost"
@@ -59,12 +60,12 @@ const chronicle = [
           <dd>Playable &amp; maintained</dd>
         </div>
         <div>
-          <dt>Next generation</dt>
-          <dd>Foundations in development</dd>
+          <dt>Windows</dt>
+          <dd>Supported client download</dd>
         </div>
         <div>
-          <dt>Source</dt>
-          <dd>Open on GitHub</dd>
+          <dt>Next generation</dt>
+          <dd>Foundations in development</dd>
         </div>
       </dl>
     </div>
