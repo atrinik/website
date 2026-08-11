@@ -497,6 +497,13 @@ test("icon records require closed local SVG provenance", () => {
   assert.throws(
     () =>
       validateSvgIconSource(
+        '<svg viewBox="0 0 64 64"/onload= "alert(1)"></svg>',
+      ),
+    /unsafe icon/u,
+  );
+  assert.throws(
+    () =>
+      validateSvgIconSource(
         '<svg viewBox="0 0 64 64"><style>@import url(https://tracker.example/icon.css)</style></svg>',
       ),
     /unsafe icon/u,
@@ -597,6 +604,7 @@ test("page metadata stays complete, consistent, and safely inert", () => {
     () => parseInertJsonLd("</script><p>stray closing tag</p>"),
     /malformed/u,
   );
+  assert.throws(() => parseInertJsonLd("<script/>alert(1)"), /script/u);
 });
 
 test("same-repository media binds source bytes and Git blob object", async (context) => {
@@ -893,6 +901,11 @@ test("static output rejects scripts, broken links, and excessive files", async (
   await writeFile(
     join(root, "index.html"),
     accessibleShell.replace("<main", '<main onload = "alert(1)"'),
+  );
+  await assert.rejects(validateDist(root), /event handler/u);
+  await writeFile(
+    join(root, "index.html"),
+    accessibleShell.replace("<main", "<main><img/onerror=alert(1)><span"),
   );
   await assert.rejects(validateDist(root), /event handler/u);
   await writeFile(join(root, "index.html"), accessibleShell);
