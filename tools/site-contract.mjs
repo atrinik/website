@@ -530,7 +530,7 @@ export function validateSvgIconSource(source, id = "icon") {
     typeof source !== "string" ||
     !source.startsWith("<svg ") ||
     !source.includes('viewBox="0 0 64 64"') ||
-    /<script|<style|(?:\s|\/)on[a-z][a-z0-9_-]*\s*=|(?:\s|\/)style\s*=|(?:href|src)\s*=|@import|url\s*\(/iu.test(
+    /<script|<style|(?:\s|\/|["'])on[a-z][a-z0-9_-]*\s*=|(?:\s|\/)style\s*=|(?:href|src)\s*=|@import|url\s*\(/iu.test(
       source,
     )
   )
@@ -1034,7 +1034,7 @@ export async function validateDist(
       )
         throw new Error("404 page must be excluded from indexing");
       parseInertJsonLd(html);
-      if (/(?:\s|\/)on[a-z][a-z0-9_-]*\s*=/iu.test(html))
+      if (/(?:\s|\/|["'])on[a-z][a-z0-9_-]*\s*=/iu.test(html))
         throw new Error(`client script/event handler forbidden in ${path}`);
       for (const match of html.matchAll(/<img\b[^>]*>/giu)) {
         containsImages = true;
