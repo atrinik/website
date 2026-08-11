@@ -10,6 +10,8 @@ import {
   validateDownloadCatalog,
   validateDownloadSchemaDefinition,
   validateDownloadsPresentation,
+  validateHomepagePhraseSet,
+  validateHomepagePresentation,
   validateLocalMediaSource,
   validateMedia,
   validateRedirects,
@@ -74,6 +76,7 @@ for (const record of media.entries) {
 const site = await readJson(resolve(root, "src/data/site.json"));
 if (site.canonicalOrigin !== "https://atrinik.org")
   throw new Error("privacy/canonical contract drift");
+validateHomepagePhraseSet(site.homepage);
 const privacyFields = [
   "applicationAnalytics",
   "applicationCookies",
@@ -227,27 +230,9 @@ if (mode === "dist") {
     .replaceAll("&#39;", "'")
     .replaceAll("&quot;", '"')
     .replaceAll("&amp;", "&");
-  const homeProposition = [
-    "Free, open-source online role-playing game · Atrinik",
-    "Atrinik is a free, open-source multiplayer online role-playing game. Download the maintained Atrinik Classic client for Windows while the replacement foundations remain in development.",
-    "Atrinik is a cooperative fantasy role-playing game.",
-    "Atrinik Classic is the playable, maintained release for Windows; the replacement game remains in development.",
-    '<a class="button button--primary" href="/downloads/">',
-    "Download Atrinik Classic",
-    "temporary concept artwork",
-  ];
-  for (const phrase of homeProposition)
-    if (!decodedHome.includes(phrase))
-      throw new Error(`home omits player proposition: ${phrase}`);
-  for (const metadata of [
-    "<title>Free, open-source online role-playing game · Atrinik</title>",
-    '<meta property="og:title" content="Free, open-source online role-playing game · Atrinik"',
-    '<meta name="twitter:title" content="Free, open-source online role-playing game · Atrinik"',
-  ])
-    if (!decodedHome.includes(metadata))
-      throw new Error(
-        `home metadata drifts from player proposition: ${metadata}`,
-      );
+  validateHomepagePresentation(home, site.homepage, site.title);
+  if (!decodedHome.includes("temporary concept artwork"))
+    throw new Error("home omits the concept-art disclosure");
   for (const field of identityFields)
     if (!decodedHome.includes(site.identity[field]))
       throw new Error(`home omits site identity ${field}`);

@@ -624,6 +624,100 @@ function decodeHtmlAttribute(value) {
     .replaceAll("&amp;", "&");
 }
 
+function normalizedText(fragment) {
+  return decodeHtmlAttribute(fragment.replaceAll(/<[^>]+>/gu, " "))
+    .replaceAll(/\s+/gu, " ")
+    .trim();
+}
+
+export function validateHomepagePhraseSet(homepage) {
+  const fields = [
+    "description",
+    "eyebrow",
+    "heading",
+    "introduction",
+    "primaryAction",
+    "title",
+  ];
+  if (
+    homepage === null ||
+    typeof homepage !== "object" ||
+    Object.keys(homepage).sort().join("\n") !== fields.join("\n") ||
+    fields.some(
+      (field) =>
+        typeof homepage[field] !== "string" ||
+        homepage[field].trim() !== homepage[field] ||
+        homepage[field].length < 10 ||
+        homepage[field].length > 300,
+    ) ||
+    homepage.title.length > 70 ||
+    homepage.description.length > 160
+  )
+    throw new Error("invalid homepage phrase set");
+}
+
+export function validateHomepagePresentation(html, homepage, siteTitle) {
+  validateHomepagePhraseSet(homepage);
+  if (typeof html !== "string" || typeof siteTitle !== "string")
+    throw new Error("invalid homepage presentation input");
+
+  const elementText = (pattern, label) => {
+    const match = pattern.exec(html);
+    if (!match) throw new Error(`homepage omits ${label}`);
+    return normalizedText(match[1]);
+  };
+  const expectedTitle = `${homepage.title} · ${siteTitle}`;
+  const titles = [
+    elementText(/<title>([^<]*)<\/title>/u, "title"),
+    elementText(
+      /<meta property="og:title" content="([^"]*)"\s*\/?>/u,
+      "Open Graph title",
+    ),
+    elementText(
+      /<meta name="twitter:title" content="([^"]*)"\s*\/?>/u,
+      "Twitter title",
+    ),
+  ];
+  if (titles.some((title) => title !== expectedTitle))
+    throw new Error("homepage title metadata drifts from phrase set");
+
+  const descriptions = [
+    elementText(
+      /<meta name="description" content="([^"]*)"\s*\/?>/u,
+      "search description",
+    ),
+    elementText(
+      /<meta property="og:description" content="([^"]*)"\s*\/?>/u,
+      "Open Graph description",
+    ),
+    elementText(
+      /<meta name="twitter:description" content="([^"]*)"\s*\/?>/u,
+      "Twitter description",
+    ),
+  ];
+  if (descriptions.some((description) => description !== homepage.description))
+    throw new Error("homepage description metadata drifts from phrase set");
+
+  if (
+    elementText(/<h1 id="hero-title">([\s\S]*?)<\/h1>/u, "hero H1") !==
+      homepage.heading ||
+    elementText(/<p class="eyebrow">([\s\S]*?)<\/p>/u, "hero eyebrow") !==
+      homepage.eyebrow ||
+    elementText(
+      /<p class="hero-lede">([\s\S]*?)<\/p>/u,
+      "hero introduction",
+    ) !== homepage.introduction
+  )
+    throw new Error("homepage visible proposition drifts from phrase set");
+
+  const primaryAction = elementText(
+    /<a class="button button--primary" href="\/downloads\/">([\s\S]*?)<\/a>/u,
+    "canonical primary action",
+  );
+  if (primaryAction !== `${homepage.primaryAction} →`)
+    throw new Error("homepage primary action drifts from phrase set");
+}
+
 export async function validateDist(
   root,
   { allowedMedia = new Map(), allowedReleaseUrls = new Set() } = {},
