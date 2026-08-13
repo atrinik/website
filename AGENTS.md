@@ -2,9 +2,10 @@
 
 ## Ownership and architecture
 
-- This repository solely owns atrinik.org: the clean-room MIT Astro/TypeScript
-  site, public content, deployment configuration, and recovery docs. Keep it
-  independently buildable/deployable; the wrapper never owns Astro source.
+- This repository solely owns atrinik.org: the evidence-gated MIT
+  Astro/TypeScript site, public content, deployment configuration, and recovery
+  docs. Keep it independently buildable/deployable; the wrapper never owns
+  Astro source.
 - Use static Astro output, semantic HTML/CSS/Markdown, and structured data with
   no repository-authored browser JavaScript under the current contract.
   Introducing browser JavaScript requires an issue defining its necessity,
@@ -52,10 +53,20 @@
   path, immutable Git blob object ID and digest, published digest and binary
   dimensions, author, license, transformation, attribution, and accessible
   alternative text/role. Validation rejects unproven or uncatalogued media.
-- Historical reuse follows local `PROVENANCE.md` and canonical
-  `atrinik/atrinik/docs/PROVENANCE.md`, failing closed on incomplete/mixed
-  evidence. Do not republish archived personal data without a separate privacy
-  and provenance decision.
+- Independent implementation is the default where exact reuse is not proven.
+  Historical Classic destination reuse follows the
+  [local provenance record](PROVENANCE.md) and
+  [canonical grant registry](https://github.com/atrinik/atrinik/blob/main/docs/PROVENANCE.md).
+  At an exact source revision, prove every copyrightable portion is separable,
+  within a recorded grant's past-contribution scope, and original work solely
+  authored by its grantor. Present-day blame, majority authorship, a later
+  edit, or an agent-assisted commit cannot fill a coverage gap. Admitted
+  material may be inspected as implementation reference, copied, adapted,
+  ported, translated, and MIT-relicensed in this destination. Record the exact
+  source, destination, transformation, and registry revision; uncovered
+  material fails closed. The Classic repository remains GPL-distributed. Do not
+  republish archived personal data without a separate privacy and provenance
+  decision.
 - Do not put secrets in source, static output, browser code, logs, fixtures,
   preview metadata, or `PUBLIC_` values. Protected environments use least
   privilege. Omit repository-managed analytics, tracking, cookies, ads, and
