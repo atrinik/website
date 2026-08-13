@@ -30,9 +30,14 @@ human-developed beginning alongside the wider Atrinik Development Team. The
 maintained GPL C Classic line credits Atrinik, Daimonin, Crossfire, and wider
 upstream/community contributors through its authoritative records; 2011 was a
 major development and release era, not the founding year. The new Go server,
-Rust client/editor/renderer/toolkit, and Protobuf protocol are a Codex-driven
-clean-room reimplementation and improvement, not a mechanical source port and
-not yet a complete game release.
+Rust client/editor/renderer/toolkit, and Protobuf protocol are Codex-driven MIT
+replacement foundations governed by evidence-gated provenance. Independent
+implementation is the default where exact reuse is unproven. Exact historical
+reuse follows the [local record](PROVENANCE.md) and
+[canonical grant registry](https://github.com/atrinik/atrinik/blob/main/docs/PROVENANCE.md);
+admitted destination material may be MIT-relicensed, while the Classic
+repository remains GPL-distributed. The foundations are not yet a complete game
+release.
 Follow the [replacement roadmap](https://github.com/atrinik/atrinik/issues/168)
 for current readiness.
 
