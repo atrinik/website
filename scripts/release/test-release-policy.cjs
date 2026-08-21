@@ -9,21 +9,21 @@ const {
 } = require("./release-policy.cjs");
 
 assert.equal(
-  releaseForCommit("main", {type: "docs", breaking: false}),
+  releaseForCommit("main", { type: "docs", breaking: false }),
   "minor",
 );
 assert.equal(nextVersion("8.0.0", "minor"), "8.1.0");
 assert.equal(
-  releaseForCommit("8.3.x", {type: "fix", breaking: false}),
+  releaseForCommit("8.3.x", { type: "fix", breaking: false }),
   "patch",
 );
 assert.equal(nextVersion("8.3.0", "patch"), "8.3.1");
 assert.equal(
-  releaseForCommit("8.3.x", {type: "feat", breaking: false}),
+  releaseForCommit("8.3.x", { type: "feat", breaking: false }),
   "minor",
 );
 assert.equal(
-  releaseForCommit("main", {type: "fix", breaking: true}),
+  releaseForCommit("main", { type: "fix", breaking: true }),
   "major",
 );
 assert.throws(() => rulesForBranch("release"), /unsupported/);

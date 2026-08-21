@@ -1,18 +1,18 @@
 "use strict";
 
 const MAINTENANCE_BRANCH = /^[0-9]+\.[0-9]+\.x$/;
-const RELEASE_RANK = {patch: 1, minor: 2, major: 3};
+const RELEASE_RANK = { patch: 1, minor: 2, major: 3 };
 
 const MAIN_RULES = [
-  {breaking: true, release: "major"},
-  {type: "feat", release: "minor"},
-  {type: "*", release: "minor"},
+  { breaking: true, release: "major" },
+  { type: "feat", release: "minor" },
+  { type: "*", release: "minor" },
 ];
 
 const MAINTENANCE_RULES = [
-  {breaking: true, release: "major"},
-  {type: "feat", release: "minor"},
-  {type: "*", release: "patch"},
+  { breaking: true, release: "major" },
+  { type: "feat", release: "minor" },
+  { type: "*", release: "patch" },
 ];
 
 function currentBranch() {
@@ -30,10 +30,10 @@ function currentBranch() {
 
 function rulesForBranch(branch) {
   if (branch === "main") {
-    return MAIN_RULES.map((rule) => ({...rule}));
+    return MAIN_RULES.map((rule) => ({ ...rule }));
   }
   if (MAINTENANCE_BRANCH.test(branch)) {
-    return MAINTENANCE_RULES.map((rule) => ({...rule}));
+    return MAINTENANCE_RULES.map((rule) => ({ ...rule }));
   }
   throw new Error("unsupported semantic-release branch: " + branch);
 }
@@ -48,9 +48,13 @@ function releaseForCommit(branch, commit) {
   if (matches.length === 0) {
     return null;
   }
-  return matches.reduce((release, rule) =>
-    RELEASE_RANK[rule.release] > RELEASE_RANK[release] ? rule.release : release,
-  "patch");
+  return matches.reduce(
+    (release, rule) =>
+      RELEASE_RANK[rule.release] > RELEASE_RANK[release]
+        ? rule.release
+        : release,
+    "patch",
+  );
 }
 
 function nextVersion(value, release) {
