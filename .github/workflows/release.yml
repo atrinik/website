@@ -3,7 +3,9 @@ name: Semantic Release
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
+      - "[0-9]+.[0-9]+.x"
 
 permissions:
   contents: write
@@ -27,6 +29,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      - name: Verify release branch policy
+        run: node scripts/release/test-release-policy.cjs
       - env:
           GITHUB_TOKEN: ${{ github.token }}
         run: npx semantic-release
