@@ -24,6 +24,14 @@ const versionPattern = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/u;
 const releaseRepositoryPattern = /^atrinik\/[a-z][a-z0-9-]*$/u;
 const artifactRolePattern = /^[a-z][a-z0-9-]*$/u;
 const artifactPattern = /^[A-Za-z0-9][A-Za-z0-9._-]+$/u;
+const releaseCoordinateExceptionValues = new Set([
+  "none",
+  "authorized-artifact-version-mismatch",
+]);
+const authorizedReleaseCoordinateException = Object.freeze({
+  releaseVersion: "5.34.4",
+  artifactVersion: "5.34.1",
+});
 const utcTimestampPattern =
   /^(?:(?:\d{2}(?:0[48]|[2468][048]|[13579][26])|(?:[02468][048]|[13579][26])00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|02-(?:0[1-9]|1\d|2[0-8])))T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\dZ$/u;
 const mediaPathPattern = /^\/media\/[a-z0-9][a-z0-9-]*\.([0-9a-f]{8})\.webp$/u;
@@ -89,6 +97,8 @@ export function validateDownload(record) {
     "artifactRole",
     "primary",
     "version",
+    "artifactVersion",
+    "releaseCoordinateException",
     "tag",
     "revision",
     "publishedAt",
@@ -127,6 +137,26 @@ export function validateDownload(record) {
     record.tag !== `v${record.version}`
   )
     throw new Error("download version/tag mismatch");
+  if (
+    !versionPattern.test(record.artifactVersion) ||
+    !releaseCoordinateExceptionValues.has(record.releaseCoordinateException)
+  )
+    throw new Error("invalid download artifact version binding");
+  const artifactVersionMismatch = record.artifactVersion !== record.version;
+  const authorizedArtifactVersionMismatch =
+    record.primary === true &&
+    record.version === authorizedReleaseCoordinateException.releaseVersion &&
+    record.artifactVersion ===
+      authorizedReleaseCoordinateException.artifactVersion &&
+    record.releaseCoordinateException ===
+      "authorized-artifact-version-mismatch";
+  if (
+    (artifactVersionMismatch && !authorizedArtifactVersionMismatch) ||
+    (!artifactVersionMismatch && record.releaseCoordinateException !== "none")
+  )
+    throw new Error(
+      "download artifact version mismatch is not explicitly authorized",
+    );
   if (
     !revisionPattern.test(record.revision) ||
     !sha256Pattern.test(record.sha256)
@@ -227,9 +257,9 @@ export function validateDownloadCatalog(catalog) {
         record.archiveFormat !== "zip" ||
         record.releaseAssets !== 12 ||
         record.artifact !==
-          `atrinik-classic-client-${record.version}-windows-x86_64.zip` ||
+          `atrinik-classic-client-${record.artifactVersion}-windows-x86_64.zip` ||
         record.sbomUrl !==
-          `https://github.com/atrinik/classic/releases/download/${record.tag}/atrinik-classic-${record.version}.spdx.json` ||
+          `https://github.com/atrinik/classic/releases/download/${record.tag}/atrinik-classic-${record.artifactVersion}.spdx.json` ||
         record.softwareLicense !== "GPL-2.0-or-later",
     )
   )
@@ -243,7 +273,10 @@ export function validateDownloadSchemaDefinition(schema, fixture) {
     schema?.additionalProperties !== false ||
     schema.required?.toSorted().join("\n") !== expectedFields ||
     properties.version?.pattern !== versionPatternSource ||
+    properties.artifactVersion?.pattern !== versionPatternSource ||
     properties.tag?.pattern !== tagPatternSource ||
+    properties.releaseCoordinateException?.enum?.join("\n") !==
+      "none\nauthorized-artifact-version-mismatch" ||
     new RegExp(properties.releaseRepository?.pattern ?? "").source !==
       releaseRepositoryPattern.source ||
     new RegExp(properties.artifactRole?.pattern ?? "").source !==
@@ -335,6 +368,7 @@ export function validateDownloadsPresentation(html, catalog) {
   }
   const requiredEvidence = [
     primary.version,
+    primary.artifactVersion,
     primary.revision,
     primary.sha256,
     primary.artifact,
@@ -353,12 +387,22 @@ export function validateDownloadsPresentation(html, catalog) {
     throw new Error("primary download presentation omits catalog evidence");
   const structuralEvidence = [
     `<dt>Platform</dt><dd>${primary.platform === "windows" ? "Windows" : primary.platform} ${primary.architecture}</dd>`,
+    `<dt>Artifact version</dt><dd>${primary.artifactVersion}</dd>`,
     `<dt>Archive</dt><dd>${primary.archiveFormat.toUpperCase()}</dd>`,
     `<h3 id="install-heading">Install and compatibility</h3><p>${primary.installation}</p><p>${primary.compatibility}</p>`,
     `<h3 id="license-heading">License boundary</h3><p>Classic software is licensed under <strong>${primary.softwareLicense}</strong>. ${primary.bundledAssetsLicense}</p>`,
   ];
   if (structuralEvidence.some((value) => !html.includes(value)))
     throw new Error("primary download presentation misplaces catalog evidence");
+  if (
+    primary.releaseCoordinateException !== "none" &&
+    !html.includes(
+      `Temporary release-coordinate exception: the ${primary.tag} release coordinate currently serves a Classic client package labeled v${primary.artifactVersion}.`,
+    )
+  )
+    throw new Error(
+      "primary download presentation omits its release exception",
+    );
   if (
     downloadReleaseUrls(primary).some(
       (url) => !html.includes(`href="${url}"`),

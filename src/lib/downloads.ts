@@ -3,6 +3,8 @@ export interface DownloadRecord {
   artifactRole: string;
   primary: boolean;
   version: string;
+  artifactVersion: string;
+  releaseCoordinateException: string;
   tag: string;
   revision: string;
   publishedAt: string;

@@ -23,11 +23,15 @@ structured identity and retains `noindex, nofollow`.
 
 Downloads remain in their owning GitHub releases. Catalog schema version 2
 separates the release repository from the artifact's logical role and marks at
-most one deliberately reviewed primary artifact. A record binds its semantic
-version/tag, 40-character source revision, publication and review times,
-immutable/attested release state, asset count, platform, architecture, archive format, filename, byte size,
-SHA-256, exact versioned artifact/evidence URLs, software and bundled-asset
-license boundaries, compatibility, and installation guidance. Draft,
+most one deliberately reviewed primary artifact. A record binds its release
+semantic version/tag and evidenced artifact package version, 40-character
+source revision, publication and review times, immutable/attested release
+state, asset count, platform, architecture, archive format, filename, byte
+size, SHA-256, exact versioned artifact/evidence URLs, software and
+bundled-asset license boundaries, compatibility, and installation guidance. A
+primary `v5.34.4`/`5.34.1` artifact-version mismatch is accepted only with the
+exact `authorized-artifact-version-mismatch` contract value and is rendered as
+a temporary warning; every other mismatch fails closed. Draft,
 prerelease, zero-asset, mutable, incomplete, duplicate, or unsupported primary
 records fail source validation. An empty catalog remains valid and renders the
 release-page fallback without a direct download.

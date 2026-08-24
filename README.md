@@ -93,9 +93,12 @@ evidence belongs under ignored `build/`.
 
 `src/data/downloads.json` is a reviewed immutable catalog, not a live release
 feed. Its closed schema keeps a release repository separate from an artifact
-role and binds exact release evidence. Drafts, prereleases, zero-asset releases,
-and guessed or mutable links fail closed; an empty catalog keeps the Classic
-release-page fallback useful without JavaScript or a GitHub request.
+role and binds exact release evidence, including the release coordinate and the
+evidenced artifact package version. Drafts, prereleases, zero-asset releases,
+and guessed or mutable links fail closed. A deliberately authorized primary
+artifact-version mismatch is an explicit closed-contract exception rendered as
+a warning; an empty catalog keeps the Classic release-page fallback useful
+without JavaScript or a GitHub request.
 
 Cloudflare Pages uses one Git-integrated project. `main` serves the canonical
 `atrinik.org`; `www.atrinik.org` permanently redirects to it. Cloudflare builds

@@ -26,6 +26,15 @@ const download = primaryDownload(Astro.props.catalog);
               artifact was deliberately selected from a complete, published,
               non-prerelease release in its owning repository.
             </p>
+            {download.releaseCoordinateException !== "none" && (
+              <p class="download-coordinate-warning" role="note">
+                Temporary release-coordinate exception: the {download.tag}{" "}
+                release coordinate currently serves a Classic client package
+                labeled v{download.artifactVersion}. This one-off catalog entry
+                is authorized while the upstream publication is corrected;
+                verify the filename and SHA-256 below.
+              </p>
+            )}
           </div>
           <div class="card-actions">
             <a class="button button--primary" href={download.url}>
@@ -42,8 +51,12 @@ const download = primaryDownload(Astro.props.catalog);
 
         <dl class="download-facts">
           <div>
-            <dt>Version</dt>
+            <dt>Release version</dt>
             <dd>{download.version}</dd>
+          </div>
+          <div>
+            <dt>Artifact version</dt>
+            <dd>{download.artifactVersion}</dd>
           </div>
           <div>
             <dt>Platform</dt>

@@ -177,6 +177,51 @@ test("download coordinates are closed and immutable", () => {
     validateDownloadSchemaDefinition(downloadSchema, validDownload),
   );
   assert.doesNotThrow(() => validateDownload(validDownload));
+  const authorizedArtifactMismatch = {
+    ...validDownload,
+    version: "5.34.4",
+    artifactVersion: "5.34.1",
+    releaseCoordinateException: "authorized-artifact-version-mismatch",
+    tag: "v5.34.4",
+    artifact: "atrinik-classic-client-5.34.1-windows-x86_64.zip",
+    url: "https://github.com/atrinik/classic/releases/download/v5.34.4/atrinik-classic-client-5.34.1-windows-x86_64.zip",
+    releaseNotesUrl: "https://github.com/atrinik/classic/releases/tag/v5.34.4",
+    manifestUrl:
+      "https://github.com/atrinik/classic/releases/download/v5.34.4/release-manifest.json",
+    checksumsUrl:
+      "https://github.com/atrinik/classic/releases/download/v5.34.4/SHA256SUMS",
+    sbomUrl:
+      "https://github.com/atrinik/classic/releases/download/v5.34.4/atrinik-classic-5.34.1.spdx.json",
+  };
+  assert.doesNotThrow(() => validateDownload(authorizedArtifactMismatch));
+  assert.throws(
+    () =>
+      validateDownload({
+        ...authorizedArtifactMismatch,
+        artifactVersion: "5.34.2",
+        artifact: "atrinik-classic-client-5.34.2-windows-x86_64.zip",
+        url: "https://github.com/atrinik/classic/releases/download/v5.34.4/atrinik-classic-client-5.34.2-windows-x86_64.zip",
+        sbomUrl:
+          "https://github.com/atrinik/classic/releases/download/v5.34.4/atrinik-classic-5.34.2.spdx.json",
+      }),
+    /explicitly authorized/u,
+  );
+  assert.throws(
+    () =>
+      validateDownload({
+        ...validDownload,
+        releaseCoordinateException: "authorized-artifact-version-mismatch",
+      }),
+    /explicitly authorized/u,
+  );
+  assert.throws(
+    () =>
+      validateDownload({
+        ...authorizedArtifactMismatch,
+        primary: false,
+      }),
+    /explicitly authorized/u,
+  );
   assert.throws(
     () =>
       validateDownload({ ...validDownload, url: "https://example.com/latest" }),
@@ -240,6 +285,8 @@ test("download coordinates are closed and immutable", () => {
 test("download schema and executable constraints reject the same edge forms", () => {
   const rejected = [
     ["version", "01.2.3"],
+    ["artifactVersion", "01.2.3"],
+    ["releaseCoordinateException", "unreviewed-mismatch"],
     ["tag", "v01.2.3"],
     ["publishedAt", "2026-99-99T99:99:99Z"],
     ["publishedAt", "2026-02-31T00:00:00Z"],
@@ -359,6 +406,7 @@ test("download catalogs stay empty safely and reject ineligible releases", () =>
 test("download presentation structurally preserves all catalog evidence", () => {
   const evidence = [
     validDownload.version,
+    validDownload.artifactVersion,
     validDownload.revision,
     validDownload.sha256,
     validDownload.artifact,
@@ -385,6 +433,7 @@ test("download presentation structurally preserves all catalog evidence", () => 
     .join(" ");
   const structures = [
     `<dt>Platform</dt><dd>Windows ${validDownload.architecture}</dd>`,
+    `<dt>Artifact version</dt><dd>${validDownload.artifactVersion}</dd>`,
     `<dt>Archive</dt><dd>${validDownload.archiveFormat.toUpperCase()}</dd>`,
     `<h3 id="install-heading">Install and compatibility</h3><p>${validDownload.installation}</p><p>${validDownload.compatibility}</p>`,
     `<h3 id="license-heading">License boundary</h3><p>Classic software is licensed under <strong>${validDownload.softwareLicense}</strong>. ${validDownload.bundledAssetsLicense}</p>`,
