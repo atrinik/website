@@ -34,4 +34,4 @@ jobs:
         run: node scripts/release/test-release-policy.cjs
       - env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: npx semantic-release
+        run: npm run release
