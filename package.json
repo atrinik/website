@@ -20,7 +20,8 @@
     "check": "npm run format:check && npm run typecheck && npm test && npm run validate:source",
     "build": "node tools/astro.mjs build && npm run validate:dist",
     "deploy:dry-run": "npm run build && node tools/deployment-dry-run.mjs",
-    "release:dry-run": "npm run deploy:dry-run && node tools/package-release.mjs --dry-run"
+    "release:dry-run": "npm run deploy:dry-run && node tools/package-release.mjs --dry-run",
+    "release": "node scripts/release/run-semantic-release.cjs"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
