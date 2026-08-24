@@ -1019,6 +1019,19 @@ main {
   font-size: 1.08rem;
 }
 
+.download-coordinate-warning {
+  margin-top: 1rem;
+  margin-bottom: 0;
+  padding: 1rem 1.2rem;
+  border: 1px solid var(--line-gold);
+  background: rgba(114, 221, 255, 0.08);
+  color: var(--text-soft);
+}
+
+.download-coordinate-warning strong {
+  color: var(--text);
+}
+
 .download-facts {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

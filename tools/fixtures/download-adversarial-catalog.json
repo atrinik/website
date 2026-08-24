@@ -6,6 +6,8 @@
       "artifactRole": "client",
       "primary": true,
       "version": "5.9.0",
+      "artifactVersion": "5.9.0",
+      "releaseCoordinateException": "none",
       "tag": "v5.9.0",
       "revision": "0123456789abcdef0123456789abcdef01234567",
       "publishedAt": "2026-08-10T01:00:00Z",
