@@ -1128,6 +1128,8 @@ export async function validateDist(
             !allowedReleaseUrls.has(url.href)
           )
             throw new Error(`unrecorded release link ${raw} in ${path}`);
+        } else if (url.href === "https://zoeysr.com/") {
+          // The founder's canonical personal site is an approved About-page link.
         } else {
           throw new Error(`external link origin is not allowlisted: ${raw}`);
         }

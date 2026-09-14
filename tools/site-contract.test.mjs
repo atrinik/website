@@ -976,6 +976,14 @@ test("static output rejects scripts, broken links, and excessive files", async (
     join(root, "index.html"),
     accessibleShell.replace(
       "</main>",
+      '<a href="https://zoeysr.com/">Zoey Rose</a></main>',
+    ),
+  );
+  await assert.doesNotReject(validateDist(root));
+  await writeFile(
+    join(root, "index.html"),
+    accessibleShell.replace(
+      "</main>",
       '<a href="https://tracker.example/">bad</a></main>',
     ),
   );
