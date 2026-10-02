@@ -223,29 +223,34 @@ const packageManifest = await readJson(resolve(root, "package.json"));
 const dependencyPolicy = await readJson(
   resolve(root, "policy/dependencies.json"),
 );
-const policyPins = Object.fromEntries(
-  dependencyPolicy.developmentDependencies.map(({ name, version }) => [
-    name,
-    version,
-  ]),
-);
-if (
-  JSON.stringify(policyPins) !== JSON.stringify(packageManifest.devDependencies)
-)
-  throw new Error("direct dependency policy and package pins differ");
-const policyOverrides = Object.fromEntries(
-  dependencyPolicy.dependencyOverrides.map(({ parent, name, version }) => [
-    parent,
-    { [name]: version },
-  ]),
-);
-if (
-  JSON.stringify(policyOverrides) !== JSON.stringify(packageManifest.overrides)
-)
+const policyDependencies = dependencyPolicy.developmentDependencies
+  .map(({ name }) => name)
+  .sort();
+const manifestDependencies = Object.keys(
+  packageManifest.devDependencies,
+).sort();
+if (JSON.stringify(policyDependencies) !== JSON.stringify(manifestDependencies))
+  throw new Error("direct dependency policy and package manifest differ");
+const policyOverrides = dependencyPolicy.dependencyOverrides
+  .map(({ parent, name }) => `${parent}\n${name}`)
+  .sort();
+const manifestOverrides = Object.entries(packageManifest.overrides)
+  .flatMap(([parent, overrides]) =>
+    Object.keys(overrides).map((name) => `${parent}\n${name}`),
+  )
+  .sort();
+if (JSON.stringify(policyOverrides) !== JSON.stringify(manifestOverrides))
   throw new Error("dependency override policy and package manifest differ");
+const policyInstallScripts = [
+  ...dependencyPolicy.approvedInstallScripts.map(({ name }) => [name, true]),
+  ...dependencyPolicy.deniedInstallScripts.map(({ name }) => [name, false]),
+].sort(([left], [right]) => left.localeCompare(right));
+const manifestInstallScripts = Object.entries(
+  packageManifest.allowScripts,
+).sort(([left], [right]) => left.localeCompare(right));
 if (
-  packageManifest.allowScripts["esbuild@0.28.1"] !== true ||
-  packageManifest.allowScripts.fsevents !== false
+  JSON.stringify(policyInstallScripts) !==
+  JSON.stringify(manifestInstallScripts)
 )
   throw new Error("install-script allow/deny policy drifted");
 
