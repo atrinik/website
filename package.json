@@ -24,25 +24,25 @@
     "release": "node scripts/release/run-semantic-release.cjs"
   },
   "devDependencies": {
-    "@astrojs/check": "0.9.10",
-    "@semantic-release/commit-analyzer": "13.0.1",
-    "@semantic-release/exec": "7.1.0",
-    "@semantic-release/github": "12.0.9",
-    "@semantic-release/release-notes-generator": "14.1.1",
-    "astro": "7.3.2",
-    "conventional-changelog-conventionalcommits": "10.2.1",
-    "prettier": "3.9.6",
-    "prettier-plugin-astro": "0.14.1",
-    "semantic-release": "25.0.9",
-    "typescript": "6.0.3"
+    "@astrojs/check": "^0.9.10",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/github": "^12.0.9",
+    "@semantic-release/release-notes-generator": "^14.1.1",
+    "astro": "^7.3.2",
+    "conventional-changelog-conventionalcommits": "^10.2.1",
+    "prettier": "^3.9.6",
+    "prettier-plugin-astro": "^0.14.1",
+    "semantic-release": "^25.0.9",
+    "typescript": "^6.0.3"
   },
   "allowScripts": {
-    "esbuild@0.28.1": true,
+    "esbuild": true,
     "fsevents": false
   },
   "overrides": {
     "@semantic-release/npm": {
-      "npm": "11.19.1"
+      "npm": "^11.21.0"
     }
   }
 }
