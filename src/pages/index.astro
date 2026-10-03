@@ -85,8 +85,8 @@ const chronicle = [
       </div>
       <figcaption>
         <span>Morliana</span>
-        The Great Blue Crystal · temporary concept artwork made by Zoey Rose with
-        OpenAI image generation
+        The Great Blue Crystal · temporary concept artwork made by Zoey Rose
+        with OpenAI image generation
       </figcaption>
     </figure>
   </section>
@@ -116,8 +116,8 @@ const chronicle = [
           <strong>Temporary generated artwork:</strong>{" "}
           {site.identity.websiteMediaException}{" "}
           <a href="https://github.com/atrinik/website/issues/22">
-            Follow its replacement.</a
-          >
+            Follow its replacement.
+          </a>
         </p>
         <a class="link-arrow" href="/licenses/">
           Read the authorship and provenance boundaries
@@ -139,7 +139,11 @@ const chronicle = [
   </section>
 
   <section class="world-intro" aria-labelledby="world-heading">
-    <div class="crystal-sigil" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="crystal-sigil" aria-hidden="true">
+      <i></i>
+      <i></i>
+      <i></i>
+    </div>
     <p class="eyebrow">From the lore</p>
     <h2 id="world-heading">It fell from the sky.</h2>
     <p>
@@ -175,9 +179,9 @@ const chronicle = [
         </div>
         <h3>Atrinik Classic</h3>
         <p>
-          The maintained GPL-licensed game: one{" "}<code>atrinik/classic</code
-          >{" "}repository coordinates the C17 client, server, editor,
-          libatrinik, protocol, version, release notes, and release artifacts.
+          The maintained GPL-licensed game: one <code>atrinik/classic</code>{" "}
+          repository coordinates the C17 client, server, editor, libatrinik,
+          protocol, version, release notes, and release artifacts.
         </p>
         <ul class="path-details">
           <li>Current playable implementation</li>
@@ -238,29 +242,27 @@ const chronicle = [
       </p>
     </div>
     <div class="chronicle-grid">
-      {
-        chronicle.map(({ media: image, number, title, text }) => (
-          <article class="chronicle-card">
-            <figure>
-              <img
-                src={image.publicPath}
-                width={image.width}
-                height={image.height}
-                alt={image.alt}
-                loading="lazy"
-                decoding="async"
-              />
-            </figure>
-            <div class="chronicle-copy">
-              <span>{number}</span>
-              <div>
-                <h3>{title}</h3>
-                <p>{text}</p>
-              </div>
+      {chronicle.map(({ media: image, number, title, text }) => (
+        <article class="chronicle-card">
+          <figure>
+            <img
+              src={image.publicPath}
+              width={image.width}
+              height={image.height}
+              alt={image.alt}
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+          <div class="chronicle-copy">
+            <span>{number}</span>
+            <div>
+              <h3>{title}</h3>
+              <p>{text}</p>
             </div>
-          </article>
-        ))
-      }
+          </div>
+        </article>
+      ))}
     </div>
   </section>
 
@@ -288,24 +290,24 @@ const chronicle = [
     </div>
     <nav class="project-links" aria-label="Atrinik source repositories">
       <a href="https://github.com/atrinik/classic">
-        <span>Maintained game</span><strong>Classic</strong><i
-          aria-hidden="true">↗</i
-        >
+        <span>Maintained game</span>
+        <strong>Classic</strong>
+        <i aria-hidden="true">↗</i>
       </a>
       <a href="https://github.com/atrinik/content">
-        <span>Authored world</span><strong>Content</strong><i aria-hidden="true"
-          >↗</i
-        >
+        <span>Authored world</span>
+        <strong>Content</strong>
+        <i aria-hidden="true">↗</i>
       </a>
       <a href="https://github.com/atrinik/server">
-        <span>Next generation</span><strong>Server</strong><i aria-hidden="true"
-          >↗</i
-        >
+        <span>Next generation</span>
+        <strong>Server</strong>
+        <i aria-hidden="true">↗</i>
       </a>
       <a href="https://github.com/atrinik/renderer">
-        <span>Shared foundation</span><strong>Renderer</strong><i
-          aria-hidden="true">↗</i
-        >
+        <span>Shared foundation</span>
+        <strong>Renderer</strong>
+        <i aria-hidden="true">↗</i>
       </a>
     </nav>
   </section>

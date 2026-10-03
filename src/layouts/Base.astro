@@ -32,113 +32,102 @@ const isCurrent = (href: string) =>
     <meta name="theme-color" content="#07111d" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any" />
     <link rel="mask-icon" href="/mask-icon.svg" color="#77e6ff" />
-    {
-      metadata.canonicalUrl ? (
-        <link rel="canonical" href={metadata.canonicalUrl} />
-      ) : null
-    }
-    {
-      metadata.openGraph ? (
-        <>
-          <meta property="og:type" content={metadata.openGraph.type} />
-          <meta property="og:site_name" content={site.title} />
-          <meta property="og:title" content={metadata.openGraph.title} />
-          <meta
-            property="og:description"
-            content={metadata.openGraph.description}
-          />
-          <meta property="og:url" content={metadata.openGraph.url} />
-          <meta property="og:image" content={metadata.openGraph.image.url} />
-          <meta
-            property="og:image:alt"
-            content={metadata.openGraph.image.alt}
-          />
-          <meta
-            property="og:image:width"
-            content={String(metadata.openGraph.image.width)}
-          />
-          <meta
-            property="og:image:height"
-            content={String(metadata.openGraph.image.height)}
-          />
-        </>
-      ) : null
-    }
-    {
-      metadata.twitter ? (
-        <>
-          <meta name="twitter:card" content={metadata.twitter.card} />
-          <meta name="twitter:title" content={metadata.twitter.title} />
-          <meta
-            name="twitter:description"
-            content={metadata.twitter.description}
-          />
-          <meta name="twitter:image" content={metadata.twitter.image.url} />
-          <meta name="twitter:image:alt" content={metadata.twitter.image.alt} />
-        </>
-      ) : null
-    }
-    {
-      metadata.structuredData?.map((record) => (
-        <script
-          type="application/ld+json"
-          is:inline
-          set:html={serializeJsonLd(record)}
+    {metadata.canonicalUrl ? (
+      <link rel="canonical" href={metadata.canonicalUrl} />
+    ) : null}
+    {metadata.openGraph ? (
+      <>
+        <meta property="og:type" content={metadata.openGraph.type} />
+        <meta property="og:site_name" content={site.title} />
+        <meta property="og:title" content={metadata.openGraph.title} />
+        <meta
+          property="og:description"
+          content={metadata.openGraph.description}
         />
-      ))
-    }
-    {
-      Astro.props.preloadImage ? (
-        <link
-          rel="preload"
-          as="image"
-          href={Astro.props.preloadImage}
-          type="image/webp"
+        <meta property="og:url" content={metadata.openGraph.url} />
+        <meta property="og:image" content={metadata.openGraph.image.url} />
+        <meta property="og:image:alt" content={metadata.openGraph.image.alt} />
+        <meta
+          property="og:image:width"
+          content={String(metadata.openGraph.image.width)}
         />
-      ) : null
-    }
+        <meta
+          property="og:image:height"
+          content={String(metadata.openGraph.image.height)}
+        />
+      </>
+    ) : null}
+    {metadata.twitter ? (
+      <>
+        <meta name="twitter:card" content={metadata.twitter.card} />
+        <meta name="twitter:title" content={metadata.twitter.title} />
+        <meta
+          name="twitter:description"
+          content={metadata.twitter.description}
+        />
+        <meta name="twitter:image" content={metadata.twitter.image.url} />
+        <meta name="twitter:image:alt" content={metadata.twitter.image.alt} />
+      </>
+    ) : null}
+    {metadata.structuredData?.map((record) => (
+      <script
+        type="application/ld+json"
+        is:inline
+        set:html={serializeJsonLd(record)}
+      />
+    ))}
+    {Astro.props.preloadImage ? (
+      <link
+        rel="preload"
+        as="image"
+        href={Astro.props.preloadImage}
+        type="image/webp"
+      />
+    ) : null}
     <title>{metadata.title}</title>
   </head>
   <body>
-    <a class="skip-link" href="#content">Skip to content</a>
+    <a class="skip-link" href="#content">
+      Skip to content
+    </a>
     <header class="site-header">
       <div class="header-inner">
         <a class="brand" href="/" aria-label="Atrinik home">
-          <span class="brand-mark" aria-hidden="true"><i></i></span>
+          <span class="brand-mark" aria-hidden="true">
+            <i></i>
+          </span>
           <span class="brand-name">Atrinik</span>
         </a>
         <nav aria-label="Primary navigation">
-          {
-            navigation.map(({ label, href }) => (
-              <a
-                href={href}
-                aria-current={isCurrent(href) ? "page" : undefined}
-              >
-                {label}
-              </a>
-            ))
-          }
+          {navigation.map(({ label, href }) => (
+            <a href={href} aria-current={isCurrent(href) ? "page" : undefined}>
+              {label}
+            </a>
+          ))}
         </nav>
         <a
           class="header-link"
           href="https://github.com/atrinik/atrinik"
           aria-label="View the Atrinik project workspace on GitHub"
         >
-          <span>GitHub</span><span aria-hidden="true">↗</span>
+          <span>GitHub</span>
+          <span aria-hidden="true">↗</span>
         </a>
       </div>
     </header>
-    <main id="content"><slot /></main>
+    <main id="content">
+      <slot />
+    </main>
     <footer class="site-footer">
       <div class="footer-inner">
         <div class="footer-intro">
           <a class="brand brand--footer" href="/" aria-label="Atrinik home">
-            <span class="brand-mark" aria-hidden="true"><i></i></span>
+            <span class="brand-mark" aria-hidden="true">
+              <i></i>
+            </span>
             <span class="brand-name">Atrinik</span>
           </a>
-          <p>
-            {site.identity.heading} Human code contributions are welcome.
-          </p>
+          <p>{site.identity.heading} Human code contributions are welcome.</p>
         </div>
         <div class="footer-links">
           <div>
@@ -149,11 +138,9 @@ const isCurrent = (href: string) =>
           </div>
           <div>
             <h2>Project</h2>
-            {
-              site.externalLinks.map(({ label, url }) => (
-                <a href={url}>{label}</a>
-              ))
-            }
+            {site.externalLinks.map(({ label, url }) => (
+              <a href={url}>{label}</a>
+            ))}
           </div>
         </div>
       </div>
@@ -163,11 +150,9 @@ const isCurrent = (href: string) =>
           projects, and exact licenses retain their credit.
         </p>
         <p>
-          <a href="/licenses/">Authorship, provenance, and licenses</a> · This site's
-          source and static build add no analytics, tracking, or application cookies.{
-            " "
-          }
-          {site.privacy.providerEdgeDisclosure}
+          <a href="/licenses/">Authorship, provenance, and licenses</a> · This
+          site's source and static build add no analytics, tracking, or
+          application cookies. {site.privacy.providerEdgeDisclosure}
         </p>
       </div>
     </footer>
