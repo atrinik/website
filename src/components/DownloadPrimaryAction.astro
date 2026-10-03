@@ -9,17 +9,15 @@ interface Props {
 const download = primaryDownload(Astro.props.catalog);
 ---
 
-{
-  download ? (
-    <a class="button button--primary" href={download.url}>
-      Download Classic {download.version} for Windows (x86_64 ZIP)
-    </a>
-  ) : (
-    <a
-      class="button button--primary"
-      href="https://github.com/atrinik/classic/releases"
-    >
-      View all Classic releases
-    </a>
-  )
-}
+{download ? (
+  <a class="button button--primary" href={download.url}>
+    Download Classic {download.version} for Windows (x86_64 ZIP)
+  </a>
+) : (
+  <a
+    class="button button--primary"
+    href="https://github.com/atrinik/classic/releases"
+  >
+    View all Classic releases
+  </a>
+)}
