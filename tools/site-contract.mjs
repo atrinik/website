@@ -1177,3 +1177,28 @@ export async function validateDist(
   if (containsImages) validatePresentationCss(styles.join("\n"));
   return { files: files.length, ...totals };
 }
+
+export function validateDependencyPolicy(packageManifest, dependencyPolicy) {
+  const policyDependencies = dependencyPolicy.developmentDependencies
+    .map(({ name }) => name)
+    .sort();
+  const manifestDependencies = Object.keys(
+    packageManifest.devDependencies,
+  ).sort();
+  if (
+    JSON.stringify(policyDependencies) !== JSON.stringify(manifestDependencies)
+  )
+    throw new Error("direct dependency policy and package manifest differ");
+  const policyInstallScripts = [
+    ...dependencyPolicy.approvedInstallScripts.map(({ name }) => [name, true]),
+    ...dependencyPolicy.deniedInstallScripts.map(({ name }) => [name, false]),
+  ].sort(([left], [right]) => left.localeCompare(right));
+  const manifestInstallScripts = Object.entries(
+    packageManifest.allowScripts,
+  ).sort(([left], [right]) => left.localeCompare(right));
+  if (
+    JSON.stringify(policyInstallScripts) !==
+    JSON.stringify(manifestInstallScripts)
+  )
+    throw new Error("install-script allow/deny policy drifted");
+}

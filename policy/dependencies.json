@@ -69,13 +69,6 @@
       "purpose": "static type checking"
     }
   ],
-  "dependencyOverrides": [
-    {
-      "parent": "@semantic-release/npm",
-      "name": "npm",
-      "reason": "uses the patched Node 24-compatible npm CLI instead of the vulnerable bundled npm dependency"
-    }
-  ],
   "approvedInstallScripts": [
     {
       "name": "esbuild",
