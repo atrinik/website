@@ -103,6 +103,14 @@
   HTML, network requests, `Set-Cookie`, browser storage, and CSP failures for
   provider-injected scripts or beacons.
 
+- Dependency security CI runs `node scripts/audit-delta.mjs` before lifecycle
+  scripts, comparing fresh complete audits of the event base and tested candidate.
+  Keep the exact revision fences, isolated verified bundle hydration, and full
+  reports. New advisory/affected-package pairs at any severity and severity
+  increases fail; existing findings warn and fixes pass. Missing baselines and
+  install, audit, or parsing errors fail closed. Do not add advisory allowlists
+  or known-good version gates. See README for the execution contract.
+
 - Wrapper replacement build adapters are not available yet. Use repository
   validation; a website-only change has no game topology/state proof. Update
   wrapper supply-chain inventory when dependencies/toolchains/Actions/images or

@@ -97,7 +97,7 @@
     "npm ci",
     "npm run check",
     "npm run deploy:dry-run",
-    "npm audit --audit-level=high",
+    "node scripts/audit-delta.mjs",
     "npm sbom --sbom-format cyclonedx"
   ]
 }

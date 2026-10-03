@@ -83,6 +83,31 @@ npm run build
 npm run deploy:dry-run
 ```
 
+CI runs `node scripts/audit-delta.mjs` before dependency lifecycle scripts.
+It freshly installs both revisions with scripts disabled and audits the complete
+graphs, including development, optional, peer, and bundled packages. An isolated
+standard npm lock refresh fills omitted bundle records; validation requires the
+original package identities and dependency maps to remain unchanged and proves
+added records against installed bundle manifests. Repository locks are untouched.
+For pull requests it compares the event's exact base revision with the tested
+merge commit and verifies both parents; for main pushes it compares the event's
+`before` revision with its tested `after` revision. Missing history, initial
+pushes without a baseline, mismatched revisions, installation failures, audit
+service failures, and malformed or incomplete reports fail closed.
+
+Every new advisory/affected-package pair at any severity, or an increased
+severity for an existing pair, fails validation. Existing findings remain
+warnings with the full reports visible in the job log; removals and severity
+reductions pass. Advisory identity uses its GHSA URL and affected package names,
+not installed versions or paths, so normal upgrades and fixes remain possible.
+No advisory allowlist, known-good dependency version list, or persisted audit
+snapshot is used. Standard dependency locks and immutable action references
+remain in place. Both audits use the same current Node/npm toolchain and registry;
+advisory changes between requests can require a rerun. Only manifests and locks
+are extracted from the baseline; historical repository scripts and npm config
+are never executed. Changes to the comparison runner and workflow require the
+same review as other CI code.
+
 The build writes a self-contained static site to `dist/`. Validation rejects
 unproven media, mutable download coordinates, missing attribution or alt text,
 unsafe links, repository-authored client JavaScript, broken internal links, and
