@@ -39,10 +39,5 @@
   "allowScripts": {
     "esbuild": true,
     "fsevents": false
-  },
-  "overrides": {
-    "@semantic-release/npm": {
-      "npm": "^11.21.0"
-    }
   }
 }

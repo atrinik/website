@@ -23,6 +23,7 @@ import {
   gitBlobObjectId,
   parseInertJsonLd,
   readWebpDimensions,
+  validateDependencyPolicy,
   validateDist,
   validateDownload,
   validateDownloadCatalog,
@@ -1052,4 +1053,52 @@ test("static output counts and bounds raster image bytes", async (context) => {
 
   await writeFile(path, vp8xFixture(1, 1, limits.imageBytes + 1));
   await assert.rejects(validateDist(root, options), /performance budget/u);
+});
+
+test("dependency policy accepts npm-managed versions and optional overrides", async () => {
+  const manifest = JSON.parse(
+    await readFile(resolve(root, "package.json"), "utf8"),
+  );
+  const policy = JSON.parse(
+    await readFile(resolve(root, "policy/dependencies.json"), "utf8"),
+  );
+  delete manifest.overrides;
+  assert.doesNotThrow(() => validateDependencyPolicy(manifest, policy));
+  manifest.overrides = { "example-parent": { "example-child": "^2.0.0" } };
+  assert.doesNotThrow(() => validateDependencyPolicy(manifest, policy));
+  manifest.devDependencies.astro = "^8.0.0";
+  assert.doesNotThrow(() => validateDependencyPolicy(manifest, policy));
+});
+
+test("dependency policy still rejects undeclared packages and script approval drift", async () => {
+  const manifest = JSON.parse(
+    await readFile(resolve(root, "package.json"), "utf8"),
+  );
+  const policy = JSON.parse(
+    await readFile(resolve(root, "policy/dependencies.json"), "utf8"),
+  );
+  for (const change of [
+    (value) => {
+      value.devDependencies["undeclared-package"] = "^1.0.0";
+    },
+    (value) => {
+      delete value.devDependencies.astro;
+    },
+    (value) => {
+      value.allowScripts.fsevents = true;
+    },
+    (value) => {
+      delete value.allowScripts.esbuild;
+    },
+    (value) => {
+      value.allowScripts["unreviewed-script"] = true;
+    },
+  ]) {
+    const changed = structuredClone(manifest);
+    change(changed);
+    assert.throws(
+      () => validateDependencyPolicy(changed, policy),
+      /policy.*differ|policy drifted/u,
+    );
+  }
 });
