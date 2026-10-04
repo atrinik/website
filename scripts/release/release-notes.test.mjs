@@ -55,14 +55,17 @@ test("configured release-note plugin renders Conventional Commit notes", async (
   assert.match(notes, /show supported platforms/);
   assert.match(notes, /repair download links/);
   assert.match(notes, /Catalog entries must include an artifact digest\./);
+  const destinations = new Set(
+    Array.from(notes.matchAll(/\[[^\]]*\]\(([^)\s]+)\)/g), (match) => match[1]),
+  );
   assert.ok(
-    notes.includes(
+    destinations.has(
       "https://github.com/atrinik/website/compare/v1.0.0...v2.0.0",
     ),
   );
-  assert.ok(notes.includes("https://github.com/atrinik/website/issues/123"));
+  assert.ok(destinations.has("https://github.com/atrinik/website/issues/123"));
   assert.ok(
-    notes.includes(
+    destinations.has(
       `https://github.com/atrinik/website/commit/${"a".repeat(40)}`,
     ),
   );
