@@ -83,6 +83,15 @@ npm run build
 npm run deploy:dry-run
 ```
 
+`npm run check` also renders feature, fix, and breaking-change release notes
+through the configured semantic-release plugin using local fixture commits.
+This exercises the actual preset and writer without invoking publication hooks.
+The [stable release-note generator](https://github.com/semantic-release/release-notes-generator/blob/v14.1.1/package.json)
+uses writer 8, so the Conventional Commits preset uses the compatible major 9
+caret range. [Preset major 10 changed its rendering API](https://github.com/conventional-changelog/conventional-changelog/blob/master/packages/conventional-changelog-conventionalcommits/CHANGELOG.md#1000-2026-06-26)
+and requires writer 9. Upgrade that preset with a stable compatible generator;
+the behavior test verifies rendered sections, breaking changes, and links.
+
 CI runs `node scripts/audit-delta.mjs` before dependency lifecycle scripts.
 It freshly installs both revisions with scripts disabled and audits the complete
 graphs, including development, optional, peer, and bundled packages. An isolated
