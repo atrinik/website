@@ -9,6 +9,9 @@ updates:
         dependency-type: development
         patterns: ["*"]
     ignore:
+      # The stable release-note generator uses writer 8; preset 10 requires writer 9.
+      - dependency-name: conventional-changelog-conventionalcommits
+        versions: [">=10 <11"]
       # @astrojs/check 0.9.10 supports TypeScript through major 6.
       - dependency-name: typescript
         versions: [">=7"]
