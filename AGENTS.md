@@ -111,10 +111,17 @@
   install, audit, or parsing errors fail closed. Do not add advisory allowlists
   or known-good version gates. See README for the execution contract.
 
+- `Dependency review` is a separate required security check for PRs to `main`:
+  introduced high/critical vulnerabilities fail across runtime, development,
+  and unknown scopes. Preserve `Website validation` and its audit-delta gate;
+  synchronize required check names with `atrinik/github-settings` policy,
+  with required human approvals remaining zero.
+
 - Wrapper replacement build adapters are not available yet. Use repository
-  validation; a website-only change has no game topology/state proof. Update
-  wrapper supply-chain inventory when dependencies/toolchains/Actions/images or
-  validation paths change.
+  validation; a website-only change has no game topology/state proof. Coordinate
+  meaningful dependency/toolchain/Action/image/validation changes with their
+  owners and preserve standard locks/integrity manifests. Wrapper supply-chain
+  inventories are optional diagnostics; catalog updates never gate PR readiness.
 - Commits/PR titles use Conventional Commits; semantic-release owns releases.
   Deployment handoffs name preview, revision, inputs, checks, environment,
   health, rollback, and anything not exercised.
