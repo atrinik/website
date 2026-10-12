@@ -111,11 +111,15 @@
   install, audit, or parsing errors fail closed. Do not add advisory allowlists
   or known-good version gates. See README for the execution contract.
 
-- `Dependency review` is a separate required security check for PRs to `main`:
-  introduced high/critical vulnerabilities fail across runtime, development,
-  and unknown scopes. Preserve `Website validation` and its audit-delta gate;
-  synchronize required check names with `atrinik/github-settings` policy,
-  with required human approvals remaining zero.
+- `Dependency review` provides nonblocking advisory feedback on eligible ordinary
+  PR runs where this workflow exists on the relevant revision, with no target-branch
+  filter, across runtime, development, and unknown scopes at every severity.
+  Implementing agents must read the latest job summary for the current PR head,
+  even when a PR comment exists, because comments may be stale. If that summary
+  is unavailable, treat results as unknown and inspect annotations and logs.
+  Fix actionable introduced risks, or record an explicit maintainer acceptance
+  of existing risk, before merge. This adds no required human approval gate;
+  preserve all other validation and security checks.
 
 - Wrapper replacement build adapters are not available yet. Use repository
   validation; a website-only change has no game topology/state proof. Coordinate
