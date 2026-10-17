@@ -14,8 +14,8 @@ code is not part of `dist/` and is audited separately.
 Every indexable page supplies an explicit metadata object with a unique title,
 description, canonical route, index policy, and matched Open Graph/Twitter
 identity. Social images resolve only through `src/data/media.json`, including
-their canonical local URL, dimensions, and alternative text. The temporary
-`atrinik-now` concept image is the explicit sitewide fallback pending issue #22;
+their canonical local URL, dimensions, and alternative text. The
+`atrinik-now` concept image is the explicit sitewide fallback;
 pages may choose a more relevant proven catalog record. The homepage alone owns
 the canonical `WebSite` JSON-LD record for `https://atrinik.org/` and its two
 verified Atrinik GitHub identities. The 404 emits no canonical, preview, or

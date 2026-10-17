@@ -1,6 +1,6 @@
 {
   "title": "Atrinik",
-  "description": "Atrinik is an open-source role-playing world under human creative direction, with primarily Codex-driven software development and human code contributions welcome.",
+  "description": "Atrinik is an open-source role-playing world shaped by its creators and community, with primarily Codex-driven software development and human code contributions welcome.",
   "canonicalOrigin": "https://atrinik.org",
   "homepage": {
     "title": "Free, open-source online role-playing game",
@@ -17,10 +17,10 @@
     "providerEdgeDisclosure": "Cloudflare may inject bot/security JavaScript or a dashboard-managed Web Analytics beacon, set strictly necessary cookies, or serve a challenge with its own HTML, scripts, cookies, and CSP. The ordinary page's no-script CSP blocks injected scripts."
   },
   "identity": {
-    "heading": "Human creativity at the heart of the world. Agent-driven software beneath it.",
-    "gameContent": "Human creators direct Atrinik's game world. Generated visual and audio assets are not accepted as final content; clearly identified temporary design drop-ins may be used until human-created replacements are found or made. For maps, quests, dialogue, and lore, generative tools may help a content creator shape terrain or develop writing; the creator directs and reviews the result. Repository owners are auditing the existing corpus before making a blanket authorship claim.",
+    "heading": "A world shaped by its creators. Agent-driven software beneath it.",
+    "gameContent": "Atrinik's creators shape its maps, quests, dialogue, lore, art and sound with whatever tools serve the work, including AI tools, and review what goes into the game. Every asset keeps its exact credit, source and license.",
     "software": "Software is developed primarily through Codex-driven agentic workflows under human direction, review, provenance, and validation. Direct human code contributions are welcome under the same gates.",
-    "websiteMediaException": "The four generated website concept images are not game content. They remain explicitly recorded and credited as temporary design drop-ins while suitable human-created replacements are found or made."
+    "websiteMediaException": "Four website concept images were made by Zoey Rose with OpenAI image generation. They are presentation material, not game content, and are recorded and credited in the site's media inventory."
   },
   "externalLinks": [
     {

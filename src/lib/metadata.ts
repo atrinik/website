@@ -50,8 +50,7 @@ interface NoindexPageInput {
   description: string;
 }
 
-// This generated concept image is the explicit sitewide preview fallback until
-// issue #22 supplies provenance-cleared human-created preview artwork.
+// This concept image is the explicit sitewide preview fallback.
 export const SOCIAL_IMAGE_FALLBACK_ID = "atrinik-now";
 
 function socialImage(id: string): SocialImageMetadata {
@@ -62,7 +61,7 @@ function socialImage(id: string): SocialImageMetadata {
     width: record.width,
     height: record.height,
     alt: record.author.includes("OpenAI image generation")
-      ? `Temporary OpenAI-generated website concept artwork: ${record.alt}`
+      ? `OpenAI-generated website concept artwork: ${record.alt}`
       : record.alt,
   };
 }

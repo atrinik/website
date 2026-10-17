@@ -250,14 +250,14 @@ if (mode === "dist") {
     .replaceAll("&quot;", '"')
     .replaceAll("&amp;", "&");
   validateHomepagePresentation(home, site.homepage, site.title);
-  if (!decodedHome.includes("temporary concept artwork"))
+  if (!decodedHome.includes("concept artwork by Zoey Rose with OpenAI"))
     throw new Error("home omits the concept-art disclosure");
   for (const field of identityFields)
     if (!decodedHome.includes(site.identity[field]))
       throw new Error(`home omits site identity ${field}`);
   if (!decodedHome.includes(site.privacy.providerEdgeDisclosure))
     throw new Error("home omits provider edge disclosure");
-  if (!home.includes("Temporary OpenAI-generated website concept artwork:"))
+  if (!home.includes("OpenAI-generated website concept artwork:"))
     throw new Error(
       "social metadata omits the generated website-media exception",
     );
