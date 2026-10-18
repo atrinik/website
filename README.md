@@ -5,25 +5,16 @@ MIT-licensed atrinik.org website. It deliberately contains no account,
 gameplay, payment, repository-managed analytics or tracking, advertising, or
 server-side runtime.
 
-Atrinik keeps people in creative control of its game world. Generated visual
-and audio assets—including pixel art, graphics, animation, music, and sound
-effects—are not accepted as final game content. They may be used only as
-clearly identified temporary design drop-ins while suitable human-created
-replacements are found or made. For maps, quests, dialogue, and lore, a human
-content creator may use generative tools to help shape terrain or develop
-writing while directing, reviewing, and taking responsibility for the result.
-The owning repositories are documenting that policy and auditing the existing
-corpus before making an unqualified blanket authorship claim. Human Atrinik
-contributors and appropriately licensed work from Crossfire, Daimonin, and
-other upstream creators retain their exact authorship, provenance, notices,
-and licenses; “human-led” describes creative direction and responsibility, not
-solely Atrinik-original work or one shared license.
+Atrinik's creators shape its maps, quests, dialogue, lore, art, and sound with
+whatever tools serve the work, including AI tools, and review what goes into
+the game. Atrinik contributors and appropriately licensed work from Crossfire,
+Daimonin, and other upstream creators retain their exact authorship,
+provenance, notices, and licenses.
 
 The project's software is developed primarily through Codex-driven agentic
 workflows under human direction, review, provenance controls, tests, and
 repository validation. Direct human-written code contributions are welcome
-under the same gates. “Generative AI” here means tools that synthesize creative
-content or code, not gameplay systems such as creature or NPC AI.
+under the same gates.
 
 Atrinik began in 2009 under founder and original lead Zoey Rose. She led its
 human-developed beginning alongside the wider Atrinik Development Team. The
@@ -41,10 +32,9 @@ release.
 Follow the [replacement roadmap](https://github.com/atrinik/atrinik/issues/168)
 for current readiness.
 
-Four temporary OpenAI-generated concept images on atrinik.org are not game
-content. They remain transparently recorded design drop-ins in
-`src/data/media.json` and are tracked for suitable human-created replacements by
-[website issue #22](https://github.com/atrinik/website/issues/22).
+Four concept images on atrinik.org were made by Zoey Rose with OpenAI image
+generation. They are presentation material, not game content, and are recorded
+and credited in `src/data/media.json`.
 
 The public information architecture keeps the useful journeys from Atrinik's
 former project portal without reviving its forum stack: understand the world,
@@ -62,8 +52,8 @@ Every indexable route constructs a closed, typed page identity through
 `src/lib/metadata.ts`: one unique title and description, canonical URL, robots
 policy, internally consistent Open Graph/Twitter fields, preview image
 dimensions, and alternative text. `atrinik-now` is the documented sitewide
-preview fallback until issue #22 supplies approved replacement artwork; routes
-can select a more relevant record from the same validated media catalog. The
+preview image; routes can select a more relevant record from the same
+validated media catalog. The
 homepage also emits the canonical Atrinik `WebSite` identity as safely
 serialized inert JSON-LD. The 404 is noindex and deliberately has no canonical,
 social-preview, or structured identity.

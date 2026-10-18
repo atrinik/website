@@ -875,7 +875,7 @@ export function validatePageMetadata(
   const expectedImage = allowedMedia?.get(imageUrl.pathname);
   const expectedImageAlt = expectedImage
     ? expectedImage.author.includes("OpenAI image generation")
-      ? `Temporary OpenAI-generated website concept artwork: ${expectedImage.alt}`
+      ? `OpenAI-generated website concept artwork: ${expectedImage.alt}`
       : expectedImage.alt
     : null;
   if (
