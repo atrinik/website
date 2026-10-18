@@ -52,8 +52,8 @@ Every indexable route constructs a closed, typed page identity through
 `src/lib/metadata.ts`: one unique title and description, canonical URL, robots
 policy, internally consistent Open Graph/Twitter fields, preview image
 dimensions, and alternative text. `atrinik-now` is the documented sitewide
-preview fallback until issue #22 supplies approved replacement artwork; routes
-can select a more relevant record from the same validated media catalog. The
+preview image; routes can select a more relevant record from the same
+validated media catalog. The
 homepage also emits the canonical Atrinik `WebSite` identity as safely
 serialized inert JSON-LD. The 404 is noindex and deliberately has no canonical,
 social-preview, or structured identity.
