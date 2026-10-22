@@ -130,7 +130,7 @@
         "properties": {
           "releaseRepository": { "const": "atrinik/classic" },
           "artifactRole": { "const": "client" },
-          "releaseAssets": { "const": 12 },
+          "releaseAssets": { "const": 13 },
           "platform": { "const": "windows" },
           "architecture": { "const": "x86_64" },
           "archiveFormat": { "const": "zip" },

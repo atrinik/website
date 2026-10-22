@@ -255,7 +255,7 @@ export function validateDownloadCatalog(catalog) {
         record.platform !== "windows" ||
         record.architecture !== "x86_64" ||
         record.archiveFormat !== "zip" ||
-        record.releaseAssets !== 12 ||
+        record.releaseAssets !== 13 ||
         record.artifact !==
           `atrinik-classic-client-${record.artifactVersion}-windows-x86_64.zip` ||
         record.sbomUrl !==
@@ -322,7 +322,7 @@ export function validateDownloadSchemaDefinition(schema, fixture) {
   if (
     primary?.releaseRepository?.const !== "atrinik/classic" ||
     primary?.artifactRole?.const !== "client" ||
-    primary?.releaseAssets?.const !== 12 ||
+    primary?.releaseAssets?.const !== 13 ||
     primary?.platform?.const !== "windows" ||
     primary?.architecture?.const !== "x86_64" ||
     primary?.archiveFormat?.const !== "zip" ||
