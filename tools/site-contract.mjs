@@ -1202,13 +1202,29 @@ export function validateDependencyPolicy(packageManifest, dependencyPolicy) {
 // Public copy, captions, alt text, credits, and metadata never describe the
 // tools used to make the software or media; those records stay internal.
 const toolingTermPattern =
-  /\b(?:codex|claude|anthropic|openai|chatgpt|agentic|agents?|agent-(?:driven|written|assisted)|generative|ai-(?:generated|assisted))\b/iu;
-const aiAbbreviationPattern = /\bA\.?I\b/u;
+  /\b(?:codex|claude|anthropic|openai|chatgpt|copilot|midjourney|stable[\s-]+diffusion|dall[\s·.-]*e|gpt(?:-?\d[\w.]*)?|llms?|large[\s-]+language[\s-]+models?|gen[\s-]?ai|artificial[\s-]+intelligence|image[\s-]+generation|agentic|agents?|agent-(?:driven|written|assisted)|generative|ai-(?:generated|assisted))\b/iu;
+const aiAbbreviationPattern = /\bA\.?Is?\b|\ba\.i\./u;
+
+// Decode HTML character references so entity-split words cannot evade the
+// guard.
+const decodeCharacterReferences = (text) =>
+  text
+    .replace(/&#x([0-9a-f]+);?/giu, (_, hex) =>
+      String.fromCodePoint(Number.parseInt(hex, 16)),
+    )
+    .replace(/&#(\d+);?/gu, (_, decimal) =>
+      String.fromCodePoint(Number.parseInt(decimal, 10)),
+    )
+    .replace(/&(?:nbsp|shy);/giu, (entity) =>
+      entity.toLowerCase() === "&shy;" ? "" : " ",
+    )
+    .replace(/&amp;/giu, "&");
 
 export function validatePublicCopy(text, label = "public output") {
   if (typeof text !== "string") throw new Error("invalid public copy input");
+  const decoded = decodeCharacterReferences(text);
   const match =
-    toolingTermPattern.exec(text) ?? aiAbbreviationPattern.exec(text);
+    toolingTermPattern.exec(decoded) ?? aiAbbreviationPattern.exec(decoded);
   if (match)
     throw new Error(
       `${label} mentions development tooling in public copy: ${match[0]}`,

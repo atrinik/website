@@ -17,7 +17,8 @@ copied, and that repository remains the authoritative source.
 The four original PNG files under `artwork/originals/` were generated at Zoey
 Rose's direction in an earlier OpenAI image-generation session. Zoey received
 the outputs, selected these four, and contributed them under this repository's
-MIT terms. They are credited to “Zoey Rose with OpenAI image generation.” The
+MIT terms. This internal record keeps that generation provenance; the public
+site credits them as concept artwork by Zoey Rose and does not render it. The
 WebP derivatives under `public/media/` are bound to their source paths,
 immutable Git blob object IDs, source and published digests, published
 dimensions, transformations, license, notices, and alternative text in

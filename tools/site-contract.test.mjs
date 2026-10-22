@@ -1119,6 +1119,18 @@ test("public copy omits development tooling", () => {
     "AI tools",
     "generative art",
     "an A.I. image",
+    "trained AIs",
+    "an a.i. helper",
+    "GenAI art",
+    "artificial intelligence",
+    "an LLM wrote it",
+    "GPT-4 output",
+    "DALL·E sketches",
+    "Midjourney",
+    "GitHub Copilot",
+    "Stable Diffusion",
+    "Cod&#101;x",
+    "Open&#x41;I",
   ])
     assert.throws(() => validatePublicCopy(text), /development tooling/u);
   assert.throws(() => validatePublicCopy(null), /invalid public copy/u);
