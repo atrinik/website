@@ -476,7 +476,7 @@ export async function refreshDownloadRecord(env, deps) {
   try {
     releases = await fetchJson(
       deps.fetch,
-      `${API_ROOT}/releases?per_page=20`,
+      `${API_ROOT}/releases?per_page=10`,
       githubOptions(env, RELEASES_LIMIT),
     );
   } catch {

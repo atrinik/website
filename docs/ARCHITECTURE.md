@@ -69,7 +69,7 @@ A recompute selects a release as follows, failing closed at every step:
    `protocol/schema/game-commands.json` at the commit of tag `v<version>`,
    resolved through the GitHub API (annotated tags are dereferenced). Tag
    commits and per-commit protocols are cached permanently in KV.
-2. `GET /repos/atrinik/classic/releases?per_page=20` is walked newest first,
+2. `GET /repos/atrinik/classic/releases?per_page=10` is walked newest first,
    with at most ten protocol lookups. A release qualifies only when it is not a
    draft or prerelease, GitHub reports it `immutable`, its tag is `vX.Y.Z`, its
    assets are uploaded with exact canonical download URLs, and
