@@ -31,10 +31,10 @@ SHA-256 digests, dimensions, transformations, purposes, and notices are closed
 records in `src/data/icons.json`; the checked-in SVG is both retained source and
 published file.
 
-The synthetic download and media records under `tools/` are contract-only test
-data. They do not name or contain a real release or asset and are never
-published by Astro. `src/data/downloads.json` remains empty until exact
-externally owned evidence is reviewed.
+The synthetic media records and mocked Classic release responses in the test
+suites are contract-only test data. They do not contain a real asset and are
+never published by Astro. Classic download records are computed at runtime
+from GitHub's immutable release metadata and are not checked in.
 
 Independent implementation is the default where exact reuse is not proven.
 Before Classic source is inspected as implementation reference or reused, the

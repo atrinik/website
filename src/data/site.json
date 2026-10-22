@@ -14,7 +14,7 @@
     "applicationAnalytics": false,
     "applicationCookies": false,
     "applicationTracking": false,
-    "providerEdgeDisclosure": "Cloudflare may inject bot/security JavaScript or a dashboard-managed Web Analytics beacon, set strictly necessary cookies, or serve a challenge with its own HTML, scripts, cookies, and CSP. The ordinary page's no-script CSP blocks injected scripts."
+    "providerEdgeDisclosure": "Cloudflare may inject bot/security JavaScript or a dashboard-managed Web Analytics beacon, set strictly necessary cookies, or serve a challenge with its own HTML, scripts, cookies, and CSP. The page's CSP blocks inline and third-party scripts."
   },
   "identity": {
     "heading": "A world shaped by its creators and its community.",

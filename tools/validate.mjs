@@ -2,15 +2,12 @@ import { access, readFile } from "node:fs/promises";
 import { relative, resolve, sep } from "node:path";
 import {
   digest,
-  downloadReleaseUrls,
   filesBelow,
   readJson,
   validateDependencyPolicy,
   validateDist,
-  validateDownload,
-  validateDownloadCatalog,
-  validateDownloadSchemaDefinition,
   validateDownloadsPresentation,
+  validateFunctionsTree,
   validateIconCatalog,
   validateHomepagePhraseSet,
   validateHomepagePresentation,
@@ -19,6 +16,7 @@ import {
   validatePageMetadata,
   validatePublicCopy,
   validateRedirects,
+  validateRoutes,
   validateSvgIconSource,
 } from "./site-contract.mjs";
 
@@ -27,10 +25,8 @@ const mode = process.argv[2];
 if (!new Set(["source", "dist"]).has(mode))
   throw new Error("usage: validate.mjs source|dist");
 
-const downloads = await readJson(resolve(root, "src/data/downloads.json"));
 const media = await readJson(resolve(root, "src/data/media.json"));
 const icons = await readJson(resolve(root, "src/data/icons.json"));
-validateDownloadCatalog(downloads);
 if (
   media.schemaVersion !== 1 ||
   !Array.isArray(media.entries) ||
@@ -53,9 +49,6 @@ if (
   media.entries.length
 )
   throw new Error("duplicate media public path");
-validateDownload(
-  await readJson(resolve(root, "tools/fixtures/download-valid.json")),
-);
 
 const mediaRoot = resolve(root, "public/media");
 let mediaFiles = [];
@@ -148,7 +141,8 @@ for (const link of site.externalLinks) {
 const headers = await readFile(resolve(root, "public/_headers"), "utf8");
 for (const directive of [
   "default-src 'none'",
-  "script-src 'none'",
+  "script-src 'self'",
+  "connect-src 'self'",
   "frame-ancestors 'none'",
   "X-Content-Type-Options: nosniff",
   "Permissions-Policy:",
@@ -157,7 +151,6 @@ for (const directive of [
   if (!headers.includes(directive))
     throw new Error(`missing security header ${directive}`);
 for (const path of [
-  "contracts/download.schema.json",
   "contracts/icon.schema.json",
   "contracts/media.schema.json",
   "LICENSE",
@@ -166,13 +159,6 @@ for (const path of [
 ])
   await access(resolve(root, path));
 
-const fixture = await readJson(
-  resolve(root, "tools/fixtures/download-valid.json"),
-);
-const downloadSchema = await readJson(
-  resolve(root, "contracts/download.schema.json"),
-);
-validateDownloadSchemaDefinition(downloadSchema, fixture);
 const mediaSchema = await readJson(
   resolve(root, "contracts/media.schema.json"),
 );
@@ -227,6 +213,8 @@ const dependencyPolicy = await readJson(
 validateDependencyPolicy(packageManifest, dependencyPolicy);
 
 validateRedirects(await readFile(resolve(root, "public/_redirects"), "utf8"));
+validateRoutes(await readFile(resolve(root, "public/_routes.json"), "utf8"));
+await validateFunctionsTree(root);
 const robots = await readFile(resolve(root, "public/robots.txt"), "utf8");
 if (!robots.includes("Sitemap: https://atrinik.org/sitemap.xml"))
   throw new Error("robots.txt does not advertise the canonical sitemap");
@@ -320,7 +308,6 @@ if (mode === "dist") {
     throw new Error("generated indexable routes and sitemap differ");
   validateDownloadsPresentation(
     await readFile(resolve(root, "dist/downloads/index.html"), "utf8"),
-    downloads,
   );
   console.log(
     JSON.stringify(
@@ -328,13 +315,10 @@ if (mode === "dist") {
         allowedMedia: new Map(
           media.entries.map((record) => [record.publicPath, record]),
         ),
-        allowedReleaseUrls: new Set(
-          downloads.entries.flatMap(downloadReleaseUrls),
-        ),
       }),
     ),
   );
 } else
   console.log(
-    `source contracts valid: ${downloads.entries.length} downloads, ${media.entries.length} media`,
+    `source contracts valid: ${media.entries.length} media, ${icons.entries.length} icons, /api/* functions`,
   );

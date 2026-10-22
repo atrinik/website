@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import ServerStatus from "../components/ServerStatus.astro";
 import media from "../data/media.json";
 import site from "../data/site.json";
 import { indexablePage, websiteIdentity } from "../lib/metadata";
@@ -57,6 +58,7 @@ const chronicle = [
           Follow the rebuild <span aria-hidden="true">↗</span>
         </a>
       </div>
+      <ServerStatus />
       <dl class="hero-facts" aria-label="Atrinik project status">
         <div>
           <dt>Classic</dt>

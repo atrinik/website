@@ -47,7 +47,7 @@ test("rejects the retired provider-blind contract schema", () => {
     () =>
       validateDeploymentContract(
         changedContract((value) => {
-          value.schemaVersion = 3;
+          value.schemaVersion = 4;
         }),
       ),
     /Cloudflare Pages deployment contract drift/u,
@@ -64,6 +64,36 @@ test("requires explicit application privacy and provider edge boundaries", () =>
     }),
     changedContract((value) => {
       value.providerEdge.webAnalytics = "disabled";
+    }),
+  ])
+    assert.throws(
+      () => validateDeploymentContract(changed),
+      /dynamic\/privacy boundary/u,
+    );
+});
+
+test("pins the reviewed /api Functions boundary", () => {
+  for (const changed of [
+    changedContract((value) => {
+      value.functions = false;
+    }),
+    changedContract((value) => {
+      value.functions.routes.include = ["/*"];
+    }),
+    changedContract((value) => {
+      value.functions.routes.exclude = ["/api/status"];
+    }),
+    changedContract((value) => {
+      value.functions.kvNamespaces.push("SESSIONS");
+    }),
+    changedContract((value) => {
+      value.functions.variables.OFFICIAL_SERVER_HOST = "evil.example";
+    }),
+    changedContract((value) => {
+      value.secrets = ["GITHUB_WEBHOOK_SECRET"];
+    }),
+    changedContract((value) => {
+      value.clientScripts = "third-party";
     }),
   ])
     assert.throws(
@@ -112,12 +142,18 @@ test("requires the content security policy on the global header block", () => {
 
 test("rejects a permissive content security policy", () => {
   for (const changed of [
-    headers.replace("script-src 'none'", "script-src *"),
-    headers.replace("connect-src 'none'", "connect-src *"),
+    headers.replace("script-src 'self'", "script-src *"),
+    headers.replace("script-src 'self'", "script-src 'self' 'unsafe-inline'"),
+    headers.replace("script-src 'self'", "script-src 'self' https:"),
+    headers.replace("connect-src 'self'", "connect-src *"),
+    headers.replace(
+      "connect-src 'self'",
+      "connect-src 'self' https://api.github.com",
+    ),
     headers.replace("default-src 'none'", "default-src *"),
   ])
     assert.throws(
       () => validateDeploymentHeaders(changed),
-      /required no-script CSP/u,
+      /required same-origin CSP/u,
     );
 });
