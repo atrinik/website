@@ -30,7 +30,7 @@
       "sbomUrl": "https://github.com/atrinik/classic/releases/download/v5.108.0/atrinik-classic-5.108.0.spdx.json",
       "softwareLicense": "GPL-2.0-or-later",
       "bundledAssetsLicense": "Bundled sound and authored assets retain their exact per-file terms; inspect the packaged LICENSE.md, ATTRIBUTIONS.md, and any license files accompanying individual assets. Use the SPDX SBOM for dependency and provenance evidence.",
-      "compatibility": "This 5.108.0 client uses gameplay protocol revision 1085 and connects only to servers using the same revision, including the official server.",
+      "compatibility": "This 5.108.0 client uses gameplay protocol revision 1085 and connects only to servers using the same revision.",
       "installation": "Extract the ZIP, keep every packaged file and directory together, and run atrinik.exe from inside the extracted package."
     }
   ]

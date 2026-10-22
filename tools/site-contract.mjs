@@ -322,7 +322,7 @@ export function validateDownloadSchemaDefinition(schema, fixture) {
   if (
     primary?.releaseRepository?.const !== "atrinik/classic" ||
     primary?.artifactRole?.const !== "client" ||
-    primary?.releaseAssets?.const !== 12 ||
+    primary?.releaseAssets?.const !== 13 ||
     primary?.platform?.const !== "windows" ||
     primary?.architecture?.const !== "x86_64" ||
     primary?.archiveFormat?.const !== "zip" ||
