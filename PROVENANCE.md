@@ -14,19 +14,14 @@ website's Morliana copy is a fresh paraphrase informed by the Morliana story in
 `2796dee0b9ac5337bd8b10dd591da124319ffea3`; no passage or content file was
 copied, and that repository remains the authoritative source.
 
-The four original PNG files under `artwork/originals/` were generated at Zoey
-Rose's direction in an earlier OpenAI image-generation session. Zoey received
-the outputs, selected these four, and contributed them under this repository's
-MIT terms. This internal record keeps that generation provenance; the public
-site credits them as concept artwork by Zoey Rose and does not render it. The
-WebP derivatives under `public/media/` are bound to their source paths,
+The four original PNG files under `artwork/originals/` are concept artwork by
+Zoey Rose, contributed under this repository's MIT terms. The WebP derivatives under `public/media/` are bound to their source paths,
 immutable Git blob object IDs, source and published digests, published
 dimensions, transformations, license, notices, and alternative text in
 `src/data/media.json`.
 
 The crystal favicon and pinned-tab mask under `public/` are new MIT-licensed
-vector artwork authored for website issue #27 by Zoey Rose with Codex
-implementation assistance. Their exact source paths, Git blob object IDs,
+vector artwork authored for website issue #27 by Zoey Rose. Their exact source paths, Git blob object IDs,
 SHA-256 digests, dimensions, transformations, purposes, and notices are closed
 records in `src/data/icons.json`; the checked-in SVG is both retained source and
 published file.

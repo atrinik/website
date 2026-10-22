@@ -11,7 +11,7 @@
       "publishedSha256": "8b5a901b27d14d2c57bcd844febea646e026cb7ccb34a611837212a2da18ef45",
       "width": 64,
       "height": 64,
-      "author": "Zoey Rose with Codex implementation assistance",
+      "author": "Zoey Rose",
       "license": "MIT",
       "transformations": ["Authored directly as a compact SVG favicon."],
       "purpose": "Browser favicon depicting the Atrinik crystal mark.",
@@ -27,7 +27,7 @@
       "publishedSha256": "84a60770868f27e7d1ac169d90c62f9293bd57e2b238117a699673f2e92535a2",
       "width": 64,
       "height": 64,
-      "author": "Zoey Rose with Codex implementation assistance",
+      "author": "Zoey Rose",
       "license": "MIT",
       "transformations": [
         "Simplified from the new favicon geometry into a monochrome SVG mask."

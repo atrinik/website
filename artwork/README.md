@@ -1,11 +1,9 @@
 # Atrinik website concept artwork
 
-These four original PNG files were generated at Zoey Rose's direction in an
-earlier OpenAI image-generation session. Zoey received the outputs, selected
-these four on 2026-08-08, and contributed them under the repository's MIT
-terms.
+These four original PNG files are concept artwork by Zoey Rose, contributed on
+2026-08-08 under the repository's MIT terms.
 
-The credited author is **Zoey Rose with OpenAI image generation**. The images
+The credited author is **Zoey Rose**. The images
 are atmospheric concept artwork, not gameplay screenshots, release promises,
 maps, or authoritative depictions of world geography.
 
