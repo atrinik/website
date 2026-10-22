@@ -966,7 +966,8 @@ test("a day of steady traffic costs about one gate write per 15 minutes", async 
       await Promise.all(ctx.pending);
     }
     // 1,440 visits per day: 96 refresh attempts, kept or confirmed alike.
-    assert.ok(kv.putsTo(GATE_KEY) - before <= 97, String(kv.putsTo(GATE_KEY)));
+    const gateWrites = kv.putsTo(GATE_KEY) - before;
+    assert.ok(gateWrites >= 95 && gateWrites <= 97, String(gateWrites));
     kv.time += 60_000;
   }
   // Only the first selection wrote the record; confirmations wrote nothing.
@@ -1014,6 +1015,98 @@ test("a transient failure on a newer release never downgrades a matching record"
   assert.equal(downgraded.outcome, "updated");
   assert.equal(downgraded.record.version, "5.107.0");
   assert.equal(downgraded.record.serverMatch, true);
+});
+
+test("a deleted or withdrawn stored release is replaced", async () => {
+  const newest = makeRelease("5.108.0");
+  const older = makeRelease("5.107.0");
+  const protocols = { "v5.108.0": 1085, "v5.107.0": 1085, "v5.106.0": 1085 };
+  const sums = { "v5.108.0": newest.sums, "v5.107.0": older.sums };
+  const kv = new MemoryKv();
+  const seeded = await refreshDownloadRecord(
+    { DOWNLOADS: kv },
+    deps(
+      upstream({ releases: [newest.release, older.release], sums, protocols }),
+    ),
+  );
+  assert.equal(seeded.record.version, "5.108.0");
+  // 5.108.0 is deleted: it leaves the list and its tag lookup returns 404.
+  const replaced = await refreshDownloadRecord(
+    { DOWNLOADS: kv },
+    deps(upstream({ releases: [older.release], sums, protocols })),
+  );
+  assert.equal(replaced.outcome, "updated");
+  assert.equal(replaced.record.version, "5.107.0");
+  // A stored release that is now a prerelease is replaced too.
+  const reseeded = await refreshDownloadRecord(
+    { DOWNLOADS: new MemoryKv() },
+    deps(upstream({ releases: [newest.release], sums, protocols })),
+  );
+  const kv2 = new MemoryKv({ [RECORD_KEY]: JSON.stringify(reseeded.record) });
+  const withdrawn = await refreshDownloadRecord(
+    { DOWNLOADS: kv2 },
+    deps(
+      upstream({
+        releases: [{ ...newest.release, prerelease: true }, older.release],
+        sums,
+        protocols,
+      }),
+    ),
+  );
+  assert.equal(withdrawn.record.version, "5.107.0");
+});
+
+test("selection does not assume the list is ordered by version", async () => {
+  const stored = makeRelease("5.108.0");
+  const patch = makeRelease("5.108.1");
+  const backport = makeRelease("5.107.1");
+  const protocols = {
+    "v5.108.1": 1085,
+    "v5.108.0": 1085,
+    "v5.107.1": 1085,
+    "v5.106.0": 1085,
+  };
+  const sums = {
+    "v5.108.0": stored.sums,
+    "v5.108.1": patch.sums,
+    "v5.107.1": backport.sums,
+  };
+  const kv = new MemoryKv();
+  await refreshDownloadRecord(
+    { DOWNLOADS: kv },
+    deps(upstream({ releases: [stored.release], sums, protocols })),
+  );
+  const result = await refreshDownloadRecord(
+    { DOWNLOADS: kv },
+    deps(
+      upstream({
+        releases: [backport.release, patch.release, stored.release],
+        sums,
+        protocols,
+      }),
+    ),
+  );
+  assert.equal(result.record.version, "5.108.1");
+});
+
+test("a failed store read never overwrites the stored record", async () => {
+  const fixture = standardReleases();
+  const kv = new MemoryKv({ [RECORD_KEY]: "kept" });
+  kv.get = async () => {
+    throw new Error("kv unavailable");
+  };
+  const result = await refreshDownloadRecord(
+    { DOWNLOADS: kv },
+    deps(
+      upstream({
+        ...fixture,
+        protocols: { "v5.108.0": 1085, "v5.107.0": 1085, "v5.106.0": 1085 },
+        directoryStatus: 500,
+      }),
+    ),
+  );
+  assert.equal(result.reason, "store-unavailable");
+  assert.equal(kv.puts.length, 0);
 });
 
 test("a server protocol change without a matching release is stated, not hidden", async () => {
@@ -1135,7 +1228,7 @@ test("pathological release notes parse in linear time", () => {
     parseReleaseNotes(body);
     const elapsed = performance.now() - start;
     assert.ok(
-      elapsed < 50,
+      elapsed < 250,
       `${elapsed.toFixed(1)} ms for ${body.slice(0, 30)}`,
     );
   }

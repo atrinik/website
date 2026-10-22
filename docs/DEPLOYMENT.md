@@ -67,8 +67,8 @@ source, previews, or logs. Configure **Production** and **Preview** separately.
    with production. In the Pages project open **Settings → Bindings → Add → KV
    namespace** and bind the variable name `DOWNLOADS` to the production
    namespace for Production and to the preview namespace for Preview. The
-   runtime also prefixes every non-`main` key with `preview:` as a second
-   barrier. Without the binding the download API answers 503 and the page
+   runtime also prefixes every key with `preview:` unless the request host is
+   `atrinik.org`, as a second barrier. Without the binding the download API answers 503 and the page
    keeps its static fallback.
 2. **Variable.** Under **Settings → Variables and Secrets**, add the plain-text
    variable `OFFICIAL_SERVER_HOST` = `game.atrinik.com` for both environments.
@@ -116,8 +116,9 @@ variable, and secret set; validation rejects additions.
 
 ### KV keys
 
-Production keys are listed below; preview deployments use the same keys with
-a `preview:` prefix.
+Production keys are listed below. Every request to a host other than
+`atrinik.org` — branch previews and the `atrinik-website.pages.dev` alias of
+production alike — uses the same keys with a `preview:` prefix.
 
 | Key                                | Contents                              | Expiry     |
 | ---------------------------------- | ------------------------------------- | ---------- |

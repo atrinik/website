@@ -491,7 +491,14 @@ export async function tagProtocol(tag, env, deps) {
  * @returns {Promise<DownloadRecord | null>}
  */
 export async function readRecord(env) {
-  const raw = await kvGet(env.DOWNLOADS, storageKeys(env).record);
+  return parseRecord(await kvGet(env.DOWNLOADS, storageKeys(env).record));
+}
+
+/**
+ * @param {string | null} raw
+ * @returns {DownloadRecord | null}
+ */
+function parseRecord(raw) {
   if (raw === null || raw.length > RECORD_LIMIT) return null;
   try {
     const value = JSON.parse(raw);
@@ -566,7 +573,14 @@ async function store(env, stored, record) {
  * @returns {Promise<RefreshResult>}
  */
 export async function refreshDownloadRecord(env, deps) {
-  const stored = await readRecord(env);
+  let storedRaw;
+  try {
+    storedRaw = await env.DOWNLOADS.get(storageKeys(env).record);
+  } catch {
+    // A failed read is not an empty store: never overwrite blindly.
+    return { outcome: "kept", record: null, reason: "store-unavailable" };
+  }
+  const stored = parseRecord(storedRaw);
   const keep = (/** @type {string} */ reason) =>
     /** @type {RefreshResult} */ ({
       outcome: stored ? "kept" : "unavailable",
@@ -605,15 +619,23 @@ export async function refreshDownloadRecord(env, deps) {
     // verified release, explicitly marked as unmatched.
     return refreshFallback(env, deps, releases, null);
 
+  // A stored release that was deleted, unpublished, or made mutable must be
+  // replaced, never kept or used as a floor.
+  const current =
+    stored && (await storedReleaseIsCurrent(stored, releases, env, deps))
+      ? stored
+      : null;
   // While the stored release still matches the server, a transient failure on
   // a newer release must never regress the download to an older one.
   const floor =
-    stored && stored.protocol === official.protocol ? stored.version : null;
+    current && current.protocol === official.protocol ? current.version : null;
   let lookups = 0;
   for (const release of releases) {
     const candidate = releaseCandidate(release);
     if (!candidate) continue;
-    if (floor !== null && compareVersions(candidate.version, floor) < 0) break;
+    // GitHub orders by creation date, not version, so skip rather than stop.
+    if (floor !== null && compareVersions(candidate.version, floor) < 0)
+      continue;
     if (lookups >= MAX_PROTOCOL_LOOKUPS) break;
     lookups += 1;
     try {
@@ -633,14 +655,14 @@ export async function refreshDownloadRecord(env, deps) {
       continue;
     }
   }
-  if (!stored)
+  if (!current)
     return refreshFallback(env, deps, releases, {
       version: official.version,
     });
   // Keep the stored release, but state honestly whether it still matches.
   const restated = {
-    ...stored,
-    serverMatch: stored.protocol === official.protocol,
+    ...current,
+    serverMatch: current.protocol === official.protocol,
     server: { version: official.version },
   };
   if (!isDownloadRecord(restated)) return keep("no-matching-release");
@@ -648,6 +670,39 @@ export async function refreshDownloadRecord(env, deps) {
   return result.outcome === "updated"
     ? result
     : { ...result, reason: "no-newer-matching-release" };
+}
+
+/**
+ * Whether the stored release is still published, immutable, and complete.
+ * It is checked in the fetched list first; an older release outside the list
+ * is looked up by tag. Lookup failures count as current, so a transient error
+ * never replaces a good record.
+ * @param {DownloadRecord} stored
+ * @param {unknown[]} releases
+ * @param {Env & { DOWNLOADS: KvNamespace }} env
+ * @param {Deps} deps
+ */
+async function storedReleaseIsCurrent(stored, releases, env, deps) {
+  for (const release of releases) {
+    const candidate = releaseCandidate(release);
+    if (candidate && candidate.tag === stored.tag) return true;
+    if (
+      release !== null &&
+      typeof release === "object" &&
+      /** @type {{ tag_name?: unknown }} */ (release).tag_name === stored.tag
+    )
+      return false;
+  }
+  try {
+    const release = await fetchJson(
+      deps.fetch,
+      `${API_ROOT}/releases/tags/${stored.tag}`,
+      githubOptions(env, RELEASES_LIMIT),
+    );
+    return releaseCandidate(release) !== null;
+  } catch (error) {
+    return !(error instanceof UpstreamError && error.code === "status-404");
+  }
 }
 
 /**

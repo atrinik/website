@@ -126,13 +126,21 @@ even if the namespaces were shared. The runtime derives this from the request
 hostname because Pages exposes `CF_PAGES_BRANCH` only at build time.
 
 KV write budget (the free plan allows 1,000 writes a day): in steady state the
-refresh gate is written at most once per 15 minutes, about 96 writes a day,
-regardless of traffic or upstream failures. Records are written only on an
+refresh gate is written about once per 15 minutes per active Cloudflare
+location, about 96 writes a day for a single location, regardless of upstream
+failures. Records are written only on an
 actual change (a new release or a server change), webhooks add at most one gate
 write each (deduplicated to one a minute), tag-commit cache entries are
 rewritten about once a day per looked-up tag, and protocol entries once per
-new commit. KV is eventually consistent, so concurrent locations may
-occasionally both take a gate; that adds a few writes, not a multiple.
+new commit. KV is eventually consistent and caches reads (including "not
+found") for about 60 seconds per location, so when the gate expires every
+location that serves a visit in that window can write it: the real cost is up to
+one gate write per active location per window. That is well inside the budget
+at this site's traffic, but it is not a hard bound of 96.
+
+A failed refresh still holds the gate, so the next automatic attempt comes 15
+minutes later; with no stored record the API answers 503 (and the page keeps its
+static fallback) for up to that long. A webhook redelivery bypasses the gate.
 
 The browser module (`src/scripts/classic-live.ts`, bundled by Astro to one
 hashed file under `/assets/`) fetches only `/api/downloads/classic` and
