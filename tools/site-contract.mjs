@@ -255,7 +255,7 @@ export function validateDownloadCatalog(catalog) {
         record.platform !== "windows" ||
         record.architecture !== "x86_64" ||
         record.archiveFormat !== "zip" ||
-        record.releaseAssets !== 12 ||
+        record.releaseAssets !== 13 ||
         record.artifact !==
           `atrinik-classic-client-${record.artifactVersion}-windows-x86_64.zip` ||
         record.sbomUrl !==

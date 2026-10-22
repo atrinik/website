@@ -13,7 +13,7 @@
   "prerelease": false,
   "immutable": true,
   "attested": true,
-  "releaseAssets": 12,
+  "releaseAssets": 13,
   "platform": "windows",
   "architecture": "x86_64",
   "archiveFormat": "zip",
