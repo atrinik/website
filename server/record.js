@@ -204,14 +204,16 @@ export function isDownloadRecord(value) {
     return false;
   const tag = String(value["tag"]);
   const server = value["server"];
-  if (value["serverMatch"]) {
-    if (
-      !isObject(server) ||
-      !hasKeys(server, ["version"]) ||
-      !isVersion(server["version"])
-    )
-      return false;
-  } else if (server !== null) return false;
+  // A match always names the server version; a mismatch may name it (known
+  // server, different protocol) or not (server unknown).
+  if (
+    server === null
+      ? value["serverMatch"]
+      : !isObject(server) ||
+        !hasKeys(server, ["version"]) ||
+        !isVersion(server["version"])
+  )
+    return false;
 
   const files = value["files"];
   if (

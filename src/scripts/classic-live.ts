@@ -180,7 +180,10 @@ function renderRelease(record: DownloadRecord, detected: Platform | null) {
     children.push(
       element("p", {
         className: "download-coordinate-warning",
-        text: "This is the newest verified release. The official server’s version could not be confirmed, so it may not match the server you want to join.",
+        text:
+          record.server === null
+            ? "This is the newest verified release. The official server’s version could not be confirmed, so it may not match the server you want to join."
+            : `The official server runs version ${record.server.version}, which uses a different network protocol than this release. This client may not be able to connect to it yet.`,
       }),
     );
   children.push(

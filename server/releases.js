@@ -22,10 +22,12 @@ import {
 import { UpstreamError, decodeUtf8, fetchBounded, fetchJson } from "./http.js";
 import { fetchOfficialServer } from "./status.js";
 
-export const RECORD_KEY = "classic:download:v1";
-export const LOCK_KEY = "classic:download:lock:v1";
-export const LOCK_TTL_SECONDS = 120;
-export const STALE_AFTER_MS = 15 * 60 * 1000;
+// The refresh gate doubles as the staleness window: a visit starts a
+// background refresh only when the gate key has expired.
+export const REFRESH_GATE_TTL_SECONDS = 15 * 60;
+export const WEBHOOK_GATE_TTL_SECONDS = 60;
+export const TAG_COMMIT_TTL_SECONDS = 24 * 60 * 60;
+const MAX_LINE_LENGTH = 1_000;
 const RECORD_LIMIT = 256 * 1024;
 const RELEASES_LIMIT = 2 * 1024 * 1024;
 const REF_LIMIT = 16 * 1024;
@@ -60,10 +62,44 @@ const digestPattern = /^sha256:([0-9a-f]{64})$/u;
  *   GITHUB_WEBHOOK_SECRET?: string,
  *   GITHUB_TOKEN?: string,
  *   OFFICIAL_SERVER_HOST?: string,
+ *   CF_PAGES_BRANCH?: string,
  * }} Env
  * @typedef {{ fetch: FetchLike, now: () => number }} Deps
  * @typedef {{ tag: string, version: string, publishedAt: string, body: string, files: ReleaseFile[], windows: ReleaseFile & { sha256: string }, linux: ReleaseFile & { sha256: string }, checksums: ReleaseFile & { sha256: string } }} Candidate
  */
+
+/**
+ * KV keys, namespaced so preview deployments can never touch production
+ * records even if they were bound to the same namespace.
+ * @param {Env} env
+ */
+export function storageKeys(env) {
+  const prefix = env.CF_PAGES_BRANCH === "main" ? "" : "preview:";
+  return {
+    record: `${prefix}classic:download:v1`,
+    refreshGate: `${prefix}classic:download:refresh-gate:v1`,
+    webhookGate: `${prefix}classic:download:webhook-gate:v1`,
+    tagCommit: (/** @type {string} */ tag) =>
+      `${prefix}classic:tag-commit:v1:${tag}`,
+    protocol: (/** @type {string} */ commit) =>
+      `${prefix}classic:protocol:v1:${commit}`,
+  };
+}
+
+/**
+ * Compares two validated X.Y.Z versions numerically.
+ * @param {string} left
+ * @param {string} right
+ */
+export function compareVersions(left, right) {
+  const a = left.split(".").map(Number);
+  const b = right.split(".").map(Number);
+  for (let index = 0; index < 3; index += 1) {
+    const difference = (a[index] ?? 0) - (b[index] ?? 0);
+    if (difference !== 0) return Math.sign(difference);
+  }
+  return 0;
+}
 
 /**
  * @param {Env} env
@@ -102,24 +138,17 @@ export function parseReleaseNotes(body) {
   const notes = [];
   /** @type {ReleaseNote["kind"] | null} */
   let kind = null;
-  for (const rawLine of body.slice(0, 20_000).split(/\r?\n/u)) {
+  for (const rawLine of body.slice(0, 20_000).split("\n")) {
     if (notes.length >= MAX_NOTES) break;
-    const heading = /^#{1,6}\s+(.+?)\s*#*\s*$/u.exec(rawLine);
-    if (heading) {
-      const title = (heading[1] ?? "").toLowerCase();
-      kind =
-        title === "features"
-          ? "feature"
-          : title === "bug fixes"
-            ? "fix"
-            : title === "performance improvements"
-              ? "performance"
-              : null;
+    // Bounding and trimming each line first keeps every pattern below linear.
+    const line = rawLine.slice(0, MAX_LINE_LENGTH).trim();
+    if (line.startsWith("#")) {
+      kind = sectionKind(line);
       continue;
     }
-    const bullet = /^[*-]\s+(.+)$/u.exec(rawLine);
-    if (kind === null || !bullet) continue;
-    let text = bullet[1] ?? "";
+    if (kind === null || !(line.startsWith("* ") || line.startsWith("- ")))
+      continue;
+    let text = line.slice(2).trim();
     /** @type {string | undefined} */
     let scope;
     const scoped = /^\*\*([^*]{1,60}):\*\*\s*(.*)$/u.exec(text);
@@ -128,9 +157,7 @@ export function parseReleaseNotes(body) {
       if (isNoteScope(candidate)) scope = candidate;
       text = scoped[2] ?? "";
     }
-    // Drop trailing issue/commit references such as ([#12](url)) ([abc](url)).
-    text = text.replace(/(?:\s*\(\s*\[[^\]]*\]\([^)]*\)\s*\))+\s*$/u, "");
-    text = plainText(text);
+    text = plainText(stripTrailingReferences(text));
     if (text === "") continue;
     if ([...text].length > MAX_NOTE_LENGTH)
       text = `${[...text]
@@ -143,11 +170,53 @@ export function parseReleaseNotes(body) {
   return notes;
 }
 
+/**
+ * Maps a Markdown heading line to a highlight kind without backtracking.
+ * @param {string} line a trimmed line starting with "#"
+ * @returns {ReleaseNote["kind"] | null}
+ */
+function sectionKind(line) {
+  let start = 0;
+  while (start < line.length && line[start] === "#") start += 1;
+  if (start > 6 || (line[start] !== " " && line[start] !== "\t")) return null;
+  let end = line.length;
+  while (end > start && line[end - 1] === "#") end -= 1;
+  const title = line.slice(start, end).trim().toLowerCase();
+  return title === "features"
+    ? "feature"
+    : title === "bug fixes"
+      ? "fix"
+      : title === "performance improvements"
+        ? "performance"
+        : null;
+}
+
+/**
+ * Drops trailing issue/commit references such as ([#12](url)) ([abc](url)).
+ * @param {string} text
+ */
+function stripTrailingReferences(text) {
+  let result = text.trimEnd();
+  for (let count = 0; count < 4 && result.endsWith("))"); count += 1) {
+    const start = result.lastIndexOf("([");
+    if (
+      start < 0 ||
+      !/^\(\[[^\]]{0,100}\]\([^()\s]{0,300}\)\)$/u.test(result.slice(start))
+    )
+      break;
+    result = result.slice(0, start).trimEnd();
+  }
+  return result;
+}
+
 /** @param {string} markdown */
 function plainText(markdown) {
   return markdown
     .replace(/<[^>]*>?/gu, " ")
-    .replace(/!?\[([^\]]*)\]\((?:[^()]|\([^()]*\))*\)/gu, "$1")
+    .replace(
+      /!?\[([^\]]{0,200})\]\((?:[^()]|\([^()]{0,100}\)){0,300}\)/gu,
+      "$1",
+    )
     .replace(/[<>]/gu, " ")
     .replace(/(\*\*|__|\*|_|~~|`)/gu, "")
     .replace(/[\p{Cc}\p{Cf}]/gu, " ")
@@ -323,7 +392,7 @@ async function kvGet(kv, key) {
  * @returns {Promise<string>}
  */
 async function tagCommit(tag, env, deps) {
-  const cacheKey = `classic:tag-commit:v1:${tag}`;
+  const cacheKey = storageKeys(env).tagCommit(tag);
   const cached = await kvGet(env.DOWNLOADS, cacheKey);
   if (cached !== null && commitPattern.test(cached)) return cached;
   let target = await fetchJson(
@@ -340,7 +409,10 @@ async function tagCommit(tag, env, deps) {
     )
       throw new UpstreamError("invalid-tag-ref");
     if (object["type"] === "commit") {
-      await env.DOWNLOADS.put(cacheKey, object["sha"]).catch(() => {});
+      // Tags can in principle move, so this cache expires; commits cannot.
+      await env.DOWNLOADS.put(cacheKey, object["sha"], {
+        expirationTtl: TAG_COMMIT_TTL_SECONDS,
+      }).catch(() => {});
       return object["sha"];
     }
     if (object["type"] !== "tag") throw new UpstreamError("invalid-tag-ref");
@@ -362,7 +434,7 @@ async function tagCommit(tag, env, deps) {
  * @returns {Promise<number>}
  */
 async function commitProtocol(commit, env, deps) {
-  const cacheKey = `classic:protocol:v1:${commit}`;
+  const cacheKey = storageKeys(env).protocol(commit);
   const cached = await kvGet(env.DOWNLOADS, cacheKey);
   if (cached !== null && /^[1-9][0-9]{0,9}$/u.test(cached)) {
     const value = Number(cached);
@@ -396,11 +468,11 @@ export async function tagProtocol(tag, env, deps) {
 }
 
 /**
- * @param {KvNamespace} kv
+ * @param {Env & { DOWNLOADS: KvNamespace }} env
  * @returns {Promise<DownloadRecord | null>}
  */
-export async function readRecord(kv) {
-  const raw = await kvGet(kv, RECORD_KEY);
+export async function readRecord(env) {
+  const raw = await kvGet(env.DOWNLOADS, storageKeys(env).record);
   if (raw === null || raw.length > RECORD_LIMIT) return null;
   try {
     const value = JSON.parse(raw);
@@ -414,10 +486,11 @@ export async function readRecord(kv) {
  * @param {Candidate} candidate
  * @param {{ commit: string, protocol: number }} source
  * @param {{ version: string } | null} server
+ * @param {boolean} serverMatch
  * @param {number} now
  * @returns {DownloadRecord}
  */
-function buildRecord(candidate, source, server, now) {
+function buildRecord(candidate, source, server, serverMatch, now) {
   return {
     schemaVersion: 1,
     version: candidate.version,
@@ -426,7 +499,7 @@ function buildRecord(candidate, source, server, now) {
     publishedAt: candidate.publishedAt,
     releaseUrl: releasePageUrl(candidate.tag),
     protocol: source.protocol,
-    serverMatch: server !== null,
+    serverMatch,
     server,
     platforms: {
       windows: { ...candidate.windows },
@@ -443,6 +516,30 @@ function buildRecord(candidate, source, server, now) {
  */
 
 /**
+ * @param {DownloadRecord} record
+ */
+function contentOf(record) {
+  const { checkedAt: _checkedAt, ...content } = record;
+  return JSON.stringify(content);
+}
+
+/**
+ * Stores a record only when its content differs from the stored one, so
+ * routine confirmations cost no KV write. `checkedAt` therefore records when
+ * the current content was first selected.
+ * @param {Env & { DOWNLOADS: KvNamespace }} env
+ * @param {DownloadRecord | null} stored
+ * @param {DownloadRecord} record
+ * @returns {Promise<RefreshResult>}
+ */
+async function store(env, stored, record) {
+  if (stored && contentOf(stored) === contentOf(record))
+    return { outcome: "kept", record: stored, reason: "unchanged" };
+  await env.DOWNLOADS.put(storageKeys(env).record, JSON.stringify(record));
+  return { outcome: "updated", record };
+}
+
+/**
  * Recomputes the selected Classic release and stores it when it is at least
  * as trustworthy as the stored record.
  * @param {Env & { DOWNLOADS: KvNamespace }} env
@@ -450,7 +547,7 @@ function buildRecord(candidate, source, server, now) {
  * @returns {Promise<RefreshResult>}
  */
 export async function refreshDownloadRecord(env, deps) {
-  const stored = await readRecord(env.DOWNLOADS);
+  const stored = await readRecord(env);
   const keep = (/** @type {string} */ reason) =>
     /** @type {RefreshResult} */ ({
       outcome: stored ? "kept" : "unavailable",
@@ -484,44 +581,64 @@ export async function refreshDownloadRecord(env, deps) {
   }
   if (!Array.isArray(releases)) return keep("releases-invalid");
 
-  if (official !== null) {
-    let lookups = 0;
-    for (const release of releases) {
-      const candidate = releaseCandidate(release);
-      if (!candidate) continue;
-      if (lookups >= MAX_PROTOCOL_LOOKUPS) break;
-      lookups += 1;
-      try {
-        const source = await tagProtocol(candidate.tag, env, deps);
-        if (source.protocol !== official.protocol) continue;
-        if (!(await verifyChecksums(candidate, deps))) continue;
-        const record = buildRecord(
-          candidate,
-          source,
-          { version: official.version },
-          deps.now(),
-        );
-        if (!isDownloadRecord(record)) continue;
-        await env.DOWNLOADS.put(RECORD_KEY, JSON.stringify(record));
-        return { outcome: "updated", record };
-      } catch {
-        continue;
-      }
+  if (official === null)
+    // Nothing is stored and the server is unknown: offer the newest fully
+    // verified release, explicitly marked as unmatched.
+    return refreshFallback(env, deps, releases, null);
+
+  // While the stored release still matches the server, a transient failure on
+  // a newer release must never regress the download to an older one.
+  const floor =
+    stored && stored.protocol === official.protocol ? stored.version : null;
+  let lookups = 0;
+  for (const release of releases) {
+    const candidate = releaseCandidate(release);
+    if (!candidate) continue;
+    if (floor !== null && compareVersions(candidate.version, floor) < 0) break;
+    if (lookups >= MAX_PROTOCOL_LOOKUPS) break;
+    lookups += 1;
+    try {
+      const source = await tagProtocol(candidate.tag, env, deps);
+      if (source.protocol !== official.protocol) continue;
+      if (!(await verifyChecksums(candidate, deps))) continue;
+      const record = buildRecord(
+        candidate,
+        source,
+        { version: official.version },
+        true,
+        deps.now(),
+      );
+      if (!isDownloadRecord(record)) continue;
+      return store(env, stored, record);
+    } catch {
+      continue;
     }
-    if (stored) return keep("no-matching-release");
   }
-  // Nothing is stored and no release can be matched to the official server:
-  // offer the newest fully verified release, explicitly marked as unmatched.
-  return refreshFallback(env, deps, releases);
+  if (!stored)
+    return refreshFallback(env, deps, releases, {
+      version: official.version,
+    });
+  // Keep the stored release, but state honestly whether it still matches.
+  const restated = {
+    ...stored,
+    serverMatch: stored.protocol === official.protocol,
+    server: { version: official.version },
+  };
+  if (!isDownloadRecord(restated)) return keep("no-matching-release");
+  const result = await store(env, stored, restated);
+  return result.outcome === "updated"
+    ? result
+    : { ...result, reason: "no-newer-matching-release" };
 }
 
 /**
  * @param {Env & { DOWNLOADS: KvNamespace }} env
  * @param {Deps} deps
  * @param {unknown[]} releases
+ * @param {{ version: string } | null} server
  * @returns {Promise<RefreshResult>}
  */
-async function refreshFallback(env, deps, releases) {
+async function refreshFallback(env, deps, releases, server) {
   let lookups = 0;
   for (const release of releases) {
     const candidate = releaseCandidate(release);
@@ -530,10 +647,9 @@ async function refreshFallback(env, deps, releases) {
     try {
       const source = await tagProtocol(candidate.tag, env, deps);
       if (!(await verifyChecksums(candidate, deps))) continue;
-      const record = buildRecord(candidate, source, null, deps.now());
+      const record = buildRecord(candidate, source, server, false, deps.now());
       if (!isDownloadRecord(record)) continue;
-      await env.DOWNLOADS.put(RECORD_KEY, JSON.stringify(record));
-      return { outcome: "updated", record };
+      return store(env, null, record);
     } catch {
       continue;
     }
@@ -542,24 +658,18 @@ async function refreshFallback(env, deps, releases) {
 }
 
 /**
- * Takes a short best-effort lock. KV is eventually consistent, so this limits
- * rather than eliminates concurrent refreshes.
+ * Takes a best-effort gate that expires after `ttlSeconds`. KV is eventually
+ * consistent, so this limits rather than eliminates concurrent refreshes.
  * @param {KvNamespace} kv
+ * @param {string} key
+ * @param {number} ttlSeconds
  */
-export async function acquireRefreshLock(kv) {
-  if ((await kvGet(kv, LOCK_KEY)) !== null) return false;
+export async function acquireGate(kv, key, ttlSeconds) {
+  if ((await kvGet(kv, key)) !== null) return false;
   try {
-    await kv.put(LOCK_KEY, "1", { expirationTtl: LOCK_TTL_SECONDS });
+    await kv.put(key, "1", { expirationTtl: ttlSeconds });
     return true;
   } catch {
     return false;
   }
-}
-
-/**
- * @param {DownloadRecord} record
- * @param {number} now
- */
-export function isStale(record, now) {
-  return now - Date.parse(record.checkedAt) > STALE_AFTER_MS;
 }

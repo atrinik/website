@@ -60,22 +60,28 @@ HTTPS.
 The owner configures these in the Cloudflare dashboard; none of them belong in
 source, previews, or logs. Configure **Production** and **Preview** separately.
 
-1. **KV namespace.** Under **Storage & Databases → KV**, create
-   `atrinik-website-downloads` (and, if preview data should stay separate,
-   `atrinik-website-downloads-preview`). In the Pages project open
-   **Settings → Bindings → Add → KV namespace** and bind it with the variable
-   name `DOWNLOADS` for Production and for Preview. Without the binding the
-   download API answers 503 and the page keeps its static fallback.
+1. **KV namespaces.** Under **Storage & Databases → KV**, create two
+   namespaces: `atrinik-website-downloads` and
+   `atrinik-website-downloads-preview`. A separate preview namespace is
+   mandatory: previews run unreviewed branch code and must never share storage
+   with production. In the Pages project open **Settings → Bindings → Add → KV
+   namespace** and bind the variable name `DOWNLOADS` to the production
+   namespace for Production and to the preview namespace for Preview. The
+   runtime also prefixes every non-`main` key with `preview:` as a second
+   barrier. Without the binding the download API answers 503 and the page
+   keeps its static fallback.
 2. **Variable.** Under **Settings → Variables and Secrets**, add the plain-text
    variable `OFFICIAL_SERVER_HOST` = `game.atrinik.com` for both environments.
    It names the server-directory entry whose version and protocol select the
    download.
 3. **Secrets.** Add `GITHUB_WEBHOOK_SECRET` (a long random value, for example
    `openssl rand -hex 32`) as an encrypted secret. Add `GITHUB_TOKEN` as an
-   encrypted secret too: a fine-grained personal access token with
-   **public repositories read-only** access and no other permissions. It only
-   raises GitHub API rate limits; without it the runtime still works at the
-   unauthenticated limit.
+   encrypted secret too; it is required. Use a fine-grained personal access
+   token with **public repositories read-only** access and no other
+   permissions. Without it, requests to GitHub's API share the
+   unauthenticated limit of 60 an hour per egress address with every other
+   Worker on that address, so refreshes fail unpredictably. The runtime then
+   keeps serving the last good record, but stops tracking releases.
 4. **Redeploy** the latest `main` deployment (and a preview) so the bindings
    apply.
 5. **GitHub webhook.** In `atrinik/classic` → **Settings → Webhooks → Add
@@ -105,17 +111,37 @@ variable, and secret set; validation rejects additions.
   with no CSP errors; with JavaScript disabled it shows the
   "Download from GitHub" fallback.
 - The Pages **Functions** log shows only reason codes such as
-  `classic download refresh: no-matching-release`, never request content.
+  `classic download refresh: no-newer-matching-release`, never request
+  content.
+
+### KV keys
+
+Production keys are listed below; preview deployments use the same keys with
+a `preview:` prefix.
+
+| Key                                | Contents                              | Expiry     |
+| ---------------------------------- | ------------------------------------- | ---------- |
+| `classic:download:v1`              | the selected release record           | none       |
+| `classic:download:refresh-gate:v1` | visit refresh gate (staleness window) | 15 minutes |
+| `classic:download:webhook-gate:v1` | webhook deduplication gate            | 60 seconds |
+| `classic:tag-commit:v1:<tag>`      | commit a release tag points to        | 1 day      |
+| `classic:protocol:v1:<commit>`     | `protocol_version` at an exact commit | none       |
 
 ### Outage behavior and rollback
 
 If GitHub, the server directory, or KV fail, the API keeps serving the last
 good record or returns `{ "available": false }`, and the page keeps its static
 GitHub link. To force a recompute, use **Redeliver** on a webhook delivery in
-GitHub. To withdraw the runtime, promote the last verified deployment from
-before the Functions change; the static fallback needs no bindings. To reset
-selection, delete the `classic:download:v1` key in the KV namespace; the next
-download request recomputes it. Remove the webhook in `atrinik/classic` and the
+GitHub; it bypasses the 15-minute gate. To withdraw the runtime, promote the
+last verified deployment from before the Functions change; the static fallback
+needs no bindings.
+
+To reset selection, delete `classic:download:v1` and
+`classic:download:refresh-gate:v1` in the production namespace (in **KV →
+namespace → KV Pairs**, or with `wrangler kv key delete`); the next download
+request recomputes the record synchronously. Delete `classic:tag-commit:v1:*`
+entries if a tag was ever moved; `classic:protocol:v1:*` entries never need
+resetting because they are keyed by immutable commit. Remove the webhook in `atrinik/classic` and the
 secrets in Pages if the runtime is retired.
 
 ## Provider edge privacy boundary

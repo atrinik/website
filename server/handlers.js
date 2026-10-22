@@ -11,10 +11,12 @@ import {
 } from "./http.js";
 import { RELEASE_REPOSITORY, isStatusResponse } from "./record.js";
 import {
-  acquireRefreshLock,
-  isStale,
+  REFRESH_GATE_TTL_SECONDS,
+  WEBHOOK_GATE_TTL_SECONDS,
+  acquireGate,
   readRecord,
   refreshDownloadRecord,
+  storageKeys,
 } from "./releases.js";
 import { fetchDirectory, statusFromDirectory } from "./status.js";
 
@@ -22,6 +24,7 @@ export const WEBHOOK_BODY_LIMIT = 1024 * 1024;
 const STATUS_TTL_SECONDS = 60;
 const STATUS_FAILURE_TTL_SECONDS = 30;
 const signaturePattern = /^sha256=([0-9a-f]{64})$/u;
+const refreshingActions = new Set(["published", "edited", "deleted"]);
 
 /**
  * @typedef {import("./releases.js").Env} Env
@@ -68,7 +71,10 @@ function hasStore(env) {
 async function backgroundRefresh(env, deps) {
   try {
     const result = await refreshDownloadRecord(env, deps);
-    if (result.outcome !== "updated") logFailure(result.reason ?? "unknown");
+    if (result.outcome === "unavailable")
+      logFailure(result.reason ?? "unknown");
+    else if (result.outcome === "kept" && result.reason !== "unchanged")
+      logFailure(result.reason ?? "unknown");
   } catch {
     logFailure("exception");
   }
@@ -147,7 +153,22 @@ export async function handleGithubRelease(context, deps = defaultDeps()) {
     payload.repository.full_name !== RELEASE_REPOSITORY
   )
     return emptyResponse(422);
+  if (!refreshingActions.has(payload.action)) return emptyResponse(204);
   if (!hasStore(env)) return emptyResponse(503);
+  const keys = storageKeys(env);
+  // A burst or replay triggers at most one refresh per minute.
+  if (
+    !(await acquireGate(
+      env.DOWNLOADS,
+      keys.webhookGate,
+      WEBHOOK_GATE_TTL_SECONDS,
+    ))
+  )
+    return emptyResponse(202);
+  // The webhook bypasses the visit gate and restarts its window.
+  await env.DOWNLOADS.put(keys.refreshGate, "1", {
+    expirationTtl: REFRESH_GATE_TTL_SECONDS,
+  }).catch(() => {});
   // The payload is only a cue: the release is re-read from GitHub's API.
   context.waitUntil(backgroundRefresh(env, deps));
   return emptyResponse(202);
@@ -162,16 +183,19 @@ export async function handleClassicDownload(context, deps = defaultDeps()) {
   const { request, env } = context;
   if (request.method !== "GET") return methodNotAllowed("GET");
   if (!hasStore(env)) return unavailable();
-  const record = await readRecord(env.DOWNLOADS);
+  const record = await readRecord(env);
+  // The refresh gate is the staleness window: at most one refresh attempt per
+  // 15 minutes, whatever its outcome.
+  const due = await acquireGate(
+    env.DOWNLOADS,
+    storageKeys(env).refreshGate,
+    REFRESH_GATE_TTL_SECONDS,
+  );
   if (record) {
-    if (
-      isStale(record, deps.now()) &&
-      (await acquireRefreshLock(env.DOWNLOADS))
-    )
-      context.waitUntil(backgroundRefresh(env, deps));
+    if (due) context.waitUntil(backgroundRefresh(env, deps));
     return jsonResponse(200, record, { maxAge: 60 });
   }
-  if (!(await acquireRefreshLock(env.DOWNLOADS))) return unavailable();
+  if (!due) return unavailable();
   try {
     const result = await refreshDownloadRecord(env, deps);
     if (result.record) return jsonResponse(200, result.record, { maxAge: 60 });

@@ -11,11 +11,10 @@ import {
 } from "../server/handlers.js";
 import { isDownloadRecord, isStatusResponse } from "../server/record.js";
 import {
-  LOCK_KEY,
-  RECORD_KEY,
   parseChecksums,
   parseReleaseNotes,
   refreshDownloadRecord,
+  storageKeys,
 } from "../server/releases.js";
 import { parseDirectory } from "../server/status.js";
 
@@ -27,17 +26,34 @@ const SECRET = "test-webhook-secret";
 const sha = (text) => createHash("sha256").update(text).digest("hex");
 const commitFor = (tag) => createHash("sha1").update(tag).digest("hex");
 
+// Tests run without CF_PAGES_BRANCH, so they use the preview key namespace.
+const RECORD_KEY = storageKeys({}).record;
+const GATE_KEY = storageKeys({}).refreshGate;
+
+/** In-memory KV with expirationTtl measured against `time`. */
 class MemoryKv {
   constructor(entries = {}) {
     this.store = new Map(Object.entries(entries));
+    this.expires = new Map();
     this.puts = [];
+    this.time = NOW;
   }
   async get(key) {
+    if ((this.expires.get(key) ?? Infinity) <= this.time) {
+      this.store.delete(key);
+      this.expires.delete(key);
+    }
     return this.store.get(key) ?? null;
   }
   async put(key, value, options) {
     this.puts.push({ key, value, options });
     this.store.set(key, value);
+    if (options?.expirationTtl)
+      this.expires.set(key, this.time + options.expirationTtl * 1000);
+    else this.expires.delete(key);
+  }
+  putsTo(key) {
+    return this.puts.filter((put) => put.key === key).length;
   }
 }
 
@@ -338,6 +354,55 @@ test("a signed ping is acknowledged and a signed release triggers a recompute", 
   const record = JSON.parse(kv.store.get(RECORD_KEY));
   assert.equal(record.version, "5.106.0");
   assert.ok(mock.calls.every(({ url }) => !url.includes("evil.example")));
+  // The webhook restarted the visit gate's 15-minute window.
+  assert.equal(
+    kv.puts.find(({ key }) => key === GATE_KEY).options.expirationTtl,
+    900,
+  );
+
+  // A replay or burst within a minute triggers no second refresh.
+  const replay = context(signed(body), env);
+  assert.equal((await handleGithubRelease(replay, deps(mock))).status, 202);
+  assert.equal(replay.pending.length, 0);
+  kv.time += 61_000;
+  const later = context(signed(body), env);
+  assert.equal((await handleGithubRelease(later, deps(mock))).status, 202);
+  assert.equal(later.pending.length, 1);
+  await Promise.all(later.pending);
+});
+
+test("release actions other than published, edited and deleted are no-ops", async () => {
+  const kv = new MemoryKv();
+  const env = { DOWNLOADS: kv, GITHUB_WEBHOOK_SECRET: SECRET };
+  const mock = upstream(standardReleases());
+  for (const action of ["created", "prereleased", "released", undefined]) {
+    const ctx = context(
+      signed(
+        JSON.stringify({
+          action,
+          repository: { full_name: "atrinik/classic" },
+        }),
+      ),
+      env,
+    );
+    assert.equal((await handleGithubRelease(ctx, deps(mock))).status, 204);
+    assert.equal(ctx.pending.length, 0);
+  }
+  assert.equal(kv.puts.length, 0);
+  for (const action of ["published", "edited", "deleted"]) {
+    kv.time += 61_000;
+    const ctx = context(
+      signed(
+        JSON.stringify({
+          action,
+          repository: { full_name: "atrinik/classic" },
+        }),
+      ),
+      env,
+    );
+    assert.equal((await handleGithubRelease(ctx, deps(mock))).status, 202);
+    assert.equal(ctx.pending.length, 1, action);
+  }
 });
 
 test("selection picks the newest verified release matching the server protocol", async () => {
@@ -379,7 +444,7 @@ test("selection picks the newest verified release matching the server protocol",
     );
   // Protocol lookups are cached by tag and commit.
   assert.equal(
-    kv.store.get(`classic:protocol:v1:${commitFor("v5.107.0")}`),
+    kv.store.get(storageKeys({}).protocol(commitFor("v5.107.0"))),
     "1085",
   );
   assert.ok(!mock.calls.some(({ url }) => url.includes("release-manifest")));
@@ -560,35 +625,34 @@ test("the download endpoint serves, refreshes stale records once, and fails clos
   const body = await first.json();
   assert.equal(body.version, "5.108.0");
 
-  // Fresh: no refresh scheduled.
-  kv.store.delete(LOCK_KEY);
+  assert.equal(kv.putsTo(RECORD_KEY), 1);
+
+  // Within the gate's 15-minute window: served, no refresh scheduled.
+  kv.time = NOW + 14 * 60_000;
   const freshCtx = context(request, { DOWNLOADS: kv });
   assert.equal(
-    (await handleClassicDownload(freshCtx, deps(healthy, NOW + 60_000))).status,
+    (await handleClassicDownload(freshCtx, deps(healthy, kv.time))).status,
     200,
   );
   assert.equal(freshCtx.pending.length, 0);
 
-  // Stale: served immediately, refreshed in the background, lock prevents a stampede.
-  const later = NOW + 16 * 60_000;
+  // After the window: served immediately, refreshed once in the background.
+  kv.time = NOW + 16 * 60_000;
   const staleCtx = context(request, { DOWNLOADS: kv });
-  const stale = await handleClassicDownload(staleCtx, deps(healthy, later));
+  const stale = await handleClassicDownload(staleCtx, deps(healthy, kv.time));
   assert.equal(stale.status, 200);
-  assert.equal((await stale.json()).checkedAt, body.checkedAt);
   assert.equal(staleCtx.pending.length, 1);
-  assert.equal(kv.store.get(LOCK_KEY), "1");
   assert.equal(
-    kv.puts.find(({ key }) => key === LOCK_KEY).options.expirationTtl,
-    120,
+    kv.puts.findLast(({ key }) => key === GATE_KEY).options.expirationTtl,
+    900,
   );
   const secondCtx = context(request, { DOWNLOADS: kv });
-  await handleClassicDownload(secondCtx, deps(healthy, later));
-  assert.equal(secondCtx.pending.length, 0, "locked refresh is not repeated");
+  await handleClassicDownload(secondCtx, deps(healthy, kv.time));
+  assert.equal(secondCtx.pending.length, 0, "gated refresh is not repeated");
   await Promise.all(staleCtx.pending);
-  assert.equal(
-    JSON.parse(kv.store.get(RECORD_KEY)).checkedAt,
-    new Date(later).toISOString(),
-  );
+  // Unchanged content costs no record write and keeps its checkedAt.
+  assert.equal(kv.putsTo(RECORD_KEY), 1);
+  assert.equal(JSON.parse(kv.store.get(RECORD_KEY)).checkedAt, body.checkedAt);
 
   const post = await handleClassicDownload(
     context(new Request(request, { method: "POST" }), { DOWNLOADS: kv }),
@@ -845,4 +909,182 @@ test("upstream fetches stay on allowlisted https hosts", async () => {
   );
   assert.equal(result.outcome, "unavailable");
   assert.ok(!evil.calls.some(({ url }) => url.includes("evil.example")));
+});
+
+test("a day of steady traffic costs about one gate write per 15 minutes", async () => {
+  const fixture = standardReleases();
+  const protocols = { "v5.108.0": 1085, "v5.107.0": 1085, "v5.106.0": 1085 };
+  const kv = new MemoryKv();
+  const request = new Request("https://atrinik.org/api/downloads/classic");
+  for (const failing of [false, true]) {
+    const mock = upstream({
+      ...fixture,
+      protocols,
+      ...(failing ? { directoryStatus: 500 } : {}),
+    });
+    const before = kv.putsTo(GATE_KEY);
+    const start = kv.time;
+    for (let minute = 0; minute < 24 * 60; minute += 1) {
+      kv.time = start + minute * 60_000;
+      const ctx = context(request, { DOWNLOADS: kv });
+      const response = await handleClassicDownload(ctx, deps(mock, kv.time));
+      assert.equal(response.status, 200);
+      await Promise.all(ctx.pending);
+    }
+    // 1,440 visits per day: 96 refresh attempts, kept or confirmed alike.
+    assert.ok(kv.putsTo(GATE_KEY) - before <= 97, String(kv.putsTo(GATE_KEY)));
+    kv.time += 60_000;
+  }
+  // Only the first selection wrote the record; confirmations wrote nothing.
+  assert.equal(kv.putsTo(RECORD_KEY), 1);
+});
+
+test("a transient failure on a newer release never downgrades a matching record", async () => {
+  const newest = makeRelease("5.108.0");
+  const older = makeRelease("5.107.0");
+  const protocols = { "v5.108.0": 1085, "v5.107.0": 1085, "v5.106.0": 1085 };
+  const releases = [newest.release, older.release];
+  const kv = new MemoryKv();
+  const seeded = await refreshDownloadRecord(
+    { DOWNLOADS: kv },
+    deps(
+      upstream({
+        releases,
+        sums: { "v5.108.0": newest.sums, "v5.107.0": older.sums },
+        protocols,
+      }),
+    ),
+  );
+  assert.equal(seeded.record.version, "5.108.0");
+  // SHA256SUMS for 5.108.0 is now unreachable; 5.107.0 still verifies.
+  const result = await refreshDownloadRecord(
+    { DOWNLOADS: kv },
+    deps(upstream({ releases, sums: { "v5.107.0": older.sums }, protocols })),
+  );
+  assert.equal(result.record.version, "5.108.0");
+  assert.equal(kv.putsTo(RECORD_KEY), 1);
+
+  // Once the server moves to a protocol the stored release no longer
+  // matches (here a rollback to 5.105.0), an older matching release wins.
+  const downgraded = await refreshDownloadRecord(
+    { DOWNLOADS: kv },
+    deps(
+      upstream({
+        releases,
+        sums: { "v5.108.0": newest.sums, "v5.107.0": older.sums },
+        protocols: { ...protocols, "v5.105.0": 1084, "v5.107.0": 1084 },
+        server: officialEntry("5.105.0"),
+      }),
+    ),
+  );
+  assert.equal(downgraded.outcome, "updated");
+  assert.equal(downgraded.record.version, "5.107.0");
+  assert.equal(downgraded.record.serverMatch, true);
+});
+
+test("a server protocol change without a matching release is stated, not hidden", async () => {
+  const fixture = standardReleases();
+  const protocols = { "v5.108.0": 1085, "v5.107.0": 1085, "v5.106.0": 1085 };
+  const kv = new MemoryKv();
+  await refreshDownloadRecord(
+    { DOWNLOADS: kv },
+    deps(upstream({ ...fixture, protocols })),
+  );
+  const result = await refreshDownloadRecord(
+    { DOWNLOADS: kv },
+    deps(
+      upstream({
+        ...fixture,
+        protocols: { ...protocols, "v5.109.0": 1090 },
+        server: officialEntry("5.109.0"),
+      }),
+    ),
+  );
+  assert.equal(result.outcome, "updated");
+  assert.equal(result.record.version, "5.108.0");
+  assert.equal(result.record.serverMatch, false);
+  assert.deepEqual(result.record.server, { version: "5.109.0" });
+  assert.ok(isDownloadRecord(result.record));
+  assert.deepEqual(JSON.parse(kv.store.get(RECORD_KEY)), result.record);
+  assert.equal(
+    isDownloadRecord({ ...result.record, serverMatch: true, server: null }),
+    false,
+  );
+});
+
+test("tag commits expire after a day while commit protocols stay cached", async () => {
+  const fixture = standardReleases();
+  const kv = new MemoryKv();
+  await refreshDownloadRecord(
+    { DOWNLOADS: kv },
+    deps(
+      upstream({
+        ...fixture,
+        protocols: { "v5.108.0": 1085, "v5.107.0": 1085, "v5.106.0": 1085 },
+      }),
+    ),
+  );
+  const keys = storageKeys({});
+  const tagPut = kv.puts.find(({ key }) => key === keys.tagCommit("v5.108.0"));
+  assert.equal(tagPut.options.expirationTtl, 86_400);
+  const protocolPut = kv.puts.find(
+    ({ key }) => key === keys.protocol(commitFor("v5.108.0")),
+  );
+  assert.equal(protocolPut.options, undefined);
+});
+
+test("preview deployments use their own key namespace", async () => {
+  const production = storageKeys({ CF_PAGES_BRANCH: "main" });
+  assert.equal(production.record, "classic:download:v1");
+  for (const branch of [undefined, "", "feat/x", "Main", "main "]) {
+    const keys = storageKeys(
+      branch === undefined ? {} : { CF_PAGES_BRANCH: branch },
+    );
+    for (const key of [
+      keys.record,
+      keys.refreshGate,
+      keys.webhookGate,
+      keys.tagCommit("v1.0.0"),
+      keys.protocol("a".repeat(40)),
+    ])
+      assert.ok(key.startsWith("preview:"), key);
+  }
+  // A preview refresh against a shared namespace leaves production untouched.
+  const kv = new MemoryKv({ [production.record]: "production" });
+  const fixture = standardReleases();
+  await refreshDownloadRecord(
+    { DOWNLOADS: kv, CF_PAGES_BRANCH: "feat/x" },
+    deps(
+      upstream({
+        ...fixture,
+        protocols: { "v5.108.0": 1085, "v5.107.0": 1085, "v5.106.0": 1085 },
+      }),
+    ),
+  );
+  assert.equal(kv.store.get(production.record), "production");
+  assert.ok(kv.puts.every(({ key }) => key.startsWith("preview:")));
+});
+
+test("pathological release notes parse in linear time", () => {
+  const bodies = [
+    `### Features\n#${" ".repeat(20_000)}x`,
+    `### Features\n# ${" ".repeat(20_000)}#x`,
+    `### Features\n* ${"[".repeat(20_000)}`,
+    `### Features\n* ${"([a](b)) ".repeat(2_200)}x))`,
+    `### Features\n* ${"<".repeat(20_000)}`,
+    `### Features\n* ${"*".repeat(20_000)}`,
+    `### Features\n* **${"a".repeat(20_000)}`,
+    `### Features\n${"* x\n".repeat(5_000)}`,
+    `### Features\n* ${"[a](".repeat(5_000)}`,
+    "#".repeat(20_000),
+  ];
+  for (const body of bodies) {
+    const start = performance.now();
+    parseReleaseNotes(body);
+    const elapsed = performance.now() - start;
+    assert.ok(
+      elapsed < 50,
+      `${elapsed.toFixed(1)} ms for ${body.slice(0, 30)}`,
+    );
+  }
 });

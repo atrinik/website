@@ -9,7 +9,7 @@ Functions limited to `/api/*` ([#75](https://github.com/atrinik/website/issues/7
 The runtime accepts only signed `atrinik/classic` release webhooks and
 read-only GET requests, and the pages carry one self-hosted module script. It
 emits no application cookies, analytics, tracking, or third-party embeds. Its
-only secrets are the webhook secret and an optional read-only GitHub token,
+only secrets are the webhook secret and a required read-only GitHub token,
 held in Cloudflare. Cloudflare
 is a separate provider boundary: it may inject bot/security JavaScript or a
 dashboard-managed Web Analytics beacon, set strictly necessary cookies, or

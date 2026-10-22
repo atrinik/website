@@ -124,7 +124,8 @@ runtime (`functions/` routes, `server/` logic) picks the newest published,
 immutable Classic release whose Windows ZIP and Linux AppImage checksums match
 GitHub's digests and whose protocol matches the official server, stores it in
 Cloudflare KV, and refreshes it on a signed release webhook or when it is more
-than 15 minutes old. A failed lookup never replaces a good record. The
+than 15 minutes old. A failed lookup never replaces a good record or
+downgrades a release that still matches the server. The
 downloads page works without JavaScript through a link to the latest Classic
 release; the page module adds direct platform buttons, checksums, and
 release-note highlights. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)

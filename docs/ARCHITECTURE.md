@@ -41,15 +41,20 @@ upstreams, an in-memory KV namespace, and a fake `waitUntil`:
 - `POST /api/github/release` requires `GITHUB_WEBHOOK_SECRET`, a well-formed
   `X-Hub-Signature-256`, and a body of at most 1 MiB (declared and actually
   read). The HMAC-SHA256 is verified with Web Crypto over the raw bytes before
-  parsing. A signed `ping` returns 204; a signed `release` event for exactly
-  `atrinik/classic` returns 202 and schedules a recompute. The payload is only
-  a cue: its URLs and digests are never used. Everything else is a bodiless
-  4xx.
+  parsing. A signed `ping` returns 204. A signed `release` event for exactly
+  `atrinik/classic` with action `published`, `edited`, or `deleted` returns
+  202 and schedules a recompute; other release actions are 204 no-ops. A
+  60-second webhook gate limits bursts and replays to one recompute per
+  minute, and each accepted webhook restarts the visit gate below. The payload
+  is only a cue: its URLs and digests are never used. Everything else is a
+  bodiless 4xx.
 - `GET /api/downloads/classic` returns the stored record with
-  `Cache-Control: public, max-age=60`. A record older than 15 minutes is still
-  served while a background refresh runs behind a 120-second KV lock. With no
-  record, one synchronous refresh is attempted; failure returns 503
-  `{ "available": false }` with `no-store`.
+  `Cache-Control: public, max-age=60`. A refresh gate key with a 15-minute
+  `expirationTtl` is the staleness window: a request that finds the gate
+  absent writes it and starts one background refresh, whatever that refresh's
+  outcome; every other request just reads. With no record, the request that
+  takes the gate attempts one synchronous refresh; failure, or a held gate,
+  returns 503 `{ "available": false }` with `no-store`.
 - `GET /api/status` reads `https://classic.meta.atrinik.org/index.json`
   (256 KiB, 5 s), caches the result for 60 s (30 s for failures) in memory and
   the Cache API, and returns only `available`, `generatedAt`, and the official
@@ -68,7 +73,8 @@ A recompute selects a release as follows, failing closed at every step:
    `OFFICIAL_SERVER_HOST`. Its protocol is the integer `protocol_version` in
    `protocol/schema/game-commands.json` at the commit of tag `v<version>`,
    resolved through the GitHub API (annotated tags are dereferenced). Tag
-   commits and per-commit protocols are cached permanently in KV.
+   commits are cached in KV for a day; per-commit protocols are cached
+   permanently because commit contents cannot change.
 2. `GET /repos/atrinik/classic/releases?per_page=10` is walked newest first,
    with at most ten protocol lookups. A release qualifies only when it is not a
    draft or prerelease, GitHub reports it `immutable`, its tag is `vX.Y.Z`, its
@@ -79,16 +85,27 @@ A recompute selects a release as follows, failing closed at every step:
    `SHA256SUMS` (at most 64 KiB) must hash to its own API digest, parse
    strictly, and list both client digests exactly as the API reports them.
    The 2.7 MB `release-manifest.json` is never downloaded.
-3. If the server is unknown or unreachable, or no recent release matches, the
-   stored record is kept unchanged. Only when nothing is stored does the
-   runtime fall back to the newest fully verified release, marked
-   `serverMatch: false` with `server: null`.
+3. While the stored release still matches the server's protocol, the walk
+   stops at the stored version: a transient failure on a newer release can
+   never regress the download to an older one. A downgrade happens only when
+   the server's protocol no longer matches the stored release.
+4. If the server is unknown or unreachable, or the release list fails, the
+   stored record is kept unchanged. If the server is known but no recent
+   release matches it, the stored release is kept and restated with
+   `serverMatch: false` and the server's version, so the page warns instead of
+   claiming compatibility. Only when nothing is stored does the runtime fall
+   back to the newest fully verified release, marked `serverMatch: false`
+   (with `server: null` when the server is unknown).
+5. A record is written only when its content, ignoring `checkedAt`, differs
+   from the stored one; `checkedAt` is when the current content was selected.
 
 Release notes are reduced to at most eight plain-text `feature`, `fix`, or
 `performance` highlights (each at most 200 characters) from the
 semantic-release `Features`, `Bug Fixes`, and `Performance Improvements`
 sections; links, emphasis, HTML, control characters, and trailing issue or
-commit references are removed. The record (KV key `classic:download:v1`,
+commit references are removed. Each line is cut to 1,000 characters and
+trimmed before any pattern runs, and every pattern is linear or bounded, so a
+hostile body cannot stall parsing. The record (KV key `classic:download:v1`,
 `schemaVersion` 1) binds version, tag, commit, publication time, release page,
 protocol, server match, both platform files with size and SHA-256, every
 release file, the notes, and `checkedAt`. `server/record.js` validates this
@@ -97,8 +114,24 @@ the browser.
 
 Remote fetches use `https` only, with a 5-second timeout, bounded reads, and
 manual redirects restricted to `api.github.com`, `raw.githubusercontent.com`,
-`classic.meta.atrinik.org`, and GitHub's release download hosts. The optional
-`GITHUB_TOKEN` is sent only to `api.github.com`.
+`classic.meta.atrinik.org`, and GitHub's release download hosts. The required
+`GITHUB_TOKEN` is sent only to `api.github.com`; without it the runtime still
+works, but at GitHub's unauthenticated limit of 60 requests per hour shared by
+every Worker on the same egress address.
+
+KV keys are namespaced by environment: production (`CF_PAGES_BRANCH` is
+`main`) uses the bare keys and every other branch prefixes them with
+`preview:`, so preview code cannot overwrite production keys even if the
+namespaces were shared.
+
+KV write budget (the free plan allows 1,000 writes a day): in steady state the
+refresh gate is written at most once per 15 minutes, about 96 writes a day,
+regardless of traffic or upstream failures. Records are written only on an
+actual change (a new release or a server change), webhooks add at most one gate
+write each (deduplicated to one a minute), tag-commit cache entries are
+rewritten about once a day per looked-up tag, and protocol entries once per
+new commit. KV is eventually consistent, so concurrent locations may
+occasionally both take a gate; that adds a few writes, not a multiple.
 
 The browser module (`src/scripts/classic-live.ts`, bundled by Astro to one
 hashed file under `/assets/`) fetches only `/api/downloads/classic` and
