@@ -14,6 +14,7 @@ import {
   parseChecksums,
   parseReleaseNotes,
   refreshDownloadRecord,
+  environmentFor,
   storageKeys,
 } from "../server/releases.js";
 import { parseDirectory } from "../server/status.js";
@@ -26,7 +27,8 @@ const SECRET = "test-webhook-secret";
 const sha = (text) => createHash("sha256").update(text).digest("hex");
 const commitFor = (tag) => createHash("sha1").update(tag).digest("hex");
 
-// Tests run without CF_PAGES_BRANCH, so they use the preview key namespace.
+// Tests use pages.dev request URLs and env without ATRINIK_PRODUCTION, so they
+// read and write the preview key namespace.
 const RECORD_KEY = storageKeys({}).record;
 const GATE_KEY = storageKeys({}).refreshGate;
 
@@ -222,11 +224,14 @@ function signed(body, { event = "release", signature, length } = {}) {
       `sha256=${createHmac("sha256", SECRET).update(body).digest("hex")}`,
   };
   if (length !== undefined) headers["content-length"] = String(length);
-  return new Request("https://atrinik.org/api/github/release", {
-    method: "POST",
-    headers,
-    body,
-  });
+  return new Request(
+    "https://preview.atrinik-website.pages.dev/api/github/release",
+    {
+      method: "POST",
+      headers,
+      body,
+    },
+  );
 }
 
 test("webhook signatures are verified over the raw body", async () => {
@@ -256,10 +261,13 @@ test("webhook rejects unsigned, mis-signed, oversized and foreign requests", asy
   const mock = upstream(standardReleases());
   const body = JSON.stringify({ repository: { full_name: "atrinik/classic" } });
 
-  const missing = new Request("https://atrinik.org/api/github/release", {
-    method: "POST",
-    body,
-  });
+  const missing = new Request(
+    "https://preview.atrinik-website.pages.dev/api/github/release",
+    {
+      method: "POST",
+      body,
+    },
+  );
   assert.equal(
     (await handleGithubRelease(context(missing, env), deps(mock))).status,
     401,
@@ -275,21 +283,24 @@ test("webhook rejects unsigned, mis-signed, oversized and foreign requests", asy
     (await handleGithubRelease(context(declaredLarge, env), deps(mock))).status,
     413,
   );
-  const actualLarge = new Request("https://atrinik.org/api/github/release", {
-    method: "POST",
-    headers: {
-      "x-github-event": "release",
-      "x-hub-signature-256": `sha256=${"0".repeat(64)}`,
-    },
-    body: new ReadableStream({
-      start(controller) {
-        controller.enqueue(new Uint8Array(WEBHOOK_BODY_LIMIT));
-        controller.enqueue(new Uint8Array(1));
-        controller.close();
+  const actualLarge = new Request(
+    "https://preview.atrinik-website.pages.dev/api/github/release",
+    {
+      method: "POST",
+      headers: {
+        "x-github-event": "release",
+        "x-hub-signature-256": `sha256=${"0".repeat(64)}`,
       },
-    }),
-    duplex: "half",
-  });
+      body: new ReadableStream({
+        start(controller) {
+          controller.enqueue(new Uint8Array(WEBHOOK_BODY_LIMIT));
+          controller.enqueue(new Uint8Array(1));
+          controller.close();
+        },
+      }),
+      duplex: "half",
+    },
+  );
   assert.equal(
     (await handleGithubRelease(context(actualLarge, env), deps(mock))).status,
     413,
@@ -318,7 +329,12 @@ test("webhook rejects unsigned, mis-signed, oversized and foreign requests", asy
   );
   assert.equal(unconfigured.status, 503);
   const get = await handleGithubRelease(
-    context(new Request("https://atrinik.org/api/github/release"), env),
+    context(
+      new Request(
+        "https://preview.atrinik-website.pages.dev/api/github/release",
+      ),
+      env,
+    ),
     deps(mock),
   );
   assert.equal(get.status, 405);
@@ -586,7 +602,9 @@ test("without a stored record an unknown server falls back to the newest verifie
 test("the download endpoint serves, refreshes stale records once, and fails closed", async () => {
   const fixture = standardReleases();
   const protocols = { "v5.108.0": 1085, "v5.107.0": 1085, "v5.106.0": 1085 };
-  const request = new Request("https://atrinik.org/api/downloads/classic");
+  const request = new Request(
+    "https://preview.atrinik-website.pages.dev/api/downloads/classic",
+  );
 
   // Empty store with a failing upstream: one synchronous attempt, then 503.
   const emptyKv = new MemoryKv();
@@ -707,18 +725,28 @@ test("records are validated when read from storage", async () => {
       releasesStatus: 500,
     });
     const response = await handleClassicDownload(
-      context(new Request("https://atrinik.org/api/downloads/classic"), {
-        DOWNLOADS: kv,
-      }),
+      context(
+        new Request(
+          "https://preview.atrinik-website.pages.dev/api/downloads/classic",
+        ),
+        {
+          DOWNLOADS: kv,
+        },
+      ),
       deps(failing),
     );
     assert.equal(response.status, 503);
   }
   const corrupt = new MemoryKv({ [RECORD_KEY]: "{not json" });
   const response = await handleClassicDownload(
-    context(new Request("https://atrinik.org/api/downloads/classic"), {
-      DOWNLOADS: corrupt,
-    }),
+    context(
+      new Request(
+        "https://preview.atrinik-website.pages.dev/api/downloads/classic",
+      ),
+      {
+        DOWNLOADS: corrupt,
+      },
+    ),
     deps(
       upstream({
         ...fixture,
@@ -775,7 +803,9 @@ test("release notes become bounded plain text", () => {
 });
 
 test("status exposes only whitelisted official-server fields", async () => {
-  const request = new Request("https://atrinik.org/api/status");
+  const request = new Request(
+    "https://preview.atrinik-website.pages.dev/api/status",
+  );
   const mock = upstream({ releases: [], server: officialEntry("5.106.0") });
   const cache = memoryStatusCache();
   const response = await handleStatus(context(request, {}), {
@@ -813,7 +843,9 @@ test("status exposes only whitelisted official-server fields", async () => {
 });
 
 test("status is honest when the directory is unavailable, stale, or malformed", async () => {
-  const request = new Request("https://atrinik.org/api/status");
+  const request = new Request(
+    "https://preview.atrinik-website.pages.dev/api/status",
+  );
   const down = await handleStatus(context(request, {}), {
     ...deps(upstream({ releases: [], directoryStatus: 503 })),
     cache: memoryStatusCache(),
@@ -915,7 +947,9 @@ test("a day of steady traffic costs about one gate write per 15 minutes", async 
   const fixture = standardReleases();
   const protocols = { "v5.108.0": 1085, "v5.107.0": 1085, "v5.106.0": 1085 };
   const kv = new MemoryKv();
-  const request = new Request("https://atrinik.org/api/downloads/classic");
+  const request = new Request(
+    "https://preview.atrinik-website.pages.dev/api/downloads/classic",
+  );
   for (const failing of [false, true]) {
     const mock = upstream({
       ...fixture,
@@ -1034,11 +1068,29 @@ test("tag commits expire after a day while commit protocols stay cached", async 
 });
 
 test("preview deployments use their own key namespace", async () => {
-  const production = storageKeys({ CF_PAGES_BRANCH: "main" });
+  const production = storageKeys({ ATRINIK_PRODUCTION: true });
   assert.equal(production.record, "classic:download:v1");
-  for (const branch of [undefined, "", "feat/x", "Main", "main "]) {
+  const request = (url) => new Request(url);
+  assert.equal(
+    environmentFor({}, request("https://atrinik.org/api/status"))
+      .ATRINIK_PRODUCTION,
+    true,
+  );
+  for (const url of [
+    "https://www.atrinik.org/api/status",
+    "https://feat-x.atrinik-website.pages.dev/api/status",
+    "https://atrinik.org.evil.example/api/status",
+    "http://localhost:8788/api/status",
+  ])
+    assert.equal(
+      environmentFor({ ATRINIK_PRODUCTION: true }, request(url))
+        .ATRINIK_PRODUCTION,
+      false,
+      url,
+    );
+  for (const flag of [undefined, false, "true", 1]) {
     const keys = storageKeys(
-      branch === undefined ? {} : { CF_PAGES_BRANCH: branch },
+      flag === undefined ? {} : { ATRINIK_PRODUCTION: flag },
     );
     for (const key of [
       keys.record,
@@ -1053,7 +1105,7 @@ test("preview deployments use their own key namespace", async () => {
   const kv = new MemoryKv({ [production.record]: "production" });
   const fixture = standardReleases();
   await refreshDownloadRecord(
-    { DOWNLOADS: kv, CF_PAGES_BRANCH: "feat/x" },
+    { DOWNLOADS: kv, ATRINIK_PRODUCTION: false },
     deps(
       upstream({
         ...fixture,

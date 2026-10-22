@@ -16,6 +16,7 @@ import {
   acquireGate,
   readRecord,
   refreshDownloadRecord,
+  environmentFor,
   storageKeys,
 } from "./releases.js";
 import { fetchDirectory, statusFromDirectory } from "./status.js";
@@ -119,7 +120,8 @@ export async function verifyGithubSignature(secret, header, body) {
  * @param {Deps} [deps]
  */
 export async function handleGithubRelease(context, deps = defaultDeps()) {
-  const { request, env } = context;
+  const { request } = context;
+  const env = environmentFor(context.env, request);
   if (request.method !== "POST") return methodNotAllowed("POST");
   const secret = env.GITHUB_WEBHOOK_SECRET;
   if (typeof secret !== "string" || secret.length === 0)
@@ -180,7 +182,8 @@ export async function handleGithubRelease(context, deps = defaultDeps()) {
  * @param {Deps} [deps]
  */
 export async function handleClassicDownload(context, deps = defaultDeps()) {
-  const { request, env } = context;
+  const { request } = context;
+  const env = environmentFor(context.env, request);
   if (request.method !== "GET") return methodNotAllowed("GET");
   if (!hasStore(env)) return unavailable();
   const record = await readRecord(env);

@@ -119,10 +119,11 @@ manual redirects restricted to `api.github.com`, `raw.githubusercontent.com`,
 works, but at GitHub's unauthenticated limit of 60 requests per hour shared by
 every Worker on the same egress address.
 
-KV keys are namespaced by environment: production (`CF_PAGES_BRANCH` is
-`main`) uses the bare keys and every other branch prefixes them with
-`preview:`, so preview code cannot overwrite production keys even if the
-namespaces were shared.
+KV keys are namespaced by environment: requests to `atrinik.org` use the bare
+production keys and every other hostname, including `pages.dev` previews,
+prefixes them with `preview:`, so preview code cannot overwrite production keys
+even if the namespaces were shared. The runtime derives this from the request
+hostname because Pages exposes `CF_PAGES_BRANCH` only at build time.
 
 KV write budget (the free plan allows 1,000 writes a day): in steady state the
 refresh gate is written at most once per 15 minutes, about 96 writes a day,

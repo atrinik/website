@@ -62,11 +62,30 @@ const digestPattern = /^sha256:([0-9a-f]{64})$/u;
  *   GITHUB_WEBHOOK_SECRET?: string,
  *   GITHUB_TOKEN?: string,
  *   OFFICIAL_SERVER_HOST?: string,
- *   CF_PAGES_BRANCH?: string,
+ *   ATRINIK_PRODUCTION?: boolean,
  * }} Env
  * @typedef {{ fetch: FetchLike, now: () => number }} Deps
  * @typedef {{ tag: string, version: string, publishedAt: string, body: string, files: ReleaseFile[], windows: ReleaseFile & { sha256: string }, linux: ReleaseFile & { sha256: string }, checksums: ReleaseFile & { sha256: string } }} Candidate
  */
+
+/** The only hostname whose requests read and write production KV keys. */
+export const PRODUCTION_HOSTNAME = "atrinik.org";
+
+/**
+ * Marks the environment from the request hostname. Pages exposes the branch
+ * only at build time, so the runtime cannot rely on CF_PAGES_BRANCH; every
+ * other hostname, including pages.dev previews, uses the preview keys. The
+ * flag is always recomputed, so a configured variable cannot set it.
+ * @param {Env} env
+ * @param {Request} request
+ * @returns {Env}
+ */
+export function environmentFor(env, request) {
+  return {
+    ...env,
+    ATRINIK_PRODUCTION: new URL(request.url).hostname === PRODUCTION_HOSTNAME,
+  };
+}
 
 /**
  * KV keys, namespaced so preview deployments can never touch production
@@ -74,7 +93,7 @@ const digestPattern = /^sha256:([0-9a-f]{64})$/u;
  * @param {Env} env
  */
 export function storageKeys(env) {
-  const prefix = env.CF_PAGES_BRANCH === "main" ? "" : "preview:";
+  const prefix = env.ATRINIK_PRODUCTION === true ? "" : "preview:";
   return {
     record: `${prefix}classic:download:v1`,
     refreshGate: `${prefix}classic:download:refresh-gate:v1`,
