@@ -4,9 +4,9 @@
 
 The four WebP images under `public/media/` are MIT-licensed derivatives of
 concept artwork by Zoey Rose, contributed by her under the repository's MIT
-terms. Credit: **Zoey Rose**. Exact source coordinates, source and published digests,
-dimensions, transformations, alternative text, and notices are recorded in
-`src/data/media.json`.
+terms. Credit: **Zoey Rose**. Exact source coordinates, source and published
+digests, dimensions, transformations, alternative text, and notices are recorded
+in `src/data/media.json`.
 
 These images are atmospheric concept artwork. They are not gameplay
 screenshots, authoritative depictions of world geography, or promises of

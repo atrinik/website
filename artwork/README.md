@@ -3,9 +3,9 @@
 These four original PNG files are concept artwork by Zoey Rose, contributed on
 2026-08-08 under the repository's MIT terms.
 
-The credited author is **Zoey Rose**. The images
-are atmospheric concept artwork, not gameplay screenshots, release promises,
-maps, or authoritative depictions of world geography.
+The credited author is **Zoey Rose**. The images are atmospheric concept
+artwork, not gameplay screenshots, release promises, maps, or authoritative
+depictions of world geography.
 
 | File                                       | SHA-256                                                            |
 | ------------------------------------------ | ------------------------------------------------------------------ |
