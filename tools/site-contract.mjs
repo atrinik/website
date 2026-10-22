@@ -873,11 +873,7 @@ export function validatePageMetadata(
   const twitterImageAlt = metadataContent(html, "name", "twitter:image:alt");
   const imageUrl = new URL(ogImage);
   const expectedImage = allowedMedia?.get(imageUrl.pathname);
-  const expectedImageAlt = expectedImage
-    ? expectedImage.author.includes("OpenAI image generation")
-      ? `OpenAI-generated website concept artwork: ${expectedImage.alt}`
-      : expectedImage.alt
-    : null;
+  const expectedImageAlt = expectedImage ? expectedImage.alt : null;
   if (
     ogType !== "website" ||
     ogTitle !== title ||
@@ -1201,4 +1197,20 @@ export function validateDependencyPolicy(packageManifest, dependencyPolicy) {
     JSON.stringify(manifestInstallScripts)
   )
     throw new Error("install-script allow/deny policy drifted");
+}
+
+// Public copy, captions, alt text, credits, and metadata never describe the
+// tools used to make the software or media; those records stay internal.
+const toolingTermPattern =
+  /\b(?:codex|claude|anthropic|openai|chatgpt|agentic|agents?|agent-(?:driven|written|assisted)|generative|ai-(?:generated|assisted))\b/iu;
+const aiAbbreviationPattern = /\bA\.?I\b/u;
+
+export function validatePublicCopy(text, label = "public output") {
+  if (typeof text !== "string") throw new Error("invalid public copy input");
+  const match =
+    toolingTermPattern.exec(text) ?? aiAbbreviationPattern.exec(text);
+  if (match)
+    throw new Error(
+      `${label} mentions development tooling in public copy: ${match[0]}`,
+    );
 }

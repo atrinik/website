@@ -60,9 +60,7 @@ function socialImage(id: string): SocialImageMetadata {
     url: new URL(record.publicPath, site.canonicalOrigin).href,
     width: record.width,
     height: record.height,
-    alt: record.author.includes("OpenAI image generation")
-      ? `OpenAI-generated website concept artwork: ${record.alt}`
-      : record.alt,
+    alt: record.alt,
   };
 }
 

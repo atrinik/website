@@ -3,9 +3,9 @@ import Base from "../layouts/Base.astro";
 import { indexablePage } from "../lib/metadata";
 
 const metadata = indexablePage({
-  title: "About Atrinik: Human imagination and open development",
+  title: "About Atrinik: A shared world, developed in the open",
   description:
-    "Atrinik began in 2009 as a human-developed open-source world. Learn how human creative direction, agentic software work, and direct contributions shape it today.",
+    "Atrinik began in 2009 as an open-source online world. Learn about its history, its two implementations, and how creators and contributors shape it today.",
   canonicalPath: "/about/",
   socialImageId: "atrinik-then",
 });
@@ -14,19 +14,17 @@ const metadata = indexablePage({
 <Base metadata={metadata}>
   <header class="page-hero">
     <p class="eyebrow">About Atrinik</p>
-    <h1 class="page-title">Shared imagination. Agentic engineering.</h1>
+    <h1 class="page-title">Shared imagination. Open development.</h1>
     <p class="page-lede">
-      Atrinik's creators shape its game world with whatever tools serve the
-      work. Codex-driven workflows primarily build and maintain the software
-      that brings that craft to life, and direct human code contributions are
-      welcome.
+      Atrinik's creators shape its game world, and its software is developed in
+      the open, where anyone can follow the work and contribute.
     </p>
   </header>
 
   <section class="section" aria-labelledby="history-heading">
     <div class="section-heading">
       <p class="eyebrow">From 2009 to today</p>
-      <h2 id="history-heading">A human-developed beginning</h2>
+      <h2 id="history-heading">Where it began</h2>
       <p>
         Atrinik began in 2009 under founder and original lead{" "}
         <a href="https://zoeysr.com/">Zoey Rose</a>. The 2011 releases were a
@@ -64,8 +62,7 @@ const metadata = indexablePage({
         <h3>Creative direction</h3>
         <p>
           Atrinik's maps, quests, dialogue, lore, art, animation, music, and
-          sound are shaped by its creators, who may use any tools that serve the
-          work, including AI tools, and who review what goes into the game.
+          sound are shaped by its creators, who review what goes into the game.
           Upstream work keeps its own author, source, license, and attribution;
           it is not automatically Atrinik-original.
         </p>
@@ -97,16 +94,21 @@ const metadata = indexablePage({
         </div>
         <h3>Classic</h3>
         <p>
-          The current playable line is the maintained GPL C lineage of the
-          human-developed project, actively coordinated in the unified{" "}
-          <code>atrinik/classic</code> repository. Its client, server, editor,
-          libatrinik, and protocol share one version, release notes stream, and
-          coordinated artifact set under GPL-2.0-or-later. Current code
-          maintenance primarily uses Codex-driven workflows.
+          The current playable line is Atrinik's maintained GPL C lineage,
+          actively coordinated in the unified <code>atrinik/classic</code>{" "}
+          repository. Its client, server, editor, libatrinik, and protocol share
+          one version, release notes stream, and coordinated artifact set under
+          GPL-2.0-or-later, with frequent 5.x releases.
+        </p>
+        <p>
+          The client is a portable Windows download and, since October 2026, a
+          Linux AppImage for x86_64 systems with glibc 2.39 or newer, such as
+          Ubuntu 24.04 and later. It renders on the GPU through Direct3D 12 on
+          Windows and Vulkan on Linux. There is no macOS client.
         </p>
         <ul class="path-details">
           <li>Current playable implementation</li>
-          <li>One repository and supported 5.x release line</li>
+          <li>Windows and Linux client downloads</li>
           <li>GPL-2.0-or-later software</li>
         </ul>
         <div class="card-actions">
@@ -123,20 +125,28 @@ const metadata = indexablePage({
         </div>
         <h3>Next generation</h3>
         <p>
-          The replacement is a Codex-driven MIT reimplementation and
-          improvement: a Go server, Rust client, editor, renderer and content
-          toolkit, plus a new Protobuf protocol. Its repositories use
-          evidence-gated provenance: independent implementation is the default,
-          while an exact, separable historical Classic contribution may be
-          reused at an MIT destination only when a complete-history audit proves
-          it fits one applicable grant's past-contribution and sole-authorship
-          scope. The Classic repository remains GPL-distributed. These
-          foundations do not yet form a complete game release or replace the
-          playable Classic line.
+          The replacement is an MIT reimplementation and improvement: a Go
+          server, a Rust client, editor, and shared renderer, a content toolkit,
+          and a new Protobuf protocol. Its repositories use evidence-gated
+          provenance: independent implementation is the default, while an exact,
+          separable historical Classic contribution may be reused at an MIT
+          destination only when a complete-history audit proves it fits one
+          applicable grant's past-contribution and sole-authorship scope. The
+          Classic repository remains GPL-distributed. These foundations do not
+          yet form a complete game release or replace the playable Classic line.
+        </p>
+        <p>
+          <strong>
+            <time datetime="2026-10">October 2026</time> status:
+          </strong>{" "}
+          the client, server, protocol, renderer, editor, and content toolkit
+          each publish independent releases, and a new Go pathfinding and
+          navigation service is in early development without a release yet.
+          These are tested foundations, not yet a playable game.
         </p>
         <ul class="path-details">
-          <li>MIT Go and Rust implementation</li>
-          <li>MIT-licensed software</li>
+          <li>MIT-licensed Go and Rust foundations</li>
+          <li>Independently released components</li>
           <li>Not yet available as a complete game</li>
         </ul>
         <div class="card-actions">
@@ -153,39 +163,37 @@ const metadata = indexablePage({
 
   <section class="section" aria-labelledby="open-development-heading">
     <div class="section-heading">
-      <p class="eyebrow">The current development model</p>
+      <p class="eyebrow">How the project works</p>
       <h2 id="open-development-heading">
-        Agent-driven, human-directed, open to everyone
+        Creator-directed, developed in the open
       </h2>
     </div>
 
     <div class="detail-grid">
       <article class="detail-card">
-        <h3>Software workflows</h3>
-        <p>
-          Software development primarily uses Codex-driven agents under
-          maintainer direction, with documented ownership, provenance review,
-          tests, and repository validation. This describes the main workflow; it
-          is not a claim that every line or commit was written by an agent.
-        </p>
-      </article>
-
-      <article class="detail-card">
         <h3>Creator-directed world</h3>
         <p>
           People set the creative direction for maps, archetypes, stories,
-          dialogue, graphics, animation, music, and sound effects, and choose
-          the tools for the work, AI tools included. Every asset keeps its
-          credit and license record.
+          dialogue, graphics, animation, music, and sound effects. Every asset
+          keeps its credit and license record.
         </p>
       </article>
 
       <article class="detail-card">
-        <h3>Human code is welcome</h3>
+        <h3>Open development</h3>
         <p>
-          People can contribute code directly. Human-written and agent-written
-          changes pass the same review, evidence-gated provenance, licensing,
-          and validation gates; contributors do not need to use an agent.
+          Source, plans, issues, and release notes live in public GitHub
+          repositories. Changes go through documented ownership, provenance
+          review, tests, and repository validation before they ship.
+        </p>
+      </article>
+
+      <article class="detail-card">
+        <h3>Contributions are welcome</h3>
+        <p>
+          Anyone can report a problem, suggest an idea, or contribute code or
+          content. Every change passes the same review, evidence-gated
+          provenance, licensing, and validation checks.
         </p>
       </article>
     </div>
