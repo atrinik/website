@@ -68,8 +68,8 @@ source, previews, or logs. Configure **Production** and **Preview** separately.
    namespace** and bind the variable name `DOWNLOADS` to the production
    namespace for Production and to the preview namespace for Preview. The
    runtime also prefixes every key with `preview:` unless the request host is
-   `atrinik.org`, as a second barrier. Without the binding the download API answers 503 and the page
-   keeps its static fallback.
+   `atrinik.org`, as a second barrier. Without the binding the download API
+   answers 503 and the page keeps its static fallback.
 2. **Variable.** Under **Settings → Variables and Secrets**, add the plain-text
    variable `OFFICIAL_SERVER_HOST` = `game.atrinik.com` for both environments.
    It names the server-directory entry whose version and protocol select the

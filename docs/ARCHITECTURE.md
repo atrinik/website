@@ -138,6 +138,10 @@ location that serves a visit in that window can write it: the real cost is up to
 one gate write per active location per window. That is well inside the budget
 at this site's traffic, but it is not a hard bound of 96.
 
+While the official server is missing from the directory, a stored record is
+kept as it is without reading the release list, so a release deleted during
+such an outage stays offered (with broken links) until the server returns.
+
 A failed refresh still holds the gate, so the next automatic attempt comes 15
 minutes later; with no stored record the API answers 503 (and the page keeps its
 static fallback) for up to that long. A webhook redelivery bypasses the gate.

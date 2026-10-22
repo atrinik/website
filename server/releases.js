@@ -578,7 +578,11 @@ export async function refreshDownloadRecord(env, deps) {
     storedRaw = await env.DOWNLOADS.get(storageKeys(env).record);
   } catch {
     // A failed read is not an empty store: never overwrite blindly.
-    return { outcome: "kept", record: null, reason: "store-unavailable" };
+    return {
+      outcome: "unavailable",
+      record: null,
+      reason: "store-unavailable",
+    };
   }
   const stored = parseRecord(storedRaw);
   const keep = (/** @type {string} */ reason) =>
@@ -613,6 +617,9 @@ export async function refreshDownloadRecord(env, deps) {
     return keep("releases-unavailable");
   }
   if (!Array.isArray(releases)) return keep("releases-invalid");
+  // GitHub lists releases by creation date; walk them newest version first so
+  // a late backport or patch release never shadows a higher version.
+  releases = newestVersionFirst(releases);
 
   if (official === null)
     // Nothing is stored and the server is unknown: offer the newest fully
@@ -670,6 +677,27 @@ export async function refreshDownloadRecord(env, deps) {
   return result.outcome === "updated"
     ? result
     : { ...result, reason: "no-newer-matching-release" };
+}
+
+/**
+ * @param {unknown[]} releases
+ * @returns {unknown[]}
+ */
+function newestVersionFirst(releases) {
+  const version = (/** @type {unknown} */ release) =>
+    releaseCandidate(release)?.version ?? null;
+  return releases
+    .map((release) => ({ release, version: version(release) }))
+    .sort((left, right) =>
+      left.version === null
+        ? right.version === null
+          ? 0
+          : 1
+        : right.version === null
+          ? -1
+          : compareVersions(right.version, left.version),
+    )
+    .map(({ release }) => release);
 }
 
 /**

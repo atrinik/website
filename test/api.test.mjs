@@ -135,6 +135,7 @@ function upstream({
   server = officialEntry("5.106.0"),
   directoryStatus = 200,
   releasesStatus = 200,
+  tagReleases = {},
 }) {
   const calls = [];
   const fetchImpl = async (input, init = {}) => {
@@ -148,6 +149,14 @@ function upstream({
       return json(directory(server ? [server] : []));
     }
     if (url.hostname === "api.github.com") {
+      const single =
+        /^\/repos\/atrinik\/classic\/releases\/tags\/(v[0-9.]+)$/u.exec(
+          url.pathname,
+        );
+      if (single && tagReleases[single[1]] !== undefined) {
+        const { status = 200, body } = tagReleases[single[1]];
+        return status === 200 ? json(body) : new Response("", { status });
+      }
       if (url.pathname === "/repos/atrinik/classic/releases") {
         if (releasesStatus !== 200)
           return new Response("", { status: releasesStatus });
@@ -1089,6 +1098,55 @@ test("selection does not assume the list is ordered by version", async () => {
   assert.equal(result.record.version, "5.108.1");
 });
 
+test("a stored release outside the list is checked by tag", async () => {
+  const stored = makeRelease("5.108.0");
+  const older = makeRelease("5.107.0");
+  const protocols = { "v5.108.0": 1085, "v5.107.0": 1085, "v5.106.0": 1085 };
+  const sums = { "v5.108.0": stored.sums, "v5.107.0": older.sums };
+  const seed = async () => {
+    const kv = new MemoryKv();
+    await refreshDownloadRecord(
+      { DOWNLOADS: kv },
+      deps(upstream({ releases: [stored.release], sums, protocols })),
+    );
+    return kv;
+  };
+  const tagUrl =
+    "https://api.github.com/repos/atrinik/classic/releases/tags/v5.108.0";
+  for (const [tagRelease, expected] of [
+    [{ body: stored.release }, "5.108.0"],
+    [{ status: 500 }, "5.108.0"],
+    [{ status: 404 }, "5.107.0"],
+  ]) {
+    const kv = await seed();
+    const mock = upstream({
+      releases: [older.release],
+      sums,
+      protocols,
+      tagReleases: { "v5.108.0": tagRelease },
+    });
+    const result = await refreshDownloadRecord({ DOWNLOADS: kv }, deps(mock));
+    assert.equal(result.record.version, expected, JSON.stringify(tagRelease));
+    assert.ok(mock.calls.some(({ url }) => url === tagUrl));
+  }
+});
+
+test("without a floor the highest matching version wins", async () => {
+  const patch = makeRelease("5.108.1");
+  const backport = makeRelease("5.107.1");
+  const result = await refreshDownloadRecord(
+    { DOWNLOADS: new MemoryKv() },
+    deps(
+      upstream({
+        releases: [backport.release, patch.release],
+        sums: { "v5.108.1": patch.sums, "v5.107.1": backport.sums },
+        protocols: { "v5.108.1": 1085, "v5.107.1": 1085, "v5.106.0": 1085 },
+      }),
+    ),
+  );
+  assert.equal(result.record.version, "5.108.1");
+});
+
 test("a failed store read never overwrites the stored record", async () => {
   const fixture = standardReleases();
   const kv = new MemoryKv({ [RECORD_KEY]: "kept" });
@@ -1106,6 +1164,7 @@ test("a failed store read never overwrites the stored record", async () => {
     ),
   );
   assert.equal(result.reason, "store-unavailable");
+  assert.equal(result.outcome, "unavailable");
   assert.equal(kv.puts.length, 0);
 });
 
