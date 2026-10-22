@@ -82,11 +82,10 @@
   republish archived personal data without a separate privacy and provenance
   decision.
 - Public copy, captions, alt text, credits, structured data, and social or
-  search metadata must not mention AI, agents, or the tools used to make the
-  software or media. Keep such records internal: unrendered `media.json` and
-  `icons.json` fields, `PROVENANCE.md`, `THIRD_PARTY_NOTICES.md`, and this
-  guide. `validatePublicCopy` enforces this on `site.json`, rendered media
-  fields, and every built page.
+  search metadata, and repository records (docs, notices, and `media.json` or
+  `icons.json` fields), must not mention AI, agents, or the tools used to make
+  the software or media; credit the author only. `validatePublicCopy` enforces
+  this on `site.json`, the media and icon catalogs, and every built page.
 - Do not put secrets in source, static output, browser code, logs, fixtures,
   preview metadata, or `PUBLIC_` values. Protected environments use least
   privilege. Omit repository-managed analytics, tracking, cookies, ads, and

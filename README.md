@@ -7,23 +7,21 @@ official server status ([#75](https://github.com/atrinik/website/issues/75)).
 It deliberately contains no account, gameplay, payment, repository-managed
 analytics or tracking, cookies, or advertising.
 
-Atrinik's creators shape its maps, quests, dialogue, lore, art, and sound with
-whatever tools serve the work, including AI tools, and review what goes into
-the game. Atrinik contributors and appropriately licensed work from Crossfire,
-Daimonin, and other upstream creators retain their exact authorship,
-provenance, notices, and licenses.
+Atrinik's creators shape its maps, quests, dialogue, lore, art, and sound and
+review everything that goes into the game. Atrinik contributors and
+appropriately licensed work from Crossfire, Daimonin, and other upstream
+creators retain their exact authorship, provenance, notices, and licenses.
 
-The project's software is developed primarily through Codex-driven agentic
-workflows under human direction, review, provenance controls, tests, and
-repository validation. Direct human-written code contributions are welcome
-under the same gates.
+The project's software is developed in the open under review, provenance
+controls, tests, and repository validation. Contributions are welcome under
+the same checks.
 
 Atrinik began in 2009 under founder and original lead Zoey Rose. She led its
-human-developed beginning alongside the wider Atrinik Development Team. The
+beginning alongside the wider Atrinik Development Team. The
 maintained GPL C Classic line credits Atrinik, Daimonin, Crossfire, and wider
 upstream/community contributors through its authoritative records; 2011 was a
 major development and release era, not the founding year. The new Go server,
-Rust client/editor/renderer/toolkit, and Protobuf protocol are Codex-driven MIT
+Rust client/editor/renderer, content toolkit, and Protobuf protocol are MIT
 replacement foundations governed by evidence-gated provenance. Independent
 implementation is the default where exact reuse is unproven. Exact historical
 reuse follows the [local record](PROVENANCE.md) and
@@ -34,9 +32,9 @@ release.
 Follow the [replacement roadmap](https://github.com/atrinik/atrinik/issues/168)
 for current readiness.
 
-Four concept images on atrinik.org were made by Zoey Rose with OpenAI image
-generation. They are presentation material, not game content, and are recorded
-and credited in `src/data/media.json`.
+The four images on atrinik.org are concept artwork by Zoey Rose. They are
+presentation material, not game content, and are recorded in
+`src/data/media.json`.
 
 The public information architecture keeps the useful journeys from Atrinik's
 former project portal without reviving its forum stack: understand the world,

@@ -7,7 +7,7 @@ or reused only when the [local provenance record](PROVENANCE.md) and
 admit every copyrightable portion at an exact source revision. Complete
 rename-aware history must prove each portion is original past work solely
 authored by its grantor; present-day blame, majority authorship, later edits,
-and agent-assisted commits are insufficient. An admitted destination may copy,
+and tool-assisted commits are insufficient. An admitted destination may copy,
 adapt, port, translate, and MIT-relicense that material, but must not depend on
 the GPL Classic source. The destination grant does not change the Classic
 repository's GPL distribution. Record the exact evidence and exclude every

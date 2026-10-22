@@ -3,12 +3,10 @@
 ## Concept artwork
 
 The four WebP images under `public/media/` are MIT-licensed derivatives of
-concept artwork generated at Zoey Rose's direction in an earlier OpenAI
-image-generation session, received and selected by Zoey, and contributed by
-her under the repository's MIT terms. Credit: **Zoey Rose with OpenAI image
-generation**. Exact source coordinates, source and published digests,
-dimensions, transformations, alternative text, and notices are recorded in
-`src/data/media.json`.
+concept artwork by Zoey Rose, contributed by her under the repository's MIT
+terms. Credit: **Zoey Rose**. Exact source coordinates, source and published
+digests, dimensions, transformations, alternative text, and notices are recorded
+in `src/data/media.json`.
 
 These images are atmospheric concept artwork. They are not gameplay
 screenshots, authoritative depictions of world geography, or promises of

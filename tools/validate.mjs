@@ -34,9 +34,9 @@ if (
 )
   throw new Error("invalid media catalog envelope");
 media.entries.forEach(validateMedia);
-// Author and other provenance fields stay internal; rendered fields stay neutral.
-for (const record of media.entries)
-  validatePublicCopy(`${record.alt}\n${record.notice}`, `media ${record.id}`);
+// Every media and icon record, rendered or not, credits the author only.
+validatePublicCopy(JSON.stringify(media), "src/data/media.json");
+validatePublicCopy(JSON.stringify(icons), "src/data/icons.json");
 if (icons.schemaVersion !== 1) throw new Error("invalid icon catalog envelope");
 validateIconCatalog(icons.entries);
 if (
