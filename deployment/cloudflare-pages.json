@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "provider": "cloudflare-pages",
   "project": "atrinik-website",
   "repository": "atrinik/website",
@@ -8,7 +8,20 @@
   "productionDomains": ["atrinik.org", "www.atrinik.org"],
   "buildCommand": "npm ci && npm run build",
   "outputDirectory": "dist",
-  "functions": false,
+  "functions": {
+    "directory": "functions",
+    "routes": {
+      "version": 1,
+      "include": ["/api/*"],
+      "exclude": []
+    },
+    "kvNamespaces": ["DOWNLOADS"],
+    "variables": {
+      "OFFICIAL_SERVER_HOST": "game.atrinik.com"
+    },
+    "issue": "https://github.com/atrinik/website/issues/75"
+  },
+  "clientScripts": "self-hosted-modules",
   "applicationPrivacy": {
     "analytics": false,
     "cookies": false,
@@ -20,7 +33,7 @@
     "securityCookies": "conditional",
     "webAnalytics": "dashboard-managed"
   },
-  "secrets": [],
+  "secrets": ["GITHUB_TOKEN", "GITHUB_WEBHOOK_SECRET"],
   "previewAccess": "public-cloudflare-managed-noindex",
   "previewDeployments": {
     "source": "cloudflare-git-integration",

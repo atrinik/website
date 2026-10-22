@@ -3,9 +3,11 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { isDeepStrictEqual } from "node:util";
 import {
-  downloadReleaseUrls,
+  expectedRoutes,
   readJson,
   validateDist,
+  validateFunctionsTree,
+  validateRoutes,
 } from "./site-contract.mjs";
 
 const expectedProductionDomains = ["atrinik.org", "www.atrinik.org"];
@@ -23,7 +25,7 @@ const expectedProviderEdge = {
 const expectedContentSecurityPolicy = new Map([
   ["default-src", ["'none'"]],
   ["base-uri", ["'none'"]],
-  ["connect-src", ["'none'"]],
+  ["connect-src", ["'self'"]],
   ["font-src", ["'self'"]],
   ["form-action", ["'none'"]],
   ["frame-ancestors", ["'none'"]],
@@ -31,10 +33,18 @@ const expectedContentSecurityPolicy = new Map([
   ["manifest-src", ["'self'"]],
   ["media-src", ["'self'"]],
   ["object-src", ["'none'"]],
-  ["script-src", ["'none'"]],
+  ["script-src", ["'self'"]],
   ["style-src", ["'self'"]],
   ["upgrade-insecure-requests", []],
 ]);
+const expectedFunctions = {
+  directory: "functions",
+  routes: expectedRoutes,
+  kvNamespaces: ["DOWNLOADS"],
+  variables: { OFFICIAL_SERVER_HOST: "game.atrinik.com" },
+  issue: "https://github.com/atrinik/website/issues/75",
+};
+const expectedSecrets = ["GITHUB_TOKEN", "GITHUB_WEBHOOK_SECRET"];
 const expectedPreviewDeployments = {
   source: "cloudflare-git-integration",
   branches: "all-non-production",
@@ -45,7 +55,7 @@ const expectedPreviewDeployments = {
 
 export function validateDeploymentContract(contract) {
   if (
-    contract.schemaVersion !== 4 ||
+    contract.schemaVersion !== 5 ||
     contract.provider !== "cloudflare-pages" ||
     contract.project !== "atrinik-website" ||
     contract.repository !== "atrinik/website" ||
@@ -55,18 +65,16 @@ export function validateDeploymentContract(contract) {
   )
     throw new Error("Cloudflare Pages deployment contract drift");
   if (
-    contract.functions !== false ||
+    !isDeepStrictEqual(contract.functions, expectedFunctions) ||
+    contract.clientScripts !== "self-hosted-modules" ||
     !isDeepStrictEqual(
       contract.applicationPrivacy,
       expectedApplicationPrivacy,
     ) ||
     !isDeepStrictEqual(contract.providerEdge, expectedProviderEdge) ||
-    !Array.isArray(contract.secrets) ||
-    contract.secrets.length !== 0
+    !isDeepStrictEqual(contract.secrets, expectedSecrets)
   )
-    throw new Error(
-      "static deployment gained an unreviewed dynamic/privacy boundary",
-    );
+    throw new Error("deployment gained an unreviewed dynamic/privacy boundary");
   if (
     contract.productionDomain !== "atrinik.org" ||
     !isDeepStrictEqual(contract.productionDomains, expectedProductionDomains) ||
@@ -112,7 +120,7 @@ export function validateDeploymentHeaders(headers) {
     directives.set(name, values);
   }
   if (!isDeepStrictEqual(directives, expectedContentSecurityPolicy))
-    throw new Error("built deployment lacks the required no-script CSP");
+    throw new Error("built deployment lacks the required same-origin CSP");
   if (/^\s*X-Robots-Tag:/imu.test(headers))
     throw new Error("repository headers must not mark production as noindex");
 }
@@ -127,14 +135,14 @@ export async function runDeploymentDryRun(
   validateDeploymentHeaders(
     await readFile(resolve(root, "dist/_headers"), "utf8"),
   );
+  validateRoutes(await readFile(resolve(root, "dist/_routes.json"), "utf8"));
+  await validateFunctionsTree(root);
 
-  const downloads = await readJson(resolve(root, "src/data/downloads.json"));
   const media = await readJson(resolve(root, "src/data/media.json"));
   const result = await validateDist(resolve(root, "dist"), {
     allowedMedia: new Map(
       media.entries.map((record) => [record.publicPath, record]),
     ),
-    allowedReleaseUrls: new Set(downloads.entries.flatMap(downloadReleaseUrls)),
   });
   console.log(
     `deployment dry-run valid for ${contract.project}: ${JSON.stringify(result)}`,

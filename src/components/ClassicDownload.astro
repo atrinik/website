@@ -1,0 +1,60 @@
+---
+import ServerStatus from "./ServerStatus.astro";
+
+// Static fallback for the Classic download. The site module replaces the
+// fallback panel with release details from /api/downloads/classic when they
+// load and validate; otherwise this markup stays as the complete answer.
+const latestRelease = "https://github.com/atrinik/classic/releases/latest";
+---
+
+<section
+  class="section"
+  id="classic-download"
+  aria-labelledby="classic-download-heading"
+>
+  <article class="download-card">
+    <div class="download-card__intro">
+      <div>
+        <p class="eyebrow">Atrinik Classic client</p>
+        <h2 id="classic-download-heading">Download Atrinik Classic</h2>
+        <p class="download-lede">
+          Every Classic release ships a portable Windows x86_64 client and a
+          Linux x86_64 AppImage, together with checksums and an SBOM.
+        </p>
+        <ServerStatus />
+      </div>
+      <div class="card-actions" data-classic-fallback>
+        <a class="button button--primary" href={latestRelease}>
+          Download from GitHub
+        </a>
+      </div>
+    </div>
+
+    <div data-classic-release></div>
+
+    <div class="download-guidance" data-classic-fallback>
+      <section aria-labelledby="fallback-windows-heading">
+        <h3 id="fallback-windows-heading">Windows</h3>
+        <p>
+          On the release page, download the file ending in
+          <code>windows-x86_64.zip</code>. Extract the ZIP, keep its files
+          together, and run <code>atrinik.exe</code>.
+        </p>
+      </section>
+      <section aria-labelledby="fallback-linux-heading">
+        <h3 id="fallback-linux-heading">Linux</h3>
+        <p>
+          Download the file ending in <code>linux-x86_64.AppImage</code>, make
+          it executable with <code>chmod +x</code>, then run it. It requires
+          x86_64 and glibc 2.39 or newer, for example Ubuntu 24.04 or newer.
+        </p>
+      </section>
+    </div>
+
+    <p class="download-license">
+      Classic software is licensed under <strong>GPL-2.0-or-later</strong>.
+      Maps, graphics, audio, and other authored content can carry separate,
+      per-file terms; the website’s MIT license does not cover downloaded files.
+    </p>
+  </article>
+</section>

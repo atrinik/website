@@ -1,12 +1,8 @@
 ---
 import Base from "../layouts/Base.astro";
-import DownloadCatalog from "../components/DownloadCatalog.astro";
-import DownloadPrimaryAction from "../components/DownloadPrimaryAction.astro";
-import downloads from "../data/downloads.json";
-import type { DownloadCatalog as DownloadCatalogType } from "../lib/downloads";
+import ClassicDownload from "../components/ClassicDownload.astro";
 import { indexablePage } from "../lib/metadata";
 
-const catalog: DownloadCatalogType = downloads;
 const metadata = indexablePage({
   title: "Atrinik Classic downloads and release status",
   description:
@@ -45,9 +41,8 @@ const metadata = indexablePage({
         <h3>Atrinik Classic</h3>
         <p>
           The unified <code>atrinik/classic</code> repository is the supported
-          GPL-2.0-or-later software line. Use the verified catalog and release
-          evidence below to confirm the selected package, platform, protocol,
-          and published fixes before choosing an artifact.
+          GPL-2.0-or-later software line. The download below follows the release
+          that matches the official server, with checksums for every file.
         </p>
         <ul class="path-details">
           <li>Current playable implementation</li>
@@ -55,7 +50,9 @@ const metadata = indexablePage({
           <li>GPL-2.0-or-later software</li>
         </ul>
         <div class="card-actions">
-          <DownloadPrimaryAction catalog={catalog} />
+          <a class="button button--primary" href="#classic-download">
+            Get the Classic client
+          </a>
         </div>
       </article>
 
@@ -88,7 +85,7 @@ const metadata = indexablePage({
     </div>
   </section>
 
-  <DownloadCatalog catalog={catalog} />
+  <ClassicDownload />
 
   <section class="section" aria-labelledby="before-heading">
     <div class="section-heading">
