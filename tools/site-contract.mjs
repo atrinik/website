@@ -1207,13 +1207,17 @@ const aiAbbreviationPattern = /\bA\.?Is?\b|\ba\.i\./u;
 
 // Decode HTML character references so entity-split words cannot evade the
 // guard.
+const codePoint = (value) => {
+  if (value > 0x10ffff) throw new Error("invalid character reference");
+  return String.fromCodePoint(value);
+};
 const decodeCharacterReferences = (text) =>
   text
     .replace(/&#x([0-9a-f]+);?/giu, (_, hex) =>
-      String.fromCodePoint(Number.parseInt(hex, 16)),
+      codePoint(Number.parseInt(hex, 16)),
     )
     .replace(/&#(\d+);?/gu, (_, decimal) =>
-      String.fromCodePoint(Number.parseInt(decimal, 10)),
+      codePoint(Number.parseInt(decimal, 10)),
     )
     .replace(/&(?:nbsp|shy);/giu, (entity) =>
       entity.toLowerCase() === "&shy;" ? "" : " ",

@@ -1134,4 +1134,8 @@ test("public copy omits development tooling", () => {
   ])
     assert.throws(() => validatePublicCopy(text), /development tooling/u);
   assert.throws(() => validatePublicCopy(null), /invalid public copy/u);
+  assert.throws(
+    () => validatePublicCopy("&#1114112;"),
+    /invalid character reference/u,
+  );
 });
