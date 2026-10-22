@@ -63,8 +63,8 @@ const chronicle = [
           <dd>Playable &amp; maintained</dd>
         </div>
         <div>
-          <dt>Windows</dt>
-          <dd>Supported client download</dd>
+          <dt>Windows &amp; Linux</dt>
+          <dd>Supported client downloads</dd>
         </div>
         <div>
           <dt>Next generation</dt>
@@ -85,8 +85,7 @@ const chronicle = [
       </div>
       <figcaption>
         <span>Morliana</span>
-        The Great Blue Crystal · concept artwork by Zoey Rose with OpenAI image
-        generation
+        The Great Blue Crystal · concept artwork by Zoey Rose
       </figcaption>
     </figure>
   </section>
@@ -94,26 +93,25 @@ const chronicle = [
   <section class="section" aria-labelledby="identity-heading">
     <div class="section-heading section-heading--split">
       <div>
-        <p class="eyebrow">How Atrinik is made</p>
+        <p class="eyebrow">Who makes Atrinik</p>
         <h2 id="identity-heading">{site.identity.heading}</h2>
       </div>
       <p>
-        Its creators give the world its character. Agentic engineering builds
-        and maintains the software that brings that work to life.
+        Its creators give the world its character, and an open community of
+        players and contributors helps it keep growing.
       </p>
     </div>
     <div class="split-grid">
       <article class="detail-card">
         <h3>Creators shape the game world</h3>
-        <p>{site.identity.gameContent}</p>
+        <p>{site.identity.creators}</p>
         <p>
           Atrinik contributors and appropriately licensed work from Crossfire,
           Daimonin, and other upstream creators retain their exact credit and
           terms.
         </p>
         <p>
-          <strong>Website artwork:</strong>{" "}
-          {site.identity.websiteMediaException}
+          <strong>Website artwork:</strong> {site.identity.websiteArtwork}
         </p>
         <a class="link-arrow" href="/licenses/">
           Read the authorship and provenance boundaries
@@ -121,14 +119,14 @@ const chronicle = [
         </a>
       </article>
       <article class="detail-card">
-        <h3>Agents help build the software</h3>
-        <p>{site.identity.software}</p>
+        <h3>Open to contributors</h3>
+        <p>{site.identity.community}</p>
         <p>
-          “Generative AI” here means tools that synthesize content or code. It
-          is unrelated to gameplay systems such as creature or NPC behavior.
+          Source, plans, and release notes live in public repositories, so you
+          can see what is changing and where help is wanted.
         </p>
         <a class="link-arrow" href="/about/">
-          Learn about the development model <span aria-hidden="true">→</span>
+          Learn how the project works <span aria-hidden="true">→</span>
         </a>
       </article>
     </div>
@@ -182,7 +180,7 @@ const chronicle = [
         <ul class="path-details">
           <li>Current playable implementation</li>
           <li>Preserved history and world</li>
-          <li>One supported 5.x release line</li>
+          <li>Frequent 5.x releases for Windows and Linux</li>
         </ul>
         <div class="card-actions">
           <a class="button button--light" href="/downloads/">
@@ -203,6 +201,14 @@ const chronicle = [
           Fresh MIT engine foundations: a Go server, Rust client and editor,
           shared renderer, new protocol, and content toolkit, developed as
           independently released repositories.
+        </p>
+        <p>
+          <strong>
+            <time datetime="2026-10">October 2026</time>:
+          </strong>{" "}
+          each of those six foundations now publishes its own releases, and a
+          new Go pathfinding service is in early development. They do not yet
+          form a complete game.
         </p>
         <ul class="path-details">
           <li>MIT implementation with evidence-gated provenance</li>
@@ -232,9 +238,9 @@ const chronicle = [
       <p class="eyebrow">The project chronicle</p>
       <h2 id="chronicle-heading">Then. Now. Beyond.</h2>
       <p>
-        Three OpenAI-generated concept-art chapters for a project carrying its
-        history forward without pretending the future has already arrived. They
-        are website presentation media, not game content.
+        Three concept-art chapters for a project carrying its history forward
+        without pretending the future has already arrived. They are website
+        presentation media, not game content.
       </p>
     </div>
     <div class="chronicle-grid">
@@ -270,11 +276,11 @@ const chronicle = [
       </div>
       <div>
         <p>
-          Atrinik's software is developed in public, primarily through
-          Codex-driven agentic workflows. Direct human code contributions are
-          welcome under the same review, provenance, licensing, and validation
-          gates. Classic has one coordinated home; provenance-reviewed MIT
-          replacement foundations live in focused repositories.
+          Atrinik is developed in public. Anyone can follow the work, report
+          problems, and contribute changes under review, provenance, licensing,
+          and validation checks. Classic has one coordinated home;
+          provenance-reviewed MIT replacement foundations live in focused
+          repositories.
         </p>
         <a
           class="button button--primary"

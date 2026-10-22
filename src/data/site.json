@@ -1,13 +1,13 @@
 {
   "title": "Atrinik",
-  "description": "Atrinik is an open-source role-playing world shaped by its creators and community, with primarily Codex-driven software development and human code contributions welcome.",
+  "description": "Atrinik is a free, open-source online role-playing world, shaped since 2009 by its creators and community and developed in the open.",
   "canonicalOrigin": "https://atrinik.org",
   "homepage": {
     "title": "Free, open-source online role-playing game",
-    "description": "Atrinik is a free, open-source online role-playing game. Download Atrinik Classic for Windows; the replacement remains in development.",
+    "description": "Atrinik is a free, open-source online role-playing game. Download Atrinik Classic for Windows or Linux; the next-generation game is in development.",
     "eyebrow": "Free, open-source online role-playing game",
     "heading": "Atrinik is a cooperative fantasy game.",
-    "introduction": "Explore Atrinik’s isometric islands, ruins, and crystal-lit mysteries with other players. The maintained Classic release is available for Windows; the replacement game remains in development.",
+    "introduction": "Explore Atrinik’s isometric islands, ruins, and crystal-lit mysteries with other players. The maintained Classic release is available for Windows and Linux; the next-generation game remains in development.",
     "primaryAction": "Download Atrinik Classic"
   },
   "privacy": {
@@ -17,10 +17,10 @@
     "providerEdgeDisclosure": "Cloudflare may inject bot/security JavaScript or a dashboard-managed Web Analytics beacon, set strictly necessary cookies, or serve a challenge with its own HTML, scripts, cookies, and CSP. The ordinary page's no-script CSP blocks injected scripts."
   },
   "identity": {
-    "heading": "A world shaped by its creators. Agent-driven software beneath it.",
-    "gameContent": "Atrinik's creators shape its maps, quests, dialogue, lore, art and sound with whatever tools serve the work, including AI tools, and review what goes into the game. Every asset keeps its exact credit, source and license.",
-    "software": "Software is developed primarily through Codex-driven agentic workflows under human direction, review, provenance, and validation. Direct human code contributions are welcome under the same gates.",
-    "websiteMediaException": "Four website concept images were made by Zoey Rose with OpenAI image generation. They are presentation material, not game content, and are recorded and credited in the site's media inventory."
+    "heading": "A world shaped by its creators and its community.",
+    "creators": "Atrinik's creators shape its maps, quests, dialogue, lore, art, music, and sound, and review what goes into the game. Every asset keeps its exact credit, source, and license.",
+    "community": "Atrinik is developed in the open. Anyone can follow the work, report problems, suggest ideas, and contribute changes. Every change passes review, provenance, licensing, and validation checks.",
+    "websiteArtwork": "The concept artwork on this website is by Zoey Rose. It is presentation material, not game content or gameplay footage."
   },
   "externalLinks": [
     {

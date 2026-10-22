@@ -873,11 +873,7 @@ export function validatePageMetadata(
   const twitterImageAlt = metadataContent(html, "name", "twitter:image:alt");
   const imageUrl = new URL(ogImage);
   const expectedImage = allowedMedia?.get(imageUrl.pathname);
-  const expectedImageAlt = expectedImage
-    ? expectedImage.author.includes("OpenAI image generation")
-      ? `OpenAI-generated website concept artwork: ${expectedImage.alt}`
-      : expectedImage.alt
-    : null;
+  const expectedImageAlt = expectedImage ? expectedImage.alt : null;
   if (
     ogType !== "website" ||
     ogTitle !== title ||
@@ -1201,4 +1197,40 @@ export function validateDependencyPolicy(packageManifest, dependencyPolicy) {
     JSON.stringify(manifestInstallScripts)
   )
     throw new Error("install-script allow/deny policy drifted");
+}
+
+// Public copy, captions, alt text, credits, and metadata never describe the
+// tools used to make the software or media; those records stay internal.
+const toolingTermPattern =
+  /\b(?:codex|claude|anthropic|openai|chatgpt|copilot|midjourney|stable[\s-]+diffusion|dall[\s·.-]*e|gpt(?:-?\d[\w.]*)?|llms?|large[\s-]+language[\s-]+models?|gen[\s-]?ai|artificial[\s-]+intelligence|image[\s-]+generation|agentic|agents?|agent-(?:driven|written|assisted)|generative|ai-(?:generated|assisted))\b/iu;
+const aiAbbreviationPattern = /\bA\.?Is?\b|\ba\.i\./u;
+
+// Decode HTML character references so entity-split words cannot evade the
+// guard.
+const codePoint = (value) => {
+  if (value > 0x10ffff) throw new Error("invalid character reference");
+  return String.fromCodePoint(value);
+};
+const decodeCharacterReferences = (text) =>
+  text
+    .replace(/&#x([0-9a-f]+);?/giu, (_, hex) =>
+      codePoint(Number.parseInt(hex, 16)),
+    )
+    .replace(/&#(\d+);?/gu, (_, decimal) =>
+      codePoint(Number.parseInt(decimal, 10)),
+    )
+    .replace(/&(?:nbsp|shy);/giu, (entity) =>
+      entity.toLowerCase() === "&shy;" ? "" : " ",
+    )
+    .replace(/&amp;/giu, "&");
+
+export function validatePublicCopy(text, label = "public output") {
+  if (typeof text !== "string") throw new Error("invalid public copy input");
+  const decoded = decodeCharacterReferences(text);
+  const match =
+    toolingTermPattern.exec(decoded) ?? aiAbbreviationPattern.exec(decoded);
+  if (match)
+    throw new Error(
+      `${label} mentions development tooling in public copy: ${match[0]}`,
+    );
 }

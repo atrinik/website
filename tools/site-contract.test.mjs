@@ -37,6 +37,7 @@ import {
   validateMedia,
   validatePageMetadata,
   validatePresentationCss,
+  validatePublicCopy,
   validateRedirects,
   validateSvgIconSource,
 } from "./site-contract.mjs";
@@ -1101,4 +1102,40 @@ test("dependency policy still rejects undeclared packages and script approval dr
       /policy.*differ|policy drifted/u,
     );
   }
+});
+
+test("public copy omits development tooling", () => {
+  assert.doesNotThrow(() =>
+    validatePublicCopy(
+      "<p>Concept artwork by Zoey Rose. Explore the islands and train your skills.</p>",
+    ),
+  );
+  for (const text of [
+    "Built with Codex",
+    "made with OpenAI image generation",
+    "Claude helped",
+    "agentic workflows",
+    "Agent-driven software",
+    "AI tools",
+    "generative art",
+    "an A.I. image",
+    "trained AIs",
+    "an a.i. helper",
+    "GenAI art",
+    "artificial intelligence",
+    "an LLM wrote it",
+    "GPT-4 output",
+    "DALL·E sketches",
+    "Midjourney",
+    "GitHub Copilot",
+    "Stable Diffusion",
+    "Cod&#101;x",
+    "Open&#x41;I",
+  ])
+    assert.throws(() => validatePublicCopy(text), /development tooling/u);
+  assert.throws(() => validatePublicCopy(null), /invalid public copy/u);
+  assert.throws(
+    () => validatePublicCopy("&#1114112;"),
+    /invalid character reference/u,
+  );
 });

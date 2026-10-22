@@ -17,6 +17,7 @@ import {
   validateLocalMediaSource,
   validateMedia,
   validatePageMetadata,
+  validatePublicCopy,
   validateRedirects,
   validateSvgIconSource,
 } from "./site-contract.mjs";
@@ -37,6 +38,9 @@ if (
 )
   throw new Error("invalid media catalog envelope");
 media.entries.forEach(validateMedia);
+// Author and other provenance fields stay internal; rendered fields stay neutral.
+for (const record of media.entries)
+  validatePublicCopy(`${record.alt}\n${record.notice}`, `media ${record.id}`);
 if (icons.schemaVersion !== 1) throw new Error("invalid icon catalog envelope");
 validateIconCatalog(icons.entries);
 if (
@@ -116,12 +120,7 @@ if (
   site.privacy.providerEdgeDisclosure.length > 250
 )
   throw new Error("privacy/canonical contract drift");
-const identityFields = [
-  "heading",
-  "gameContent",
-  "software",
-  "websiteMediaException",
-];
+const identityFields = ["heading", "creators", "community", "websiteArtwork"];
 if (
   site.identity === null ||
   typeof site.identity !== "object" ||
@@ -136,6 +135,7 @@ if (
   )
 )
   throw new Error("site identity contract drift");
+validatePublicCopy(JSON.stringify(site), "src/data/site.json");
 for (const link of site.externalLinks) {
   const url = new URL(link.url);
   if (
@@ -250,17 +250,13 @@ if (mode === "dist") {
     .replaceAll("&quot;", '"')
     .replaceAll("&amp;", "&");
   validateHomepagePresentation(home, site.homepage, site.title);
-  if (!decodedHome.includes("concept artwork by Zoey Rose with OpenAI"))
-    throw new Error("home omits the concept-art disclosure");
+  if (!decodedHome.includes("concept artwork by Zoey Rose"))
+    throw new Error("home omits the concept-art credit");
   for (const field of identityFields)
     if (!decodedHome.includes(site.identity[field]))
       throw new Error(`home omits site identity ${field}`);
   if (!decodedHome.includes(site.privacy.providerEdgeDisclosure))
     throw new Error("home omits provider edge disclosure");
-  if (!home.includes("OpenAI-generated website concept artwork:"))
-    throw new Error(
-      "social metadata omits the generated website-media exception",
-    );
   const htmlPaths = (await filesBelow(resolve(root, "dist"))).filter((path) =>
     path.endsWith(".html"),
   );
@@ -288,6 +284,7 @@ if (mode === "dist") {
         );
     }
     const html = await readFile(path, "utf8");
+    validatePublicCopy(html, relativePath);
     const faviconLinks = [
       ...html.matchAll(
         /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml" sizes="any"\s*\/?>/gu,
