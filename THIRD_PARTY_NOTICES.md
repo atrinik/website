@@ -19,7 +19,8 @@ downloads, or embedded services. Cloudflare can transform a delivered response
 at the provider edge by injecting bot/security JavaScript or a
 dashboard-managed Web Analytics beacon, setting strictly necessary cookies, or
 serving a challenge response with different HTML, scripts, cookies, and CSP.
-The ordinary static response's no-script CSP blocks injected scripts; provider
+The ordinary static response's same-origin CSP blocks injected third-party
+scripts; provider
 behavior is disclosed and audited separately. Build dependencies and their
 licenses are recorded in the release SBOM generated from the committed npm
 lockfile.

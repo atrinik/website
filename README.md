@@ -1,9 +1,11 @@
 # Atrinik website
 
-This repository is the sole source and deployment owner for the static,
-MIT-licensed atrinik.org website. It deliberately contains no account,
-gameplay, payment, repository-managed analytics or tracking, advertising, or
-server-side runtime.
+This repository is the sole source and deployment owner for the MIT-licensed
+atrinik.org website. Its pages are static; a small Cloudflare Pages Functions
+runtime answers only `/api/*` to keep the Classic download current and show
+official server status ([#75](https://github.com/atrinik/website/issues/75)).
+It deliberately contains no account, gameplay, payment, repository-managed
+analytics or tracking, cookies, or advertising.
 
 Atrinik's creators shape its maps, quests, dialogue, lore, art, and sound with
 whatever tools serve the work, including AI tools, and review what goes into
@@ -108,21 +110,26 @@ are never executed. Changes to the comparison runner and workflow require the
 same review as other CI code.
 
 The build writes a self-contained static site to `dist/`. Validation rejects
-unproven media, mutable download coordinates, missing attribution or alt text,
-unsafe links, repository-authored client JavaScript, broken internal links, and
-page-weight budget violations. It permits only inert, locally serialized
-`type="application/ld+json"` data blocks; executable scripts, script sources,
-event handlers, and JavaScript assets remain forbidden. Generated release
-evidence belongs under ignored `build/`.
+unproven media, guessed release links, missing attribution or alt text,
+unsafe links, broken internal links, and page-weight budget violations. It
+permits inert, locally serialized `type="application/ld+json"` data blocks and
+exactly the Astro-bundled same-origin module script under `/assets/` (at most
+20,000 bytes, no HTML sinks, storage, cookies, or external origins); inline
+scripts, external script sources, and event handlers remain forbidden.
+`_routes.json` limits Pages Functions to `/api/*`. Generated release evidence
+belongs under ignored `build/`.
 
-`src/data/downloads.json` is a reviewed immutable catalog, not a live release
-feed. Its closed schema keeps a release repository separate from an artifact
-role and binds exact release evidence, including the release coordinate and the
-evidenced artifact package version. Drafts, prereleases, zero-asset releases,
-and guessed or mutable links fail closed. A deliberately authorized primary
-artifact-version mismatch is an explicit closed-contract exception rendered as
-a warning; an empty catalog keeps the Classic release-page fallback useful
-without JavaScript or a GitHub request.
+The Classic download is selected at runtime, not checked in. The `/api`
+runtime (`functions/` routes, `server/` logic) picks the newest published,
+immutable Classic release whose Windows ZIP and Linux AppImage checksums match
+GitHub's digests and whose protocol matches the official server, stores it in
+Cloudflare KV, and refreshes it on a signed release webhook or when it is more
+than 15 minutes old. A failed lookup never replaces a good record. The
+downloads page works without JavaScript through a link to the latest Classic
+release; the page module adds direct platform buttons, checksums, and
+release-note highlights. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+for the selection rules and [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the
+KV, secret, and webhook setup.
 
 Cloudflare Pages uses one Git-integrated project. `main` serves the canonical
 `atrinik.org`; `www.atrinik.org` permanently redirects to it. Cloudflare builds
@@ -132,12 +139,13 @@ custom preview hostname, or Cloudflare credential. See
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the exact preview, domain,
 health, and rollback contract.
 
-Zero-JavaScript, cookie, analytics, and tracking claims apply to the built
-artifact, not every Cloudflare response. Cloudflare may inject bot/security
-JavaScript or a dashboard-managed Web Analytics beacon, set strictly necessary
-cookies, or serve a challenge response with different HTML, scripts, cookies,
-and CSP. Ordinary static responses retain a `script-src 'none'` CSP that blocks
-injected scripts; audit the actual production response as described in
+Cookie, analytics, and tracking claims apply to the repository output and
+`/api` runtime, not every Cloudflare response. Cloudflare may inject
+bot/security JavaScript or a dashboard-managed Web Analytics beacon, set
+strictly necessary cookies, or serve a challenge response with different HTML,
+scripts, cookies, and CSP. Ordinary static responses retain a same-origin
+`script-src 'self'` and `connect-src 'self'` CSP that blocks injected
+third-party scripts; audit the actual production response as described in
 `docs/DEPLOYMENT.md`.
 
 The replacement roadmap is [atrinik/atrinik#168](https://github.com/atrinik/atrinik/issues/168).

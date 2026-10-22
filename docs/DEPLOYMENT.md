@@ -1,10 +1,13 @@
 # Cloudflare Pages deployment contract
 
 Atrinik uses one Git-integrated Cloudflare Pages project, `atrinik-website`,
-connected only to `atrinik/website`. The repository output is fully static: it
-has no Pages Functions, bindings, runtime secrets, application analytics,
-remote build inputs, or environment-dependent pages. Cloudflare can still
-transform a response at the provider edge after the build.
+connected only to `atrinik/website`. Pages are static. Pages Functions answer
+only `/api/*` ([atrinik/website#75](https://github.com/atrinik/website/issues/75)):
+Classic download selection, the signed release webhook, and official server
+status. They use one KV namespace and two secrets, listed below. There are no
+application analytics, cookies, remote build inputs, or environment-dependent
+pages. Cloudflare can still transform a response at the provider edge after
+the build.
 
 The deployment topology is fixed:
 
@@ -29,7 +32,9 @@ Configure the Pages Git integration with:
 - preview branch deployments: **All non-production branches**;
 - build command: `npm ci && npm run build`;
 - output directory: `dist`;
-- Functions, bindings, and runtime secrets: absent;
+- Functions: the repository `functions/` directory, limited to `/api/*` by
+  the checked-in `_routes.json`; bindings and secrets as described in
+  [Pages Functions setup](#pages-functions-setup);
 - Web Analytics: no repository snippet or build integration; dashboard-managed
   state must be checked against the delivered response and publicly disclosed.
 
@@ -50,10 +55,74 @@ preserving path and query. The response policy enables one-year HSTS with
 `includeSubDomains`, so every retained web-facing subdomain must serve valid
 HTTPS.
 
+## Pages Functions setup
+
+The owner configures these in the Cloudflare dashboard; none of them belong in
+source, previews, or logs. Configure **Production** and **Preview** separately.
+
+1. **KV namespace.** Under **Storage & Databases → KV**, create
+   `atrinik-website-downloads` (and, if preview data should stay separate,
+   `atrinik-website-downloads-preview`). In the Pages project open
+   **Settings → Bindings → Add → KV namespace** and bind it with the variable
+   name `DOWNLOADS` for Production and for Preview. Without the binding the
+   download API answers 503 and the page keeps its static fallback.
+2. **Variable.** Under **Settings → Variables and Secrets**, add the plain-text
+   variable `OFFICIAL_SERVER_HOST` = `game.atrinik.com` for both environments.
+   It names the server-directory entry whose version and protocol select the
+   download.
+3. **Secrets.** Add `GITHUB_WEBHOOK_SECRET` (a long random value, for example
+   `openssl rand -hex 32`) as an encrypted secret. Add `GITHUB_TOKEN` as an
+   encrypted secret too: a fine-grained personal access token with
+   **public repositories read-only** access and no other permissions. It only
+   raises GitHub API rate limits; without it the runtime still works at the
+   unauthenticated limit.
+4. **Redeploy** the latest `main` deployment (and a preview) so the bindings
+   apply.
+5. **GitHub webhook.** In `atrinik/classic` → **Settings → Webhooks → Add
+   webhook**: payload URL `https://atrinik.org/api/github/release`, content
+   type `application/json`, the same secret as `GITHUB_WEBHOOK_SECRET`, SSL
+   verification enabled, and **Let me select individual events → Releases**
+   only. GitHub sends a `ping` immediately, which must show 204.
+
+The `deployment/cloudflare-pages.json` contract records exactly this binding,
+variable, and secret set; validation rejects additions.
+
+### Verify
+
+- `curl -sS https://atrinik.org/api/downloads/classic` returns the record JSON
+  with `Cache-Control: public, max-age=60`; the first request after setup may
+  take a few seconds while it is computed. `serverMatch` should be `true` and
+  `server.version` should equal the official server's version.
+- `curl -sS https://atrinik.org/api/status` returns `available: true` and only
+  the official server's name, version, player count, and online flag.
+- `curl -sSI https://atrinik.org/downloads/` is served without invoking a
+  Function (no `/api` path) and carries `script-src 'self'; connect-src
+'self'`. Requests such as `curl -sSI -X POST https://atrinik.org/` must not
+  reach a Function.
+- An unsigned `curl -X POST https://atrinik.org/api/github/release` returns
+  401; the webhook's **Recent Deliveries** show 202 for releases.
+- In a browser, `/downloads/` shows both platform buttons and the status line
+  with no CSP errors; with JavaScript disabled it shows the
+  "Download from GitHub" fallback.
+- The Pages **Functions** log shows only reason codes such as
+  `classic download refresh: no-matching-release`, never request content.
+
+### Outage behavior and rollback
+
+If GitHub, the server directory, or KV fail, the API keeps serving the last
+good record or returns `{ "available": false }`, and the page keeps its static
+GitHub link. To force a recompute, use **Redeliver** on a webhook delivery in
+GitHub. To withdraw the runtime, promote the last verified deployment from
+before the Functions change; the static fallback needs no bindings. To reset
+selection, delete the `classic:download:v1` key in the KV namespace; the next
+download request recomputes it. Remove the webhook in `atrinik/classic` and the
+secrets in Pages if the runtime is retired.
+
 ## Provider edge privacy boundary
 
-The built artifact contains zero JavaScript and sets no application cookies.
-That does not make every Cloudflare-delivered response script- or cookie-free.
+The built artifact contains one self-hosted module script and sets no
+application cookies. That does not make every Cloudflare-delivered response
+free of other scripts or cookies.
 Depending on hostname, request signals, and dashboard configuration, Cloudflare
 may inject Web Analytics, add JavaScript for bot or challenge services, replace
 the origin page with a challenge, or set strictly necessary security cookies
@@ -64,7 +133,8 @@ A live audit on 2026-08-10 observed a Cloudflare Web Analytics tag in the
 production response for a Chromium browser user agent. This was
 `static.cloudflareinsights.com/beacon.min.js`, not an anti-bot
 `/cdn-cgi/challenge-platform/` script. The ordinary-site
-`Content-Security-Policy: script-src 'none'` blocked the tag before it received
+`Content-Security-Policy: script-src 'none'` in force at the time blocked the
+tag before it received
 a response or sent a beacon; no cookies, local storage, or session storage were
 created. The branch preview contained no injected script. A curl response and
 a browser response differed, demonstrating that one request is not proof of
@@ -124,6 +194,7 @@ npm run deploy:dry-run
 ```
 
 Verify `/`, `/about/`, `/downloads/`, `/licenses/`, `/404.html`, `_headers`,
+`_routes.json`, the `/api` checks above,
 narrow and desktop keyboard behavior, no-JavaScript rendering, TLS, the apex
 canonical, and the permanent `www` redirect. Compare `dist/` with production
 and preview responses, recording provider-injected scripts, beacons,

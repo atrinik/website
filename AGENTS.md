@@ -6,20 +6,31 @@
   Astro/TypeScript site, public content, deployment configuration, and recovery
   docs. Keep it independently buildable/deployable; the wrapper never owns
   Astro source.
-- Use static Astro output, semantic HTML/CSS/Markdown, and structured data with
-  no repository-authored browser JavaScript under the current contract.
-  Introducing browser JavaScript requires an issue defining its necessity,
-  privacy/security ownership, CSP changes, and validation. A server runtime,
-  database, CMS, client framework, or dynamic function likewise requires an
-  issue proving static design is insufficient and defining security/ownership.
+- Use static Astro output, semantic HTML/CSS/Markdown, and structured data.
+  [atrinik/website#75](https://github.com/atrinik/website/issues/75) defines
+  the only dynamic surface: Cloudflare Pages Functions under `/api/*` only
+  (`functions/` routes, logic in `server/`, `_routes.json` include `/api/*`)
+  and one Astro-bundled, self-hosted module script for Classic downloads and
+  official server status. Any further browser JavaScript, route, binding,
+  secret, database, CMS, client framework, or third-party script requires an
+  issue defining its necessity, privacy/security ownership, CSP changes, and
+  validation.
 - The site is presentation/discovery, not an account/game API, metaserver,
   protocol authority, content compiler, release store, or documentation fork.
   Never handle credentials, characters, payments, private community data, or
   persistent game sessions.
-- Core pages and built artifacts contain no repository-authored browser
-  JavaScript and require no live services. Status integrations are read-only,
+- Every page works without JavaScript and without the `/api` runtime: the
+  static downloads page links to the latest Classic GitHub release with
+  platform guidance, and the module only enhances it after validating API
+  JSON, building DOM with `textContent`. Status integrations are read-only,
   bounded, cached appropriately, and honest when empty, stale, malformed,
-  timed out, or unavailable.
+  timed out, or unavailable; they never fabricate status.
+- The `/api` runtime accepts only signed `atrinik/classic` release webhooks
+  (HMAC verified over the bounded raw body before parsing) and GET reads. It
+  stores one validated record in the `DOWNLOADS` KV namespace, fetches only
+  allowlisted https hosts with timeouts and size bounds, never trusts webhook
+  URLs or digests, and never replaces a good record with a worse or empty one.
+  It logs reason codes only, never bodies or visitor identifiers.
 - Cloudflare Pages owns preview/production deployment. Document project/branch,
   environments, domain/DNS/TLS, permissions, health, cache invalidation,
   rollback, and outage behavior. Keep metaserver/game hosts separate. Never
@@ -38,15 +49,18 @@
   It may inject bot/security JavaScript or a dashboard-managed Web Analytics
   beacon, set strictly necessary cookies, or serve a challenge with its own
   HTML, scripts, cookies, and CSP. Keep those features out of source, disclose
-  them honestly, retain a no-script CSP on ordinary site responses, and audit
+  them honestly, retain the same-origin `script-src 'self'` and
+  `connect-src 'self'` CSP on ordinary site responses, and audit
   production plus preview behavior rather than inferring it from `dist/`.
 
 ## Content, privacy, and security
 
-- Consume immutable schema-validated release metadata with component, version,
-  source revision, platform, compatibility, artifact, size, digest, provenance,
-  and exact license. Do not scrape mutable pages or guess download URLs; invalid
-  metadata makes a download unavailable.
+- Offer a direct Classic download only for a published, immutable,
+  non-prerelease release whose exact client asset names exist, whose
+  `SHA256SUMS` digests equal GitHub's asset digests, and whose protocol matches
+  the official server (see `docs/ARCHITECTURE.md`). Do not scrape mutable pages
+  or guess download URLs; invalid metadata leaves the static release-page
+  fallback.
 - Keep classic GPL and replacement MIT packages clearly distinct. The site MIT
   license never covers downloaded binaries or mixed authored media/content.
   Media derivatives require a locally retained source bound to its repository
