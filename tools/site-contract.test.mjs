@@ -104,6 +104,15 @@ const homepage = {
 
 const homepageHtml = `<title>${homepage.title} · Atrinik</title><meta name="description" content="${homepage.description}"><meta property="og:title" content="${homepage.title} · Atrinik"><meta property="og:description" content="${homepage.description}"><meta name="twitter:title" content="${homepage.title} · Atrinik"><meta name="twitter:description" content="${homepage.description}"><h1 id="hero-title">${homepage.heading}</h1><p class="eyebrow">${homepage.eyebrow}</p><p class="hero-lede">${homepage.introduction}</p><a class="button button--primary" href="/downloads/">${homepage.primaryAction} <span aria-hidden="true">→</span></a>`;
 
+// Removes the fixture's module script element so the validator must notice
+// it is missing. This builds a negative fixture; it is not a sanitizer.
+const withoutModuleScript = (html) => {
+  const start = html.indexOf("<script");
+  const end = html.indexOf("</script>", start);
+  assert.ok(start !== -1 && end !== -1, "fixture has a module script");
+  return html.slice(0, start) + html.slice(end + "</script>".length);
+};
+
 test("homepage phrase set stays structurally aligned", () => {
   assert.doesNotThrow(() => validateHomepagePhraseSet(homepage));
   assert.doesNotThrow(() =>
@@ -180,7 +189,7 @@ test("the downloads page keeps a complete static fallback", () => {
     downloadsFallbackHtml.replace("glibc 2.39", ""),
     downloadsFallbackHtml.replace("<div data-classic-release></div>", ""),
     downloadsFallbackHtml.replace(' aria-live="polite"', ""),
-    downloadsFallbackHtml.replace(/<script[^]*<\/script>/u, ""),
+    withoutModuleScript(downloadsFallbackHtml),
     `${downloadsFallbackHtml}<a href="https://github.com/atrinik/classic/releases/download/v1.2.3/guessed.zip">x</a>`,
     `${downloadsFallbackHtml}<a href="https://github.com/atrinik/classic/releases/tag/v1.2.3">x</a>`,
   ])
