@@ -15,6 +15,9 @@ updates:
       # @astrojs/check 0.9.10 supports TypeScript through major 6.
       - dependency-name: typescript
         versions: [">=7"]
+      # semantic-release 26 requires Node >=26.13; this repository pins Node 24.
+      - dependency-name: semantic-release
+        versions: [">=26"]
     assignees:
       - zoeyrose
   - package-ecosystem: github-actions
